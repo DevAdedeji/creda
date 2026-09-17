@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { authInputUi } from '../../utils/authInputUi'
+import { authInputUi } from '@/utils/authInputUi'
 
 withDefaults(
   defineProps<{

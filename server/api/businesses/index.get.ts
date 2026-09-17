@@ -1,6 +1,6 @@
 import { createError, getQuery } from 'h3'
-import { businessListQuerySchema } from '../../domains/businesses/validation'
-import { listPublicBusinesses } from '../../domains/businesses/service'
+import { businessListQuerySchema } from '@server/domains/businesses/validation'
+import { listPublicBusinesses } from '@server/domains/businesses/service'
 
 export default defineEventHandler(async (event) => {
   const parsed = businessListQuerySchema.safeParse(getQuery(event))

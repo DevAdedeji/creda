@@ -1,5 +1,5 @@
 import { createError, getRouterParam } from 'h3'
-import { getPublicBusiness } from '../../domains/businesses/service'
+import { getPublicBusiness } from '@server/domains/businesses/service'
 
 export default defineEventHandler(async (event) => {
   const slug = getRouterParam(event, 'slug')

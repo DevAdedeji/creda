@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import BusinessForm from '../../components/businesses/BusinessForm.vue'
-import { apiErrorMessage } from '../../utils/apiError'
+import BusinessForm from '@/components/businesses/BusinessForm.vue'
+import { apiErrorMessage } from '@/utils/apiError'
 import { authClient } from '~~/lib/auth-client'
 import type { BusinessDraft, ManagedBusiness } from '~~/shared/businesses'
 

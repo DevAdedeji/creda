@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import AuthShell from '../components/auth/AuthShell.vue'
-import { authInputUi } from '../utils/authInputUi'
+import AuthShell from '@/components/auth/AuthShell.vue'
+import { authInputUi } from '@/utils/authInputUi'
 import { authClient } from '~~/lib/auth-client'
 
 useSeoMeta({ title: 'Reset password — Creda', robots: 'noindex, nofollow' })

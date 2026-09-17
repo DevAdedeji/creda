@@ -1,7 +1,7 @@
 <script setup lang="ts">
-import AuthShell from '../components/auth/AuthShell.vue'
-import PasswordInput from '../components/auth/PasswordInput.vue'
-import { authInputUi } from '../utils/authInputUi'
+import AuthShell from '@/components/auth/AuthShell.vue'
+import PasswordInput from '@/components/auth/PasswordInput.vue'
+import { authInputUi } from '@/utils/authInputUi'
 import { authClient } from '~~/lib/auth-client'
 
 useSeoMeta({ title: 'Join Creda', description: 'Create a Creda account with email or Google.' })

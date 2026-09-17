@@ -1,6 +1,6 @@
 <script setup lang="ts">
-import BusinessCard from '../../components/businesses/BusinessCard.vue'
-import { authInputUi } from '../../utils/authInputUi'
+import BusinessCard from '@/components/businesses/BusinessCard.vue'
+import { authInputUi } from '@/utils/authInputUi'
 import {
   businessCategories,
   businessTypes,

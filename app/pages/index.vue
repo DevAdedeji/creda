@@ -8,7 +8,7 @@ useSeoMeta({
     'A little context. A lot more confidence. Discover businesses and customer experiences on Creda.',
 })
 
-import BusinessCard from '../components/businesses/BusinessCard.vue'
+import BusinessCard from '@/components/businesses/BusinessCard.vue'
 import type { BusinessListResponse } from '~~/shared/businesses'
 
 const categories = [

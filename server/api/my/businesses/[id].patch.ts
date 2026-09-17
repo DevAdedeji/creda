@@ -1,9 +1,9 @@
 import { createError, getRouterParam } from 'h3'
-import { assertSameOrigin, requireVerifiedUser } from '../../../utils/access'
-import { readValidatedJson } from '../../../utils/validated-json'
-import { businessSubmissionSchema } from '../../../domains/businesses/validation'
-import { updateBusiness } from '../../../domains/businesses/service'
-import { rethrowBusinessError } from '../../../domains/businesses/http-error'
+import { assertSameOrigin, requireVerifiedUser } from '@server/utils/access'
+import { readValidatedJson } from '@server/utils/validated-json'
+import { businessSubmissionSchema } from '@server/domains/businesses/validation'
+import { updateBusiness } from '@server/domains/businesses/service'
+import { rethrowBusinessError } from '@server/domains/businesses/http-error'
 
 export default defineEventHandler(async (event) => {
   assertSameOrigin(event)

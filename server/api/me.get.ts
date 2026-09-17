@@ -1,5 +1,5 @@
 import { auth } from '~~/lib/auth'
-import { isAdminEmail } from '../utils/access'
+import { isAdminEmail } from '@server/utils/access'
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession({ headers: event.headers })

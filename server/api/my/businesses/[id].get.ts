@@ -1,6 +1,6 @@
 import { createError, getRouterParam } from 'h3'
-import { requireVerifiedUser } from '../../../utils/access'
-import { getOwnedBusiness } from '../../../domains/businesses/service'
+import { requireVerifiedUser } from '@server/utils/access'
+import { getOwnedBusiness } from '@server/domains/businesses/service'
 
 export default defineEventHandler(async (event) => {
   const user = await requireVerifiedUser(event)
