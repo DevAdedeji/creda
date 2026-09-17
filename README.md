@@ -1,34 +1,24 @@
 # Creda
 
-A Nigeria-first business discovery and customer review platform built with Nuxt 4 and Nuxt UI 4.
+Nuxt 4 and Nuxt UI app.
 
-## Development
+## Local setup
 
 ```sh
 npm install
+cp .env.example .env
+docker compose up -d db
+npm run db:migrate
 npm run dev
 ```
 
-## Validation
+Set `BETTER_AUTH_SECRET` in `.env`. The app runs on `http://localhost:4002`; PostgreSQL runs locally on port `5444`. Local account emails print their links in the terminal.
+
+## Checks
 
 ```sh
+npm run lint
+npm run format:check
 npm run typecheck
 npm run build
 ```
-
-## Current scope
-
-The responsive landing page includes category filtering, example-business search, profile preview dialogs, mobile navigation and reduced-motion support. All example businesses are illustrative, not live listings. Search filters only those examples. No accounts, review submission, ownership checks or business submissions are connected yet.
-
-## Essential MVP pages
-
-1. Landing page (implemented).
-2. Business directory and search results.
-3. Business profile and review submission.
-4. Sign-in and email verification.
-5. Owner dashboard for listing details, ownership checks and review responses.
-6. Admin moderation queue for listings, ownership requests, reviews and reports.
-
-## Design
-
-DM Sans is self-hosted through Fontsource. Nuxt UI provides interface primitives, with a forest-green and lime brand system. The generated studio photograph is illustrative marketing imagery, not a customer endorsement. No analytics or external services are required for this landing page.
