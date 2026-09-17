@@ -129,7 +129,7 @@ async function continueWithGoogle() {
       <span class="h-px flex-1 bg-[#dfe6dc]" />
     </div>
 
-    <form class="space-y-5" @submit.prevent="logIn">
+    <form method="post" class="space-y-5" @submit.prevent="logIn">
       <UFormField
         label="Email address"
         name="email"

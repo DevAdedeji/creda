@@ -1,7 +1,27 @@
 import { randomBytes, randomUUID } from 'node:crypto'
-import { and, arrayContains, asc, desc, eq, ilike, ne, or, sql, type SQL } from 'drizzle-orm'
+import {
+  and,
+  arrayContains,
+  asc,
+  desc,
+  eq,
+  ilike,
+  inArray,
+  ne,
+  or,
+  sql,
+  type SQL,
+} from 'drizzle-orm'
 import { db } from '~~/lib/db'
-import { business, businessImageUpload, businessModeration, user } from '~~/lib/db/schema'
+import {
+  business,
+  businessImageUpload,
+  businessModeration,
+  businessReview,
+  ownershipDecision,
+  ownershipRequest,
+  user,
+} from '~~/lib/db/schema'
 import type { BusinessListResponse, ManagedBusiness, PublicBusiness } from '~~/shared/businesses'
 import type { BusinessListQuery, BusinessReviewInput, BusinessSubmissionInput } from './validation'
 import { normalizedKey } from './validation'
@@ -218,6 +238,17 @@ export async function updateBusiness(
           'This listing changed. Refresh and try again.',
         )
       }
+      const identityChanged =
+        locked.ownershipStatus === 'verified' &&
+        (locked.normalizedName !== normalizedKey(input.name) ||
+          locked.normalizedLocation !== normalizedKey(input.location || 'online') ||
+          locked.googlePlaceId !== input.googlePlaceId ||
+          locked.operationMode !== input.operationMode ||
+          locked.websiteUrl !== input.websiteUrl ||
+          locked.appStoreUrl !== input.appStoreUrl ||
+          locked.playStoreUrl !== input.playStoreUrl ||
+          locked.socialUrl !== input.socialUrl ||
+          locked.contactUrl !== input.contactUrl)
       await assertAttachableImages(tx, ownerUserId, input)
       const [updated] = await tx
         .update(business)
@@ -226,6 +257,7 @@ export async function updateBusiness(
           normalizedName: normalizedKey(input.name),
           normalizedLocation: normalizedKey(input.location || 'online'),
           status: 'approved',
+          ownershipStatus: identityChanged ? 'revoked' : locked.ownershipStatus,
           rejectionReason: null,
           reviewedAt: null,
           reviewedByUserId: null,
@@ -234,6 +266,33 @@ export async function updateBusiness(
         })
         .where(and(eq(business.id, id), eq(business.ownerUserId, ownerUserId)))
         .returning()
+      if (identityChanged) {
+        const approvedRequests = await tx
+          .select({ id: ownershipRequest.id })
+          .from(ownershipRequest)
+          .where(and(eq(ownershipRequest.businessId, id), eq(ownershipRequest.status, 'approved')))
+        for (const request of approvedRequests) {
+          await tx
+            .update(ownershipRequest)
+            .set({
+              status: 'revoked',
+              reviewNote: 'Listing identity or official contact details changed.',
+              reviewedByUserId: ownerUserId,
+              reviewedAt: sql`now()`,
+              updatedAt: sql`now()`,
+            })
+            .where(eq(ownershipRequest.id, request.id))
+          await tx.insert(ownershipDecision).values({
+            id: randomUUID(),
+            requestId: request.id,
+            businessId: id,
+            actorUserId: ownerUserId,
+            fromStatus: 'approved',
+            toStatus: 'revoked',
+            reason: 'Listing identity or official contact details changed.',
+          })
+        }
+      }
       if (locked.status === 'rejected') {
         await tx.insert(businessModeration).values({
           id: randomUUID(),
@@ -403,8 +462,33 @@ export async function listPublicBusinesses(
       .where(where),
   ])
 
+  const ratings = rows.length
+    ? await db
+        .select({
+          businessId: businessReview.businessId,
+          reviewCount: sql<number>`count(*)::int`,
+          averageRating: sql<number>`round(avg(${businessReview.rating})::numeric, 1)::float`,
+        })
+        .from(businessReview)
+        .where(
+          and(
+            inArray(
+              businessReview.businessId,
+              rows.map((row) => row.id),
+            ),
+            eq(businessReview.status, 'published'),
+          ),
+        )
+        .groupBy(businessReview.businessId)
+    : []
+  const ratingsByBusiness = new Map(ratings.map((rating) => [rating.businessId, rating]))
+
   return {
-    items: rows.map(toPublic),
+    items: rows.map((row) => ({
+      ...toPublic(row),
+      averageRating: ratingsByBusiness.get(row.id)?.averageRating ?? null,
+      reviewCount: ratingsByBusiness.get(row.id)?.reviewCount ?? 0,
+    })),
     page: query.page,
     pageSize: PAGE_SIZE,
     total: countRows[0]?.count ?? 0,

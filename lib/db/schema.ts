@@ -3,6 +3,7 @@ import {
   boolean,
   check,
   index,
+  integer,
   pgEnum,
   pgTable,
   text,
@@ -212,4 +213,141 @@ export const businessModeration = pgTable(
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [index('business_moderation_business_idx').on(table.businessId, table.createdAt)],
+)
+
+export const reviewStatus = pgEnum('review_status', ['pending', 'published', 'rejected', 'removed'])
+
+export const businessReview = pgTable(
+  'business_review',
+  {
+    id: text('id').primaryKey(),
+    businessId: text('business_id')
+      .notNull()
+      .references(() => business.id),
+    authorUserId: text('author_user_id')
+      .notNull()
+      .references(() => user.id),
+    rating: integer('rating').notNull(),
+    body: text('body').notNull(),
+    experienceMonth: text('experience_month').notNull(),
+    status: reviewStatus('status').notNull().default('pending'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('business_review_author_unique').on(table.businessId, table.authorUserId),
+    index('business_review_business_status_created_idx').on(
+      table.businessId,
+      table.status,
+      table.createdAt,
+    ),
+    check('business_review_rating_range', sql.raw('rating BETWEEN 1 AND 5')),
+    check('business_review_body_length', sql.raw('length(trim(body)) BETWEEN 30 AND 2000')),
+    check(
+      'business_review_experience_month_format',
+      sql.raw("experience_month ~ '^[0-9]{4}-(0[1-9]|1[0-2])$'"),
+    ),
+  ],
+)
+
+export const reviewModeration = pgTable(
+  'review_moderation',
+  {
+    id: text('id').primaryKey(),
+    reviewId: text('review_id')
+      .notNull()
+      .references(() => businessReview.id),
+    actorUserId: text('actor_user_id')
+      .notNull()
+      .references(() => user.id),
+    fromStatus: reviewStatus('from_status').notNull(),
+    toStatus: reviewStatus('to_status').notNull(),
+    reason: text('reason'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index('review_moderation_review_created_idx').on(table.reviewId, table.createdAt)],
+)
+
+export const reviewReply = pgTable(
+  'review_reply',
+  {
+    id: text('id').primaryKey(),
+    reviewId: text('review_id')
+      .notNull()
+      .references(() => businessReview.id)
+      .unique(),
+    ownerUserId: text('owner_user_id')
+      .notNull()
+      .references(() => user.id),
+    body: text('body').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  () => [check('review_reply_body_length', sql.raw('length(trim(body)) BETWEEN 2 AND 1000'))],
+)
+
+export const ownershipRequestStatus = pgEnum('ownership_request_status', [
+  'pending',
+  'approved',
+  'declined',
+  'revoked',
+])
+
+export const ownershipRequest = pgTable(
+  'ownership_request',
+  {
+    id: text('id').primaryKey(),
+    businessId: text('business_id')
+      .notNull()
+      .references(() => business.id),
+    requesterUserId: text('requester_user_id')
+      .notNull()
+      .references(() => user.id),
+    method: text('method').notNull(),
+    evidenceNote: text('evidence_note').notNull(),
+    status: ownershipRequestStatus('status').notNull().default('pending'),
+    reviewNote: text('review_note'),
+    reviewedByUserId: text('reviewed_by_user_id').references(() => user.id),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('ownership_request_one_pending_per_business')
+      .on(table.businessId)
+      .where(sql`status = 'pending'`),
+    index('ownership_request_business_created_idx').on(table.businessId, table.createdAt),
+    index('ownership_request_status_created_idx').on(table.status, table.createdAt),
+    check(
+      'ownership_request_method_allowed',
+      sql.raw("method IN ('official_email', 'official_website', 'official_social', 'other')"),
+    ),
+    check(
+      'ownership_request_evidence_length',
+      sql.raw('length(trim(evidence_note)) BETWEEN 20 AND 2000'),
+    ),
+  ],
+)
+
+export const ownershipDecision = pgTable(
+  'ownership_decision',
+  {
+    id: text('id').primaryKey(),
+    requestId: text('request_id')
+      .notNull()
+      .references(() => ownershipRequest.id),
+    businessId: text('business_id')
+      .notNull()
+      .references(() => business.id),
+    actorUserId: text('actor_user_id')
+      .notNull()
+      .references(() => user.id),
+    fromStatus: ownershipRequestStatus('from_status').notNull(),
+    toStatus: ownershipRequestStatus('to_status').notNull(),
+    reason: text('reason'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    index('ownership_decision_business_created_idx').on(table.businessId, table.createdAt),
+  ],
 )

@@ -96,8 +96,13 @@ export interface ManagedBusiness extends PublicBusiness {
   updatedAt: string
 }
 
+export interface BusinessListItem extends PublicBusiness {
+  averageRating: number | null
+  reviewCount: number
+}
+
 export interface BusinessListResponse {
-  items: PublicBusiness[]
+  items: BusinessListItem[]
   page: number
   total: number
   pageSize: number

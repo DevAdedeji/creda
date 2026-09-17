@@ -48,7 +48,7 @@ async function resetPassword() {
     <p class="mt-5 text-base leading-7 text-[#657069]">
       Use at least 8 characters for your new Creda password.
     </p>
-    <form v-if="token" class="mt-9 space-y-4" @submit.prevent="resetPassword">
+    <form v-if="token" method="post" class="mt-9 space-y-4" @submit.prevent="resetPassword">
       <UFormField label="New password" name="password" required
         ><PasswordInput
           v-model="password"

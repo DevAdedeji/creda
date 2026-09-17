@@ -1,8 +1,8 @@
 <script setup lang="ts">
-import { businessCategories, type PublicBusiness } from '~~/shared/businesses'
+import { businessCategories, type BusinessListItem } from '~~/shared/businesses'
 
-defineProps<{ business: PublicBusiness }>()
-const categoryLabel = (value: PublicBusiness['category']) =>
+defineProps<{ business: BusinessListItem }>()
+const categoryLabel = (value: BusinessListItem['category']) =>
   businessCategories.find((item) => item.value === value)?.label ?? value
 </script>
 
@@ -45,6 +45,15 @@ const categoryLabel = (value: PublicBusiness['category']) =>
     <h2 class="mt-4 text-[22px] font-semibold tracking-[-.04em] text-[#143e32]">
       {{ business.name }}
     </h2>
+    <div
+      v-if="business.reviewCount"
+      class="mt-2 flex items-center gap-1.5 text-sm font-semibold text-[#795c20]"
+      :aria-label="`${business.averageRating} out of 5 stars from ${business.reviewCount} ${business.reviewCount === 1 ? 'review' : 'reviews'}`"
+    >
+      <span class="text-lg leading-none text-[#d59b34]" aria-hidden="true">★</span>
+      <span>{{ business.averageRating }}</span>
+      <span class="font-normal text-[#738076]">({{ business.reviewCount }})</span>
+    </div>
     <p class="mt-2 line-clamp-3 flex-1 text-sm leading-6 text-[#657069]">
       {{ business.description }}
     </p>

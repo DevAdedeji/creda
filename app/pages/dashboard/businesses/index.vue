@@ -98,6 +98,21 @@ const { data, status, error, refresh } = await useFetch<{ items: ManagedBusiness
               <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-[#143e32]">{{ item.name }}</h2>
                 <p class="mt-1 text-sm text-[#657069]">{{ item.location || 'Online' }}</p>
+                <NuxtLink
+                  :to="'/dashboard/businesses/' + item.id + '/verification'"
+                  class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#315b3a] hover:underline"
+                >
+                  <UIcon
+                    :name="
+                      item.ownershipStatus === 'verified'
+                        ? 'i-lucide-badge-check'
+                        : 'i-lucide-shield-check'
+                    "
+                  />
+                  {{
+                    item.ownershipStatus === 'verified' ? 'Ownership verified' : 'Verify ownership'
+                  }}
+                </NuxtLink>
               </div>
             </div>
             <div class="flex flex-wrap justify-end gap-2 md:ml-auto md:shrink-0">

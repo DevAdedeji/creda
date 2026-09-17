@@ -49,7 +49,7 @@ async function requestReset() {
           : 'Enter your email and we’ll send you a link to set a new password.'
       }}
     </p>
-    <form v-if="!submitted" class="mt-9 space-y-5" @submit.prevent="requestReset">
+    <form v-if="!submitted" method="post" class="mt-9 space-y-5" @submit.prevent="requestReset">
       <UFormField label="Email address" name="email" required
         ><UInput
           v-model="email"

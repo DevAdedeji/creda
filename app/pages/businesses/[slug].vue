@@ -161,32 +161,11 @@ const destinations = computed(() => {
                 </a>
               </div>
             </section>
-            <section
-              class="rounded-2xl border border-[#dfe6dc] bg-white p-7 sm:p-9"
-              aria-labelledby="reviews-heading"
-            >
-              <div class="flex items-center gap-3">
-                <span
-                  class="grid size-11 place-items-center rounded-xl bg-[#e8f4da] text-xl text-[#315b3a]"
-                  ><UIcon name="i-lucide-message-circle"
-                /></span>
-                <h2
-                  id="reviews-heading"
-                  class="text-2xl font-semibold tracking-tight text-[#143e32]"
-                >
-                  Customer experiences
-                </h2>
-              </div>
-              <div
-                class="mt-9 rounded-xl border border-dashed border-[#cbd9c6] bg-[#f9fbf6] px-6 py-10 text-center"
-              >
-                <UIcon name="i-lucide-messages-square" class="text-3xl text-[#799478]" />
-                <h3 class="mt-3 text-lg font-semibold text-[#143e32]">No reviews yet.</h3>
-                <p class="mt-2 text-sm text-[#657069]">
-                  Customer experiences will appear here when available.
-                </p>
-              </div>
-            </section>
+            <ReviewsSection
+              :business-id="business.id"
+              :slug="business.slug"
+              :business-name="business.name"
+            />
             <section
               v-if="mapUrl"
               class="overflow-hidden rounded-2xl border border-[#dfe6dc] bg-white"

@@ -43,6 +43,13 @@
       "when": 1789617118149,
       "tag": "0005_bizarre_zodiak",
       "breakpoints": true
+    },
+    {
+      "idx": 6,
+      "version": "7",
+      "when": 1789618736386,
+      "tag": "0006_blushing_tarot",
+      "breakpoints": true
     }
   ]
 }
