@@ -67,9 +67,8 @@ async function decide(item: AdminReport) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f7f9f3] text-[#172f27]">
-    <LandingHeader />
-    <main class="mx-auto w-full max-w-5xl px-5 pb-20 pt-10 sm:px-8 sm:pt-14">
+  <WorkspaceShell>
+    <main class="mx-auto w-full max-w-6xl px-5 pb-20 pt-10 sm:px-8 sm:pt-14 xl:px-12">
       <NuxtLink
         to="/admin/reviews"
         class="inline-flex items-center gap-2 text-sm font-semibold text-[#496c51] hover:underline"
@@ -288,5 +287,5 @@ async function decide(item: AdminReport) {
         >
       </nav>
     </main>
-  </div>
+  </WorkspaceShell>
 </template>

@@ -46,9 +46,8 @@ async function decide(item: AdminVerificationItem, decision: 'approve' | 'declin
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f7f9f3] text-[#172f27]">
-    <LandingHeader />
-    <main class="mx-auto w-full max-w-5xl px-5 py-12 sm:px-8 sm:py-16">
+  <WorkspaceShell>
+    <main class="mx-auto w-full max-w-6xl px-5 py-12 sm:px-8 sm:py-16 xl:px-12">
       <div class="flex flex-wrap items-end justify-between gap-5">
         <div>
           <p class="text-xs font-bold tracking-[.17em] text-[#456b4d]">PRIVATE ADMINISTRATION</p>
@@ -214,5 +213,5 @@ async function decide(item: AdminVerificationItem, decision: 'approve' | 'declin
         </section>
       </template>
     </main>
-  </div>
+  </WorkspaceShell>
 </template>

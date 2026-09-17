@@ -125,6 +125,13 @@ export interface ManagedBusiness extends PublicBusiness {
   updatedAt: string
 }
 
+export interface ManagedBusinessListResponse {
+  items: ManagedBusiness[]
+  page: number
+  pageSize: number
+  total: number
+}
+
 export interface BusinessListItem extends PublicBusiness {
   averageRating: number | null
   reviewCount: number

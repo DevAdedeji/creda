@@ -31,8 +31,7 @@ async function submit(draft: BusinessDraft) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f7f9f3] text-[#172f27]">
-    <LandingHeader />
+  <WorkspaceShell>
     <main class="mx-auto w-full px-5 sm:px-8 xl:px-12 max-w-4xl py-12 sm:py-16">
       <NuxtLink
         to="/dashboard/businesses"
@@ -60,5 +59,5 @@ async function submit(draft: BusinessDraft) {
       </div>
       <BusinessForm v-else :submitting="submitting" :error="errorMessage" @submit="submit" />
     </main>
-  </div>
+  </WorkspaceShell>
 </template>

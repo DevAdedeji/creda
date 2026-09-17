@@ -41,8 +41,7 @@ async function submit() {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f7f9f3] text-[#172f27]">
-    <LandingHeader />
+  <WorkspaceShell>
     <main class="mx-auto w-full max-w-3xl px-5 py-12 sm:px-8 sm:py-16">
       <NuxtLink
         to="/dashboard/businesses"
@@ -156,5 +155,5 @@ async function submit() {
         </section>
       </template>
     </main>
-  </div>
+  </WorkspaceShell>
 </template>

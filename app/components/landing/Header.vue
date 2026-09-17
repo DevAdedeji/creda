@@ -35,7 +35,7 @@ const accountMenu = computed(() => [
     },
   ],
   [
-    { label: 'Your account', icon: 'i-lucide-user-round', to: '/account' },
+    { label: 'My account', icon: 'i-lucide-user-round', to: '/profile' },
     { label: 'Your businesses', icon: 'i-lucide-store', to: '/dashboard/businesses' },
     { label: 'Saved businesses', icon: 'i-lucide-bookmark', to: '/saved' },
   ],
@@ -138,10 +138,10 @@ const accountMenu = computed(() => [
       /></a>
       <template v-if="session">
         <NuxtLink
-          to="/account"
+          to="/profile"
           class="flex items-center justify-between border-b border-[#e0e5dd] py-3 text-[15px] font-semibold text-[#172f27]"
           @click="menuOpen = false"
-          >Your account <UIcon name="i-lucide-user-round"
+          >My account <UIcon name="i-lucide-user-round"
         /></NuxtLink>
         <NuxtLink
           to="/dashboard/businesses"

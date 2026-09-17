@@ -59,9 +59,8 @@ function openDecision(id: string, choice: 'reject' | 'remove') {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#fcfcf8] text-[#173e32]">
-    <LandingHeader />
-    <main class="mx-auto max-w-5xl px-5 py-10 sm:px-8 sm:py-14">
+  <WorkspaceShell>
+    <main class="mx-auto w-full max-w-6xl px-5 py-10 sm:px-8 sm:py-14 xl:px-12">
       <NuxtLink
         to="/account"
         class="inline-flex items-center gap-2 text-sm font-semibold text-[#45694e] hover:underline"
@@ -236,5 +235,5 @@ function openDecision(id: string, choice: 'reject' | 'remove') {
         >
       </div>
     </main>
-  </div>
+  </WorkspaceShell>
 </template>

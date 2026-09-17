@@ -11,13 +11,19 @@ import {
   ownershipRequest,
   user,
 } from '~~/lib/db/schema'
-import type { BusinessListResponse, ManagedBusiness, PublicBusiness } from '~~/shared/businesses'
+import type {
+  BusinessListResponse,
+  ManagedBusiness,
+  ManagedBusinessListResponse,
+  PublicBusiness,
+} from '~~/shared/businesses'
 import type { BusinessListQuery, BusinessReviewInput, BusinessSubmissionInput } from './validation'
 import { normalizedKey } from './validation'
 import { validateBusinessMedia } from './media'
 import { deleteUnusedBusinessImages } from './image-storage'
 
 const PAGE_SIZE = 12
+const MANAGED_PAGE_SIZE = 10
 type BusinessRow = typeof business.$inferSelect
 type BusinessTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
 
@@ -329,14 +335,25 @@ export async function updateBusiness(
   }
 }
 
-export async function listOwnedBusinesses(ownerUserId: string): Promise<ManagedBusiness[]> {
+export async function listOwnedBusinesses(
+  ownerUserId: string,
+  requestedPage: number,
+): Promise<ManagedBusinessListResponse> {
+  const where = eq(business.ownerUserId, ownerUserId)
+  const [countRow] = await db
+    .select({ count: sql<number>`count(*)::int` })
+    .from(business)
+    .where(where)
+  const total = countRow?.count ?? 0
+  const page = Math.min(requestedPage, Math.max(1, Math.ceil(total / MANAGED_PAGE_SIZE)))
   const rows = await db
     .select()
     .from(business)
-    .where(eq(business.ownerUserId, ownerUserId))
-    .orderBy(desc(business.createdAt))
-    .limit(100)
-  return rows.map(toManaged)
+    .where(where)
+    .orderBy(desc(business.createdAt), desc(business.id))
+    .limit(MANAGED_PAGE_SIZE)
+    .offset((page - 1) * MANAGED_PAGE_SIZE)
+  return { items: rows.map(toManaged), page, pageSize: MANAGED_PAGE_SIZE, total }
 }
 
 export async function getOwnedBusiness(

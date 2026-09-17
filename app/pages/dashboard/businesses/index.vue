@@ -1,22 +1,51 @@
 <script setup lang="ts">
 import { authClient } from '~~/lib/auth-client'
-import type { ManagedBusiness } from '~~/shared/businesses'
+import type { ManagedBusinessListResponse } from '~~/shared/businesses'
 
 useSeoMeta({ title: 'Your businesses — Creda', robots: 'noindex, nofollow' })
 const route = useRoute()
 const { data: session } = await authClient.useSession(useFetch)
 if (!session.value) await navigateTo('/login')
 
-const { data, status, error, refresh } = await useFetch<{ items: ManagedBusiness[] }>(
+const page = computed(() => {
+  const requested = typeof route.query.page === 'string' ? Number(route.query.page) : 1
+  return Number.isInteger(requested) && requested >= 1 && requested <= 10000 ? requested : 1
+})
+const { data, status, error, refresh } = await useFetch<ManagedBusinessListResponse>(
   '/api/my/businesses',
+  { query: computed(() => ({ page: page.value })) },
+)
+
+function pageLink(nextPage: number) {
+  return {
+    path: '/dashboard/businesses',
+    query: {
+      ...route.query,
+      submitted: undefined,
+      page: nextPage === 1 ? undefined : String(nextPage),
+    },
+  }
+}
+
+watch(
+  () => data.value?.page,
+  (resolvedPage) => {
+    if (resolvedPage && resolvedPage !== page.value) {
+      void navigateTo(pageLink(resolvedPage), { replace: true })
+    }
+  },
 )
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f7f9f3] text-[#172f27]">
-    <LandingHeader />
-    <main class="mx-auto w-full px-5 sm:px-8 xl:px-12 max-w-5xl py-12 sm:py-16">
-      <div class="flex flex-wrap items-end justify-between gap-6">
+  <WorkspaceShell>
+    <main class="mx-auto w-full max-w-6xl px-5 py-12 sm:px-8 sm:py-16 xl:px-12">
+      <p class="text-xs font-medium text-[#79877c]">
+        Your space <span class="mx-2 text-[#b4c0b4]">/</span> Your businesses
+      </p>
+      <div
+        class="mt-7 flex flex-wrap items-end justify-between gap-6 border-b border-[#e4e9e0] pb-8"
+      >
         <div>
           <p class="text-xs font-bold tracking-[.17em] text-[#456b4d]">YOUR BUSINESS PROFILES</p>
           <h1 class="mt-3 text-4xl font-semibold tracking-[-.06em] text-[#143e32] sm:text-5xl">
@@ -44,10 +73,10 @@ const { data, status, error, refresh } = await useFetch<{ items: ManagedBusiness
       </p>
       <div
         v-if="status === 'pending'"
-        class="mt-10 grid gap-4"
+        class="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-3"
         aria-label="Loading your businesses"
       >
-        <div v-for="n in 2" :key="n" class="h-32 animate-pulse rounded-2xl bg-[#e8eee4]" />
+        <div v-for="n in 3" :key="n" class="h-72 animate-pulse rounded-2xl bg-[#e8eee4]" />
       </div>
       <div v-else-if="error" class="mt-10 rounded-2xl border border-red-200 bg-white p-7">
         <p class="text-sm text-red-800">We could not load your listings.</p>
@@ -74,79 +103,126 @@ const { data, status, error, refresh } = await useFetch<{ items: ManagedBusiness
           >Create a listing</UButton
         >
       </div>
-      <div v-else class="mt-10 grid gap-4">
+      <div v-else class="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-3">
         <article
           v-for="item in data.items"
           :key="item.id"
-          class="rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-7"
+          class="flex flex-col overflow-hidden rounded-2xl border border-[#dfe6dc] bg-white transition hover:border-[#b9cdb4] hover:shadow-[0_14px_35px_#143e3212]"
         >
-          <div class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
-            <div class="flex min-w-0 items-center gap-4">
+          <div class="flex-1 p-6">
+            <div class="flex items-start justify-between gap-3">
               <NuxtImg
                 v-if="item.logoUrl"
                 :src="item.logoUrl"
                 alt=""
-                class="size-14 shrink-0 rounded-xl border border-[#e1e7dc] object-cover"
                 width="56"
                 height="56"
                 format="webp"
+                class="size-14 rounded-xl object-cover"
               />
               <span
                 v-else
-                class="grid size-14 shrink-0 place-items-center rounded-xl bg-[#e8f4da] text-xl font-bold text-[#315b3a]"
+                class="grid size-14 place-items-center rounded-xl bg-[#e4f2d8] text-xl font-bold text-[#315b3a]"
                 >{{ item.name.charAt(0).toUpperCase() }}</span
               >
-              <div class="min-w-0">
-                <h2 class="text-xl font-semibold text-[#143e32]">{{ item.name }}</h2>
-                <p class="mt-1 text-sm text-[#657069]">{{ item.location || 'Online' }}</p>
-                <p
-                  v-if="item.status === 'suspended'"
-                  class="mt-2 max-w-md text-sm font-medium leading-6 text-amber-800"
-                >
-                  This listing is unavailable following a content review. Changes are paused until
-                  an administrator restores it.
-                </p>
-                <NuxtLink
-                  v-if="item.status !== 'suspended'"
-                  :to="'/dashboard/businesses/' + item.id + '/verification'"
-                  class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#315b3a] hover:underline"
-                >
-                  <UIcon
-                    :name="
-                      item.ownershipStatus === 'verified'
-                        ? 'i-lucide-badge-check'
-                        : 'i-lucide-shield-check'
-                    "
-                  />
-                  {{
-                    item.ownershipStatus === 'verified' ? 'Ownership verified' : 'Verify ownership'
-                  }}
-                </NuxtLink>
-              </div>
+              <UIcon
+                v-if="item.ownershipStatus === 'verified'"
+                name="i-lucide-badge-check"
+                class="text-xl text-[#4b8b56]"
+                aria-label="Ownership verified"
+              />
             </div>
-            <div class="flex flex-wrap justify-end gap-2 md:ml-auto md:shrink-0">
-              <UButton
-                v-if="item.status === 'approved'"
-                :to="'/businesses/' + item.slug"
-                color="neutral"
-                variant="outline"
-                class="!rounded-lg"
-                trailing-icon="i-lucide-arrow-up-right"
-                >View public profile</UButton
-              >
-              <UButton
-                v-if="item.status !== 'suspended'"
-                :to="'/dashboard/businesses/' + item.id + '/edit'"
-                color="neutral"
-                variant="outline"
-                class="!rounded-lg"
-                trailing-icon="i-lucide-pencil"
-                >Edit listing</UButton
-              >
-            </div>
+            <h2 class="mt-5 line-clamp-2 text-xl font-semibold text-[#143e32]">
+              {{ item.name }}
+            </h2>
+            <p class="mt-2 line-clamp-2 min-h-12 text-sm leading-6 text-[#657069]">
+              {{ item.description }}
+            </p>
+            <p class="mt-4 flex items-center gap-2 text-xs font-medium text-[#5b715f]">
+              <UIcon name="i-lucide-map-pin" class="shrink-0" />
+              <span class="truncate">{{ item.location || 'Online' }}</span>
+            </p>
+            <p
+              v-if="item.status === 'suspended'"
+              class="mt-5 text-sm font-medium leading-6 text-amber-800"
+            >
+              This listing is unavailable following a content review. Changes are paused until an
+              administrator restores it.
+            </p>
+            <NuxtLink
+              v-else
+              :to="'/dashboard/businesses/' + item.id + '/verification'"
+              class="mt-5 inline-flex items-center gap-1.5 text-xs font-semibold text-[#315b3a] hover:underline"
+            >
+              <UIcon
+                :name="
+                  item.ownershipStatus === 'verified'
+                    ? 'i-lucide-badge-check'
+                    : 'i-lucide-shield-check'
+                "
+                class="text-base"
+              />
+              {{ item.ownershipStatus === 'verified' ? 'Ownership verified' : 'Verify ownership' }}
+            </NuxtLink>
+          </div>
+          <div
+            v-if="item.status !== 'suspended'"
+            class="flex flex-wrap justify-end gap-x-5 gap-y-2 border-t border-[#edf0e9] px-6 py-4"
+          >
+            <NuxtLink
+              v-if="item.status === 'approved'"
+              :to="'/businesses/' + item.slug"
+              class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#315b3a] hover:underline"
+            >
+              View profile <UIcon name="i-lucide-arrow-up-right" class="text-base" />
+            </NuxtLink>
+            <NuxtLink
+              :to="'/dashboard/businesses/' + item.id + '/edit'"
+              class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#315b3a] hover:underline"
+            >
+              Edit listing <UIcon name="i-lucide-pencil" class="text-sm" />
+            </NuxtLink>
           </div>
         </article>
       </div>
+      <nav
+        v-if="status === 'success' && data && data.total > data.pageSize"
+        aria-label="Your business pages"
+        class="mt-10 flex flex-wrap items-center justify-between gap-3"
+      >
+        <UButton
+          :to="data.page > 1 ? pageLink(data.page - 1) : undefined"
+          :disabled="data.page <= 1"
+          size="sm"
+          color="neutral"
+          variant="outline"
+          class="!rounded-lg"
+          icon="i-lucide-arrow-left"
+          >Previous</UButton
+        >
+        <UPagination
+          :page="data.page"
+          :total="data.total"
+          :items-per-page="data.pageSize"
+          :sibling-count="1"
+          :show-controls="false"
+          :to="pageLink"
+          class="hidden sm:flex"
+        />
+        <span class="text-sm text-[#657069] sm:hidden">
+          Page {{ data.page }} of {{ Math.ceil(data.total / data.pageSize) }}
+        </span>
+        <UButton
+          :to="data.page * data.pageSize < data.total ? pageLink(data.page + 1) : undefined"
+          :disabled="data.page * data.pageSize >= data.total"
+          size="sm"
+          color="neutral"
+          variant="outline"
+          class="!rounded-lg"
+          trailing-icon="i-lucide-arrow-right"
+          >Next</UButton
+        >
+      </nav>
     </main>
-  </div>
+  </WorkspaceShell>
 </template>

@@ -38,15 +38,14 @@ async function remove(id: string) {
 </script>
 
 <template>
-  <div class="min-h-screen bg-[#f7f9f3] text-[#172f27]">
-    <LandingHeader />
+  <WorkspaceShell>
     <main class="mx-auto w-full max-w-6xl px-5 pb-20 pt-10 sm:px-8 sm:pt-14 xl:px-12">
-      <NuxtLink
-        to="/account"
-        class="inline-flex items-center gap-2 text-sm font-semibold text-[#496c51] hover:underline"
-        ><UIcon name="i-lucide-arrow-left" /> Your account</NuxtLink
+      <p class="text-xs font-medium text-[#79877c]">
+        Your space <span class="mx-2 text-[#b4c0b4]">/</span> Saved businesses
+      </p>
+      <div
+        class="mt-7 flex flex-wrap items-end justify-between gap-5 border-b border-[#e4e9e0] pb-8"
       >
-      <div class="mt-8 flex flex-wrap items-end justify-between gap-5">
         <div>
           <p class="text-xs font-bold uppercase tracking-[.17em] text-[#65836a]">YOUR SHORTLIST</p>
           <h1 class="mt-3 text-4xl font-semibold tracking-[-.06em] text-[#143e32] sm:text-5xl">
@@ -187,5 +186,5 @@ async function remove(id: string) {
         >
       </nav>
     </main>
-  </div>
+  </WorkspaceShell>
 </template>

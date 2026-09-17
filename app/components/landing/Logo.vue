@@ -1,10 +1,10 @@
 <script setup lang="ts">
-withDefaults(defineProps<{ compact?: boolean }>(), { compact: false })
+withDefaults(defineProps<{ compact?: boolean; to?: string }>(), { compact: false, to: '/' })
 </script>
 
 <template>
   <NuxtLink
-    to="/"
+    :to="to"
     :class="
       compact ? 'text-[28px] tracking-[-.07em]' : 'text-[32px] tracking-[-.07em] lg:text-[37px]'
     "
