@@ -1,7 +1,3 @@
-<script setup lang="ts">
-withDefaults(defineProps<{ mode?: 'login' | 'signup' | 'recovery' }>(), { mode: 'recovery' })
-</script>
-
 <template>
   <div class="min-h-screen bg-[#edf2e9] text-[#172f27] lg:p-3">
     <main
@@ -74,20 +70,7 @@ withDefaults(defineProps<{ mode?: 'login' | 'signup' | 'recovery' }>(), { mode: 
             class="hidden items-center gap-1.5 text-sm font-semibold text-[#587061] transition hover:text-[#143e32] lg:inline-flex"
             ><UIcon name="i-lucide-arrow-left" /> Back to explore</NuxtLink
           >
-          <NuxtLink
-            v-if="mode === 'login'"
-            to="/signup"
-            class="text-sm font-semibold text-[#143e32] hover:underline"
-            >New here? <span class="underline underline-offset-4">Join Creda</span></NuxtLink
-          >
-          <NuxtLink
-            v-else-if="mode === 'signup'"
-            to="/login"
-            class="text-sm font-semibold text-[#143e32] hover:underline"
-            >Have an account? <span class="underline underline-offset-4">Log in</span></NuxtLink
-          >
           <span
-            v-else
             class="hidden text-xs font-semibold uppercase tracking-[.15em] text-[#819184] lg:block"
             >Your Creda account</span
           >

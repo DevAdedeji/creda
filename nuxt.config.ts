@@ -8,7 +8,7 @@ export default defineNuxtConfig({
   icon: { clientBundle: { scan: true } },
   app: {
     head: {
-      htmlAttrs: { lang: 'en' },
+      htmlAttrs: { lang: 'en', class: 'motion-safe:scroll-smooth scroll-pt-20 lg:scroll-pt-28' },
       meta: [{ name: 'theme-color', content: '#143e32' }],
       link: [{ rel: 'icon', type: 'image/svg+xml', href: '/favicon.svg' }],
     },

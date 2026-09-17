@@ -80,7 +80,7 @@ async function continueWithGoogle() {
 </script>
 
 <template>
-  <AuthShell mode="login">
+  <AuthShell>
     <div class="mb-8">
       <span
         class="inline-flex items-center gap-2 rounded-full bg-[#ecf5e5] px-3 py-1.5 text-[11px] font-bold tracking-[.12em] text-[#356746]"
@@ -176,6 +176,14 @@ async function continueWithGoogle() {
         :loading="pending"
         >Log in <UIcon name="i-lucide-arrow-right" class="ml-1"
       /></UButton>
+      <p class="pt-5 text-center text-sm text-[#657069]">
+        New to Creda?
+        <NuxtLink
+          to="/signup"
+          class="font-semibold text-[#143e32] underline underline-offset-4 hover:text-[#315f42]"
+          >Create an account</NuxtLink
+        >
+      </p>
     </form>
 
     <p

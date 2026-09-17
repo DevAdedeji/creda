@@ -82,7 +82,7 @@ async function continueWithGoogle() {
 </script>
 
 <template>
-  <AuthShell mode="signup">
+  <AuthShell>
     <template v-if="registered">
       <div
         class="mb-7 grid size-16 place-items-center rounded-2xl bg-[#d8f36a] text-3xl text-[#143e32]"
@@ -226,6 +226,14 @@ async function continueWithGoogle() {
           :loading="pending"
           >Create my account <UIcon name="i-lucide-arrow-right" class="ml-1"
         /></UButton>
+        <p class="pt-5 text-center text-sm text-[#657069]">
+          Have an account?
+          <NuxtLink
+            to="/login"
+            class="font-semibold text-[#143e32] underline underline-offset-4 hover:text-[#315f42]"
+            >Log in</NuxtLink
+          >
+        </p>
       </form>
       <p
         v-if="errorMessage"

@@ -1,4 +1,5 @@
 import { auth } from '~~/lib/auth'
+import { isAdminEmail } from '../utils/access'
 
 export default defineEventHandler(async (event) => {
   const session = await auth.api.getSession({ headers: event.headers })
@@ -11,6 +12,8 @@ export default defineEventHandler(async (event) => {
       name: session.user.name,
       email: session.user.email,
       image: session.user.image,
+      emailVerified: session.user.emailVerified,
+      isAdmin: session.user.emailVerified && isAdminEmail(session.user.email),
     },
   }
 })
