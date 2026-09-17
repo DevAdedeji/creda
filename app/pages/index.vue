@@ -409,9 +409,18 @@ function searchBusinesses() {
             >
           </h2>
           <p class="text-[17px] leading-[1.7] text-[#657069]">
-            Give your business a home beyond a social feed. One shareable profile for your story,
-            your links, and your customers’ experiences.
+            Give your business a home beyond a social feed. Get a short, shareable page for your
+            story, photos, and links, alongside a Creda profile for customer experiences.
           </p>
+          <div
+            class="mt-6 inline-flex max-w-full items-center gap-3 rounded-xl border border-[#dce8d6] bg-[#f5f9f1] px-4 py-3 text-sm font-semibold text-[#315b3a]"
+          >
+            <UIcon name="i-lucide-link-2" class="shrink-0 text-lg" />
+            <span class="truncate">creda.ng/your-business</span>
+            <span class="hidden text-xs font-medium text-[#6c7f70] sm:inline"
+              >Your link to share</span
+            >
+          </div>
           <ul class="flex flex-col gap-3 my-7">
             <li class="flex items-center gap-2.5 text-sm font-semibold">
               <UIcon name="i-lucide-check" class="text-lg text-[#4b805f]" /> Your business, in one
@@ -422,7 +431,8 @@ function searchBusinesses() {
               can respond to
             </li>
             <li class="flex items-center gap-2.5 text-sm font-semibold">
-              <UIcon name="i-lucide-check" class="text-lg text-[#4b805f]" /> A link worth sharing
+              <UIcon name="i-lucide-check" class="text-lg text-[#4b805f]" /> A short link that’s
+              yours to share
             </li>
           </ul>
           <UButton

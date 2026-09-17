@@ -4,6 +4,8 @@ import type { ManagedBusinessListResponse } from '~~/shared/businesses'
 
 useSeoMeta({ title: 'Your businesses — Creda', robots: 'noindex, nofollow' })
 const route = useRoute()
+const toast = useToast()
+const siteOrigin = new URL(useCanonicalUrl('/')).origin
 const { data: session } = await authClient.useSession(useFetch)
 if (!session.value) await navigateTo('/login')
 
@@ -24,6 +26,19 @@ function pageLink(nextPage: number) {
       submitted: undefined,
       page: nextPage === 1 ? undefined : String(nextPage),
     },
+  }
+}
+
+function bioLink(slug: string) {
+  return new URL('/' + encodeURIComponent(slug), siteOrigin)
+}
+
+async function copyBioLink(slug: string) {
+  try {
+    await navigator.clipboard.writeText(bioLink(slug).toString())
+    toast.add({ title: 'Business page link copied', color: 'success' })
+  } catch {
+    toast.add({ title: 'Could not copy the link', color: 'error' })
   }
 }
 
@@ -164,6 +179,28 @@ watch(
               />
               {{ item.ownershipStatus === 'verified' ? 'Ownership verified' : 'Verify ownership' }}
             </NuxtLink>
+            <div
+              v-if="item.status === 'approved'"
+              class="mt-5 flex items-center gap-3 rounded-xl border border-[#e2ebde] bg-[#f6faf3] px-3 py-2.5"
+            >
+              <UIcon name="i-lucide-link-2" class="shrink-0 text-[#4c7653]" />
+              <div class="min-w-0 flex-1">
+                <p class="text-[10px] font-bold uppercase tracking-[.12em] text-[#69806c]">
+                  Your shareable page
+                </p>
+                <p class="truncate text-xs font-semibold text-[#254c37]">
+                  {{ bioLink(item.slug).host }}{{ bioLink(item.slug).pathname }}
+                </p>
+              </div>
+              <button
+                type="button"
+                :aria-label="`Copy ${item.name} business page link`"
+                class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#d2e1cf] bg-white px-2.5 text-xs font-semibold text-[#315b3a] transition hover:bg-[#e9f4e4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#315b3a]"
+                @click="copyBioLink(item.slug)"
+              >
+                <UIcon name="i-lucide-copy" class="text-base" /> Copy
+              </button>
+            </div>
           </div>
           <div
             v-if="item.status !== 'suspended'"
