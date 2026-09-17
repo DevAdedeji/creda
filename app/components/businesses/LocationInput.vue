@@ -10,6 +10,7 @@ const emit = defineEmits<{
   'update:modelValue': [value: string]
   'update:googlePlaceId': [value: string]
   placeSelected: [value: { city: string; state: string }]
+  placeCleared: []
 }>()
 
 const apiKey = useRuntimeConfig().public.googleMapsApiKey
@@ -48,6 +49,7 @@ function onInput(value: string | number) {
   const text = String(value)
   input.value = text
   emit('update:modelValue', text)
+  if (props.googlePlaceId) emit('placeCleared')
   emit('update:googlePlaceId', '')
   clearTimeout(searchTimer)
   suggestions.value = []

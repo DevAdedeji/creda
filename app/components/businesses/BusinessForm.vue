@@ -8,6 +8,7 @@ import {
 import LocationInput from '@/components/businesses/LocationInput.vue'
 import BusinessHoursEditor from '@/components/businesses/BusinessHoursEditor.vue'
 import { apiErrorMessage } from '@/utils/apiError'
+import { matchingNigeriaState, nigeriaStates } from '~~/shared/nigeriaStates'
 
 const props = withDefaults(
   defineProps<{
@@ -56,12 +57,24 @@ const categoryError = ref('')
 const hoursError = ref('')
 const mediaError = ref('')
 const uploading = ref<'logo' | 'cover' | 'gallery' | null>(null)
+const customState = ref(false)
 const uploadedProofs = new Map<string, string>()
 const locationRequired = computed(() => draft.operationMode !== 'online')
 const selectedCategory = computed<BusinessCategory | undefined>({
   get: () => draft.category || undefined,
   set: (value) => {
     draft.category = value ?? ''
+  },
+})
+const stateItems = [
+  ...nigeriaStates.map((state) => ({ label: state, value: state })),
+  { label: 'Another state or region', value: 'other' },
+]
+const selectedState = computed<string | undefined>({
+  get: () => (customState.value ? 'other' : matchingNigeriaState(draft.state)),
+  set: (value) => {
+    customState.value = value === 'other'
+    draft.state = customState.value ? '' : (value ?? '')
   },
 })
 const modeChoices = [
@@ -83,8 +96,15 @@ const showAppStores = computed(
   () => draft.operationMode !== 'physical' || Boolean(draft.appStoreUrl || draft.playStoreUrl),
 )
 function onPlaceSelected(place: { city: string; state: string }) {
-  if (place.city) draft.city = place.city
-  if (place.state) draft.state = place.state
+  draft.city = place.city
+  const state = matchingNigeriaState(place.state)
+  draft.state = state ?? place.state
+  customState.value = Boolean(place.state && !state)
+}
+function onPlaceCleared() {
+  draft.city = ''
+  draft.state = ''
+  customState.value = false
 }
 watch(
   () => props.initial,
@@ -98,6 +118,8 @@ watch(
         galleryUrls: [...value.galleryUrls],
         mediaProofs: [...value.mediaProofs],
       })
+      customState.value = Boolean(value.state && !matchingNigeriaState(value.state))
+      draft.state = matchingNigeriaState(value.state) ?? value.state
       servicesText.value = value.services.join('\n')
     }
   },
@@ -484,10 +506,28 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
           <p class="mt-1 text-sm text-[#657069]">
             {{
               locationRequired
-                ? 'Add the city and state for local discovery. Choose a Google Maps suggestion if one appears.'
+                ? 'Start with an address or area. Choosing a Google Maps suggestion fills in the city and state.'
                 : 'Online businesses can add a city and state to appear in local searches.'
             }}
           </p>
+          <UFormField
+            v-if="locationRequired"
+            label="Address or area"
+            name="location"
+            required
+            class="mt-5"
+          >
+            <LocationInput
+              v-model="draft.location"
+              v-model:google-place-id="draft.googlePlaceId"
+              :required="true"
+              @place-selected="onPlaceSelected"
+              @place-cleared="onPlaceCleared"
+            />
+            <p v-if="locationError" role="alert" class="mt-2 text-sm text-red-700">
+              {{ locationError }}
+            </p>
+          </UFormField>
           <div class="mt-5 grid gap-5 sm:grid-cols-2">
             <UFormField label="City" name="city" :required="locationRequired">
               <UInput
@@ -502,12 +542,24 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
               />
             </UFormField>
             <UFormField label="State" name="state" :required="locationRequired">
-              <UInput
-                v-model="draft.state"
+              <USelectMenu
+                v-model="selectedState"
+                :items="stateItems"
+                value-key="value"
+                :search-input="{ placeholder: 'Find a state' }"
                 name="state"
-                placeholder="e.g. Lagos State"
-                :maxlength="100"
+                placeholder="Choose a state"
                 class="w-full"
+                size="xl"
+                :ui="fieldUi"
+              />
+              <UInput
+                v-if="customState"
+                v-model="draft.state"
+                name="customState"
+                placeholder="Enter a state or region"
+                :maxlength="100"
+                class="mt-2 w-full"
                 size="xl"
                 :ui="fieldUi"
                 :required="locationRequired"
@@ -515,23 +567,6 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
             </UFormField>
           </div>
           <p v-if="areaError" role="alert" class="mt-2 text-sm text-red-700">{{ areaError }}</p>
-          <UFormField
-            v-if="locationRequired"
-            label="Address or area"
-            name="location"
-            required
-            class="mt-5"
-          >
-            <LocationInput
-              v-model="draft.location"
-              v-model:google-place-id="draft.googlePlaceId"
-              :required="true"
-              @place-selected="onPlaceSelected"
-            />
-            <p v-if="locationError" role="alert" class="mt-2 text-sm text-red-700">
-              {{ locationError }}
-            </p>
-          </UFormField>
         </div>
       </div>
     </section>

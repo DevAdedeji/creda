@@ -10,6 +10,7 @@ import {
   type BusinessCategory,
   type OperationMode,
 } from '~~/shared/businesses'
+import { otherStateFilterValue } from '~~/shared/nigeriaStates'
 
 const canonicalUrl = useCanonicalUrl('/explore')
 const socialImage = useCanonicalUrl('/og-image.png')
@@ -167,7 +168,7 @@ function applyFilters() {
       q: search.value.trim() || undefined,
       category: category.value.length ? category.value : undefined,
       city: city.value.trim() || undefined,
-      state: state.value.trim() || undefined,
+      state: state.value === otherStateFilterValue ? undefined : state.value.trim() || undefined,
       operationMode: operationMode.value.length ? operationMode.value : undefined,
       sort: sort.value === 'relevance' ? undefined : sort.value,
     },

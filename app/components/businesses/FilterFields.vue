@@ -6,6 +6,7 @@ import {
   type BusinessCategory,
   type OperationMode,
 } from '~~/shared/businesses'
+import { matchingNigeriaState, nigeriaStates, otherStateFilterValue } from '~~/shared/nigeriaStates'
 
 const search = defineModel<string>('search', { required: true })
 const category = defineModel<BusinessCategory[]>('category', { required: true })
@@ -15,6 +16,27 @@ const operationMode = defineModel<OperationMode[]>('operationMode', { required: 
 
 const categoryItems = [...businessCategories]
 const modeItems = [...operationModes]
+const allStateFilterValue = '__all_states__'
+const stateItems = [
+  { label: 'All states', value: allStateFilterValue },
+  ...nigeriaStates.map((name) => ({ label: name, value: name })),
+  { label: 'Another state or region', value: otherStateFilterValue },
+]
+const selectedState = computed<string>({
+  get: () =>
+    state.value
+      ? (matchingNigeriaState(state.value) ?? otherStateFilterValue)
+      : allStateFilterValue,
+  set: (value) => {
+    state.value = value === allStateFilterValue ? '' : value
+  },
+})
+const customState = computed<string>({
+  get: () => (state.value === otherStateFilterValue ? '' : state.value),
+  set: (value) => {
+    state.value = value || otherStateFilterValue
+  },
+})
 const categorySummary = computed(() =>
   category.value.length === 1
     ? categoryItems.find((item) => item.value === category.value[0])?.label
@@ -77,11 +99,21 @@ const modeSummary = computed(() =>
       <UInput v-model="city" name="city" placeholder="Any city" class="w-full" :ui="authInputUi" />
     </UFormField>
     <UFormField label="State" name="state">
-      <UInput
-        v-model="state"
+      <USelectMenu
+        v-model="selectedState"
+        :items="stateItems"
+        value-key="value"
+        :search-input="{ placeholder: 'Find a state' }"
         name="state"
-        placeholder="Any state"
         class="w-full"
+        :ui="authInputUi"
+      />
+      <UInput
+        v-if="selectedState === otherStateFilterValue"
+        v-model="customState"
+        name="customState"
+        placeholder="Enter a state or region"
+        class="mt-2 w-full"
         :ui="authInputUi"
       />
     </UFormField>
