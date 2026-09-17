@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import BusinessCard from '@/components/businesses/BusinessCard.vue'
 import FilterFields from '@/components/businesses/FilterFields.vue'
+import { authClient } from '~~/lib/auth-client'
 import {
   businessCategories,
   operationModes,
@@ -29,17 +30,17 @@ useHead({ link: [{ rel: 'canonical', href: canonicalUrl }] })
 const route = useRoute()
 const filtersOpen = ref(false)
 const search = ref(String(route.query.q ?? ''))
-const category = ref<BusinessCategory | 'all'>(
-  businessCategories.some((item) => item.value === route.query.category)
-    ? (route.query.category as BusinessCategory)
-    : 'all',
-)
+function selectedValues<T extends string>(value: unknown, options: readonly { value: T }[]): T[] {
+  const values = Array.isArray(value) ? value : typeof value === 'string' ? [value] : []
+  return [
+    ...new Set(values.filter((item): item is T => options.some((option) => option.value === item))),
+  ]
+}
+const category = ref<BusinessCategory[]>(selectedValues(route.query.category, businessCategories))
 const city = ref(String(route.query.city ?? ''))
 const state = ref(String(route.query.state ?? ''))
-const operationMode = ref<OperationMode | 'all'>(
-  operationModes.some((item) => item.value === route.query.operationMode)
-    ? (route.query.operationMode as OperationMode)
-    : 'all',
+const operationMode = ref<OperationMode[]>(
+  selectedValues(route.query.operationMode, operationModes),
 )
 const sortOptions = [
   { label: 'Best match', value: 'relevance' },
@@ -55,31 +56,79 @@ const sort = ref<DirectorySort>(
 )
 const apiQuery = computed(() => ({
   q: typeof route.query.q === 'string' ? route.query.q : undefined,
-  category: typeof route.query.category === 'string' ? route.query.category : undefined,
+  category: route.query.category ?? undefined,
   location: typeof route.query.location === 'string' ? route.query.location : undefined,
   city: typeof route.query.city === 'string' ? route.query.city : undefined,
   state: typeof route.query.state === 'string' ? route.query.state : undefined,
-  operationMode:
-    typeof route.query.operationMode === 'string' ? route.query.operationMode : undefined,
+  operationMode: route.query.operationMode ?? undefined,
   sort: typeof route.query.sort === 'string' ? route.query.sort : undefined,
   page: typeof route.query.page === 'string' ? route.query.page : undefined,
 }))
 const { data, status, error, refresh } = await useFetch<BusinessListResponse>('/api/businesses', {
   query: apiQuery,
 })
+const { data: session } = await authClient.useSession(useFetch)
+const visibleIds = computed(() =>
+  session.value?.user.emailVerified
+    ? (data.value?.items.map((item) => item.id).join(',') ?? '')
+    : '',
+)
+const {
+  data: savedStatus,
+  status: savedLoadStatus,
+  refresh: refreshSaved,
+} = await useFetch<{ ids: string[] }>('/api/my/saved-businesses/status', {
+  query: computed(() => ({ ids: visibleIds.value || undefined })),
+  immediate: Boolean(visibleIds.value),
+})
+const savedIds = computed(() => new Set(savedStatus.value?.ids ?? []))
+const savingId = ref<string | null>(null)
+const toast = useToast()
+
+async function toggleSaved(item: BusinessListResponse['items'][number]) {
+  if (savingId.value || (session.value?.user.emailVerified && savedLoadStatus.value !== 'success'))
+    return
+  if (!session.value) {
+    await navigateTo({ path: '/login', query: { returnTo: route.fullPath } })
+    return
+  }
+  if (!session.value.user.emailVerified) {
+    toast.add({ title: 'Verify your email to save businesses', color: 'warning' })
+    return
+  }
+  savingId.value = item.id
+  const wasSaved = savedIds.value.has(item.id)
+  try {
+    const result = await $fetch<{ saved: boolean }>(`/api/my/saved-businesses/${item.id}`, {
+      method: wasSaved ? 'DELETE' : 'PUT',
+    })
+    const next = new Set(savedIds.value)
+    if (result.saved) next.add(item.id)
+    else next.delete(item.id)
+    savedStatus.value = { ids: [...next] }
+    toast.add({
+      title: result.saved ? 'Saved to your businesses' : 'Removed from saved businesses',
+      color: 'success',
+    })
+  } catch {
+    toast.add({
+      title: 'Could not update saved businesses',
+      description: 'Please try again.',
+      color: 'error',
+    })
+  } finally {
+    savingId.value = null
+  }
+}
 
 watch(
   () => route.query,
   () => {
     search.value = String(route.query.q ?? '')
-    category.value = businessCategories.some((item) => item.value === route.query.category)
-      ? (route.query.category as BusinessCategory)
-      : 'all'
+    category.value = selectedValues(route.query.category, businessCategories)
     city.value = String(route.query.city ?? '')
     state.value = String(route.query.state ?? '')
-    operationMode.value = operationModes.some((item) => item.value === route.query.operationMode)
-      ? (route.query.operationMode as OperationMode)
-      : 'all'
+    operationMode.value = selectedValues(route.query.operationMode, operationModes)
     sort.value = sortOptions.some((item) => item.value === route.query.sort)
       ? (route.query.sort as DirectorySort)
       : 'relevance'
@@ -92,10 +141,10 @@ function applyFilters() {
     path: '/businesses',
     query: {
       q: search.value.trim() || undefined,
-      category: category.value === 'all' ? undefined : category.value,
+      category: category.value.length ? category.value : undefined,
       city: city.value.trim() || undefined,
       state: state.value.trim() || undefined,
-      operationMode: operationMode.value === 'all' ? undefined : operationMode.value,
+      operationMode: operationMode.value.length ? operationMode.value : undefined,
       sort: sort.value === 'relevance' ? undefined : sort.value,
     },
   })
@@ -103,10 +152,10 @@ function applyFilters() {
 
 function clearFilters() {
   search.value = ''
-  category.value = 'all'
+  category.value = []
   city.value = ''
   state.value = ''
-  operationMode.value = 'all'
+  operationMode.value = []
   sort.value = 'relevance'
   filtersOpen.value = false
   navigateTo('/businesses')
@@ -225,6 +274,16 @@ function applySort() {
             </div>
           </div>
           <div
+            v-if="session?.user.emailVerified && savedLoadStatus === 'error'"
+            role="alert"
+            class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+          >
+            <span>We couldn’t load your saved businesses.</span>
+            <UButton color="neutral" variant="link" size="sm" @click="refreshSaved()"
+              >Try again</UButton
+            >
+          </div>
+          <div
             v-if="status === 'pending'"
             class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
             aria-label="Loading businesses"
@@ -260,7 +319,18 @@ function applySort() {
             >
           </div>
           <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <BusinessCard v-for="item in data.items" :key="item.id" :business="item" />
+            <BusinessCard
+              v-for="item in data.items"
+              :key="item.id"
+              :business="item"
+              show-save
+              :saved="savedIds.has(item.id)"
+              :save-pending="
+                Boolean(savingId) ||
+                (Boolean(session?.user.emailVerified) && savedLoadStatus !== 'success')
+              "
+              @toggle-save="toggleSaved(item)"
+            />
           </div>
           <div v-if="data && data.total > data.pageSize" class="mt-9">
             <nav

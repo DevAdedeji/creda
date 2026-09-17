@@ -25,7 +25,7 @@ async function remove(id: string) {
   removingId.value = id
   removeError.value = ''
   try {
-    await $fetch(`/api/my/saved-businesses/${id}`, { method: 'DELETE' })
+    await $fetch<{ saved: boolean }>(`/api/my/saved-businesses/${id}`, { method: 'DELETE' })
     if (data.value?.items.length === 1 && page.value > 1) page.value--
     else await refresh()
     toast.add({ title: 'Business removed from saved', color: 'success' })

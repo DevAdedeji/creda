@@ -170,11 +170,21 @@ export const businessSubmissionSchema = z
 
 export const businessListQuerySchema = z.object({
   q: z.string().trim().max(80).default(''),
-  category: z.enum(businessCategoryValues).optional(),
+  category: z
+    .preprocess(
+      (value) => (typeof value === 'string' ? [value] : value),
+      z.array(z.enum(businessCategoryValues)).max(businessCategoryValues.length).default([]),
+    )
+    .transform((values) => [...new Set(values)]),
   location: z.string().trim().max(160).default(''),
   city: z.string().trim().max(100).default(''),
   state: z.string().trim().max(100).default(''),
-  operationMode: z.enum(operationModeValues).optional(),
+  operationMode: z
+    .preprocess(
+      (value) => (typeof value === 'string' ? [value] : value),
+      z.array(z.enum(operationModeValues)).max(operationModeValues.length).default([]),
+    )
+    .transform((values) => [...new Set(values)]),
   sort: z.enum(['relevance', 'top_rated', 'most_reviewed', 'newest']).default('relevance'),
   page: z.coerce.number().int().min(1).max(10000).default(1),
 })

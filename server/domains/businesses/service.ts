@@ -436,7 +436,7 @@ export async function listPublicBusinesses(
     const term = '%' + query.q.replace(/[\\%_]/g, '\\$&') + '%'
     conditions.push(or(ilike(business.name, term), ilike(business.description, term))!)
   }
-  if (query.category) conditions.push(eq(business.category, query.category))
+  if (query.category.length) conditions.push(inArray(business.category, query.category))
   if (query.location) {
     const location = '%' + query.location.replace(/[\\%_]/g, '\\$&') + '%'
     conditions.push(ilike(business.location, location))
@@ -456,7 +456,8 @@ export async function listPublicBusinesses(
       )!,
     )
   }
-  if (query.operationMode) conditions.push(eq(business.operationMode, query.operationMode))
+  if (query.operationMode.length)
+    conditions.push(inArray(business.operationMode, query.operationMode))
   const where = and(...conditions)!
   const rank = query.q
     ? sql<number>`CASE WHEN lower(${business.name}) = ${query.q.toLowerCase()} THEN 0
@@ -577,6 +578,18 @@ export async function isBusinessSaved(userId: string, businessId: string) {
     .where(and(eq(savedBusiness.userId, userId), eq(savedBusiness.businessId, businessId)))
     .limit(1)
   return Boolean(row)
+}
+
+export async function listSavedBusinessIds(
+  userId: string,
+  businessIds: string[],
+): Promise<string[]> {
+  if (!businessIds.length) return []
+  const rows = await db
+    .select({ businessId: savedBusiness.businessId })
+    .from(savedBusiness)
+    .where(and(eq(savedBusiness.userId, userId), inArray(savedBusiness.businessId, businessIds)))
+  return rows.map((row) => row.businessId)
 }
 
 export async function saveBusiness(userId: string, businessId: string) {
