@@ -3,6 +3,7 @@ import BusinessForm from '@/components/businesses/BusinessForm.vue'
 import { apiErrorMessage } from '@/utils/apiError'
 import { authClient } from '~~/lib/auth-client'
 import type { BusinessDraft, ManagedBusiness } from '~~/shared/businesses'
+import { isAvailableBusinessSlugFormat } from '~~/shared/business-slugs'
 
 useSeoMeta({ title: 'Edit your business — Creda', robots: 'noindex, nofollow' })
 const route = useRoute()
@@ -45,6 +46,41 @@ const initial = computed<BusinessDraft | undefined>(() => {
 })
 const submitting = ref(false)
 const errorMessage = ref('')
+const currentSlug = ref('')
+const slugDraft = ref('')
+const savingSlug = ref(false)
+const slugError = ref('')
+const slugSuccess = ref('')
+const proposedSlug = computed(() => slugDraft.value.trim().toLowerCase())
+watch(
+  () => business.value?.slug,
+  (slug) => {
+    if (!slug) return
+    currentSlug.value = slug
+    slugDraft.value = slug
+  },
+  { immediate: true },
+)
+
+async function saveSlug() {
+  if (savingSlug.value || !isAvailableBusinessSlugFormat(proposedSlug.value)) return
+  savingSlug.value = true
+  slugError.value = ''
+  slugSuccess.value = ''
+  try {
+    const updated = await $fetch<ManagedBusiness>(
+      '/api/my/businesses/' + encodeURIComponent(id) + '/slug',
+      { method: 'PATCH', body: { slug: proposedSlug.value } },
+    )
+    currentSlug.value = updated.slug
+    slugDraft.value = updated.slug
+    slugSuccess.value = 'Your new link is live. Older links will still work.'
+  } catch (error) {
+    slugError.value = apiErrorMessage(error, 'We could not update this link. Please try again.')
+  } finally {
+    savingSlug.value = false
+  }
+}
 
 async function submit(draft: BusinessDraft) {
   if (submitting.value) return
@@ -94,8 +130,81 @@ async function submit(draft: BusinessDraft) {
           This listing is unavailable following a content review. Changes are paused until an
           administrator restores it.
         </div>
-        <BusinessForm
+        <section
           v-else
+          class="mb-8 rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-8"
+          aria-labelledby="business-link-heading"
+        >
+          <div class="flex flex-wrap items-start justify-between gap-4">
+            <div>
+              <p class="text-xs font-bold uppercase tracking-[.15em] text-[#58745f]">
+                YOUR BUSINESS PAGE
+              </p>
+              <h2
+                id="business-link-heading"
+                class="mt-2 text-2xl font-semibold tracking-tight text-[#143e32]"
+              >
+                Make your link yours.
+              </h2>
+              <p class="mt-2 text-sm leading-6 text-[#657069]">
+                Share a simple page for your business. Your directory listing uses the same address.
+              </p>
+            </div>
+            <NuxtLink
+              :to="'/' + currentSlug"
+              target="_blank"
+              class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#315b3a] hover:underline"
+              >View page <UIcon name="i-lucide-arrow-up-right"
+            /></NuxtLink>
+          </div>
+          <form
+            class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end"
+            @submit.prevent="saveSlug"
+          >
+            <div class="min-w-0 flex-1">
+              <label for="business-slug" class="mb-2 block text-sm font-semibold text-[#254b36]"
+                >Page address</label
+              >
+              <div
+                class="flex h-12 overflow-hidden rounded-xl border border-[#d9e2d8] focus-within:border-[#4f805c]"
+              >
+                <span class="flex items-center bg-[#f5f8f2] px-3 text-sm text-[#536b57]"
+                  >creda.ng/</span
+                >
+                <input
+                  id="business-slug"
+                  v-model="slugDraft"
+                  type="text"
+                  maxlength="48"
+                  autocomplete="off"
+                  autocapitalize="none"
+                  spellcheck="false"
+                  class="min-w-0 flex-1 bg-white px-3 text-sm text-[#143e32] outline-none"
+                  aria-describedby="business-slug-help"
+                />
+              </div>
+            </div>
+            <UButton
+              type="submit"
+              :loading="savingSlug"
+              :disabled="
+                !isAvailableBusinessSlugFormat(proposedSlug) || proposedSlug === currentSlug
+              "
+              class="!h-12 !rounded-xl !bg-[#143e32] !px-5 !text-white"
+              >Save link</UButton
+            >
+          </form>
+          <p id="business-slug-help" class="mt-3 text-xs leading-5 text-[#708075]">
+            Use 3–48 letters, numbers, or hyphens. Your directory link will be
+            creda.ng/businesses/{{ proposedSlug || currentSlug }}.
+          </p>
+          <p v-if="slugError" class="mt-3 text-sm text-red-700" role="alert">{{ slugError }}</p>
+          <p v-if="slugSuccess" class="mt-3 text-sm text-[#2c6d41]" role="status">
+            {{ slugSuccess }}
+          </p>
+        </section>
+        <BusinessForm
+          v-if="business.status !== 'suspended'"
           :initial="initial"
           :submitting="submitting"
           :error="errorMessage"

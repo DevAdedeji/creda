@@ -196,6 +196,18 @@ export const business = pgTable(
   ],
 )
 
+export const businessSlug = pgTable(
+  'business_slug',
+  {
+    slug: text('slug').primaryKey(),
+    businessId: text('business_id')
+      .notNull()
+      .references(() => business.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index('business_slug_business_idx').on(table.businessId)],
+)
+
 export const businessImageUpload = pgTable(
   'business_image_upload',
   {

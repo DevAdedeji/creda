@@ -4,6 +4,7 @@ import {
   businessLinkError,
   operationModeValues,
 } from '~~/shared/businesses'
+import { isAvailableBusinessSlugFormat } from '~~/shared/business-slugs'
 
 const cleanText = (min: number, max: number) =>
   z
@@ -187,6 +188,12 @@ export const businessListQuerySchema = z.object({
     .transform((values) => [...new Set(values)]),
   sort: z.enum(['relevance', 'top_rated', 'most_reviewed', 'newest']).default('relevance'),
   page: z.coerce.number().int().min(1).max(10000).default(1),
+})
+
+export const businessSlugSchema = z.object({
+  slug: z.string().trim().toLowerCase().refine(isAvailableBusinessSlugFormat, {
+    message: 'Use 3–48 letters, numbers, or hyphens. Some names are reserved.',
+  }),
 })
 
 export const reviewBusinessSchema = z.discriminatedUnion('decision', [

@@ -20,6 +20,9 @@ const {
   status,
   error,
 } = await useFetch<PublicBusiness>('/api/businesses/' + encodeURIComponent(slug))
+if (business.value && business.value.slug !== slug) {
+  await navigateTo('/businesses/' + encodeURIComponent(business.value.slug), { redirectCode: 301 })
+}
 if (import.meta.server && (error.value || !business.value)) {
   setResponseStatus(error.value && error.value.statusCode !== 404 ? 500 : 404)
 }
@@ -244,9 +247,9 @@ const destinations = computed(() => {
               v-if="business.coverUrl"
               :src="business.coverUrl"
               :alt="`${business.name} cover image`"
-              sizes="100vw xl:90vw"
               width="1920"
               height="384"
+              densities="x1"
               format="webp"
               class="size-full object-cover"
             />
@@ -376,7 +379,6 @@ const destinations = computed(() => {
                     :src="url"
                     :alt="`${business.name} gallery photo ${index + 1}`"
                     loading="lazy"
-                    sizes="50vw sm:256px"
                     width="256"
                     height="256"
                     format="webp"

@@ -32,9 +32,11 @@ export default defineEventHandler(async (event) => {
 
   setSitemapHeaders(event)
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${listings
-    .map(
-      ({ slug, updatedAt }) =>
-        `<url><loc>${escapeXml(new URL(`/businesses/${encodeURIComponent(slug)}`, productionOrigin).toString())}</loc><lastmod>${updatedAt.toISOString()}</lastmod></url>`,
+    .flatMap(({ slug, updatedAt }) =>
+      [`/${encodeURIComponent(slug)}`, `/businesses/${encodeURIComponent(slug)}`].map(
+        (path) =>
+          `<url><loc>${escapeXml(new URL(path, productionOrigin).toString())}</loc><lastmod>${updatedAt.toISOString()}</lastmod></url>`,
+      ),
     )
     .join('')}</urlset>`
 })

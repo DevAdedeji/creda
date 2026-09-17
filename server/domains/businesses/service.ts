@@ -3,6 +3,7 @@ import { and, asc, desc, eq, ilike, inArray, isNull, ne, or, sql, type SQL } fro
 import { db } from '~~/lib/db'
 import {
   business,
+  businessSlug,
   businessImageUpload,
   businessModeration,
   businessReview,
@@ -207,6 +208,7 @@ export async function createBusiness(
           normalizedLocation: normalizedKey(input.location || 'online'),
         })
         .returning()
+      await tx.insert(businessSlug).values({ slug: row!.slug, businessId: row!.id })
       return { row: row!, isFirstBusiness: !existingBusiness }
     })
     return { ...toManaged(created.row), isFirstBusiness: created.isFirstBusiness }
@@ -445,12 +447,77 @@ export async function reviewBusiness(
 }
 
 export async function getPublicBusiness(slug: string): Promise<PublicBusiness | null> {
-  const [row] = await db
+  const [current] = await db
     .select()
     .from(business)
     .where(and(eq(business.slug, slug), eq(business.status, 'approved')))
     .limit(1)
-  return row ? toPublic(row) : null
+  if (current) return toPublic(current)
+
+  const [row] = await db
+    .select({ business })
+    .from(businessSlug)
+    .innerJoin(business, eq(businessSlug.businessId, business.id))
+    .where(and(eq(businessSlug.slug, slug), eq(business.status, 'approved')))
+    .limit(1)
+  return row ? toPublic(row.business) : null
+}
+
+export async function updateBusinessSlug(
+  id: string,
+  ownerUserId: string,
+  slug: string,
+): Promise<ManagedBusiness> {
+  try {
+    return await db.transaction(async (tx) => {
+      const [current] = await tx
+        .select()
+        .from(business)
+        .where(and(eq(business.id, id), eq(business.ownerUserId, ownerUserId)))
+        .limit(1)
+        .for('update')
+      if (!current) throw new BusinessDomainError('not_found', 'Business not found.')
+      if (current.status === 'suspended') {
+        throw new BusinessDomainError(
+          'not_editable',
+          'This listing is unavailable while it is under review.',
+        )
+      }
+      if (current.slug === slug) return toManaged(current)
+
+      // A listing made by an older app instance during deployment may not be backfilled yet.
+      const [previous] = await tx
+        .select({ businessId: businessSlug.businessId })
+        .from(businessSlug)
+        .where(eq(businessSlug.slug, current.slug))
+        .limit(1)
+      if (previous && previous.businessId !== id) {
+        throw new BusinessDomainError('duplicate', 'This business link is already in use.')
+      }
+      if (!previous) await tx.insert(businessSlug).values({ slug: current.slug, businessId: id })
+
+      const [claimed] = await tx
+        .select({ businessId: businessSlug.businessId })
+        .from(businessSlug)
+        .where(eq(businessSlug.slug, slug))
+        .limit(1)
+      if (claimed && claimed.businessId !== id) {
+        throw new BusinessDomainError('duplicate', 'This link is already taken.')
+      }
+      if (!claimed) await tx.insert(businessSlug).values({ slug, businessId: id })
+      const [updated] = await tx
+        .update(business)
+        .set({ slug, updatedAt: sql`now()` })
+        .where(eq(business.id, id))
+        .returning()
+      return toManaged(updated!)
+    })
+  } catch (error) {
+    if (isUniqueViolation(error)) {
+      throw new BusinessDomainError('duplicate', 'This link is already taken.')
+    }
+    throw error
+  }
 }
 
 export async function listPublicBusinesses(
