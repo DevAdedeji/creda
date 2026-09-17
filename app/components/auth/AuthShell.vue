@@ -1,11 +1,27 @@
+<script setup lang="ts">
+const formPanel = ref<HTMLElement | null>(null)
+
+function scrollFormFromAnywhere(event: WheelEvent) {
+  const panel = formPanel.value
+  if (!panel || panel.contains(event.target as Node) || window.innerWidth < 1024) return
+
+  event.preventDefault()
+  const unit = event.deltaMode === 1 ? 16 : event.deltaMode === 2 ? panel.clientHeight : 1
+  panel.scrollBy({ top: event.deltaY * unit, left: event.deltaX * unit })
+}
+</script>
+
 <template>
-  <div class="min-h-screen bg-[#edf2e9] text-[#172f27] lg:p-3">
+  <div
+    class="min-h-screen bg-[#edf2e9] text-[#172f27] lg:h-dvh lg:min-h-0 lg:overflow-hidden lg:p-3"
+    @wheel="scrollFormFromAnywhere"
+  >
     <main
-      class="mx-auto grid min-h-screen w-full max-w-[1920px] lg:min-h-[calc(100vh-24px)] lg:grid-cols-[minmax(0,1fr)_minmax(480px,.92fr)] lg:gap-3 xl:w-[90%]"
+      class="mx-auto grid min-h-screen w-full max-w-[1920px] lg:h-full lg:min-h-0 lg:grid-cols-[minmax(0,1fr)_minmax(480px,.92fr)] lg:gap-3 xl:w-[90%]"
       aria-label="Creda account access"
     >
       <aside
-        class="relative hidden min-h-[720px] flex-col overflow-hidden rounded-[28px] bg-[#143e32] p-10 text-white lg:flex xl:p-14"
+        class="relative hidden min-h-[720px] flex-col overflow-hidden rounded-[28px] bg-[#143e32] p-10 text-white lg:flex lg:h-full lg:min-h-0 xl:p-14"
       >
         <NuxtImg
           src="/images/business-owners.png"
@@ -32,7 +48,7 @@
             >creda<span class="-ml-2 text-[#d8f36a]">.</span>
           </NuxtLink>
         </div>
-        <div class="relative z-10 my-auto max-w-[550px] py-20">
+        <div class="relative z-10 my-auto max-w-[550px] py-[clamp(1.5rem,5vh,5rem)]">
           <div
             class="mb-7 inline-flex items-center gap-2 rounded-full border border-white/25 bg-white/10 px-3.5 py-2 text-[11px] font-bold tracking-[.16em] text-[#e5f1dd] backdrop-blur-sm"
           >
@@ -63,7 +79,8 @@
       </aside>
 
       <section
-        class="flex min-h-screen flex-col bg-[#fcfcf8] px-5 py-6 sm:px-10 lg:min-h-0 lg:rounded-[28px] lg:bg-white lg:px-12 lg:py-9 xl:px-16"
+        ref="formPanel"
+        class="flex min-h-screen flex-col bg-[#fcfcf8] px-5 py-6 sm:px-10 lg:h-full lg:min-h-0 lg:overflow-y-auto lg:overscroll-contain lg:rounded-[28px] lg:bg-white lg:px-12 lg:py-9 lg:[scrollbar-width:none] lg:[&::-webkit-scrollbar]:hidden xl:px-16"
       >
         <div class="flex items-center justify-between gap-4">
           <div class="lg:hidden"><LandingLogo /></div>
