@@ -20,6 +20,7 @@
     "@fontsource-variable/dm-sans": "^5.3.0",
     "@googlemaps/js-api-loader": "^2.1.1",
     "@iconify-json/lucide": "^1.2.133",
+    "@nuxt/image": "^2.1.0",
     "@nuxt/ui": "^4.11.1",
     "better-auth": "^1.7.5",
     "drizzle-orm": "^0.45.2",

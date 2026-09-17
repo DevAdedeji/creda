@@ -12,14 +12,14 @@ const categoryLabel = (value: BusinessListItem['category']) =>
     class="group flex h-full flex-col rounded-2xl border border-[#dfe6dc] bg-white p-6 transition duration-200 hover:-translate-y-1 hover:border-[#b9cdb4] hover:shadow-[0_16px_40px_#143e3212]"
   >
     <div class="flex items-start justify-between gap-4">
-      <img
+      <NuxtImg
         v-if="business.logoUrl"
         :src="business.logoUrl"
         alt=""
         width="60"
         height="60"
         loading="lazy"
-        referrerpolicy="no-referrer"
+        format="webp"
         class="size-15 rounded-xl border border-[#e0e7db] object-cover"
       />
       <span

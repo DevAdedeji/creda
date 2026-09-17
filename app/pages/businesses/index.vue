@@ -9,10 +9,22 @@ import {
   type BusinessType,
 } from '~~/shared/businesses'
 
+const canonicalUrl = useCanonicalUrl('/businesses')
+const socialImage = useCanonicalUrl('/og-image.png')
+
 useSeoMeta({
   title: 'Explore businesses — Creda',
   description: 'Find businesses worth knowing, starting in Nigeria.',
+  ogTitle: 'Explore businesses — Creda',
+  ogDescription: 'Find businesses worth knowing, starting in Nigeria.',
+  ogUrl: canonicalUrl,
+  ogImage: socialImage,
+  ogImageAlt: 'Discover businesses on Creda',
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterImage: socialImage,
 })
+useHead({ link: [{ rel: 'canonical', href: canonicalUrl }] })
 
 const route = useRoute()
 const filtersOpen = ref(false)

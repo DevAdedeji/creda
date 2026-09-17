@@ -1,4 +1,7 @@
 <script setup lang="ts">
+const canonicalUrl = useCanonicalUrl('/')
+const socialImage = useCanonicalUrl('/og-image.png')
+
 useSeoMeta({
   title: 'Creda — Find businesses worth knowing',
   description:
@@ -6,7 +9,14 @@ useSeoMeta({
   ogTitle: 'Creda — Find businesses worth knowing',
   ogDescription:
     'A little context. A lot more confidence. Discover businesses and customer experiences on Creda.',
+  ogUrl: canonicalUrl,
+  ogImage: socialImage,
+  ogImageAlt: 'Creda — Find businesses worth knowing',
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterImage: socialImage,
 })
+useHead({ link: [{ rel: 'canonical', href: canonicalUrl }] })
 
 import BusinessCard from '@/components/businesses/BusinessCard.vue'
 import type { BusinessListResponse } from '~~/shared/businesses'
@@ -332,12 +342,14 @@ function searchBusinesses() {
         <div
           class="relative overflow-hidden rounded-xl bg-[#dfe9d7] min-h-[400px] max-md:min-h-[300px]"
         >
-          <img
+          <NuxtImg
             class="absolute inset-0 h-full w-full object-cover"
             src="/images/business-owners.png"
             alt="Two creative business owners collaborating in a bright design studio"
             width="1536"
             height="1024"
+            sizes="100vw lg:50vw"
+            format="webp"
             loading="lazy"
           />
           <div

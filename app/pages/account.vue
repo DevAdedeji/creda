@@ -115,14 +115,14 @@ const recentBusinesses = computed(() => owned.value?.items.slice(0, 2) ?? [])
                 "
                 class="group flex items-center gap-4 py-4"
               >
-                <img
+                <NuxtImg
                   v-if="item.logoUrl"
                   :src="item.logoUrl"
                   alt=""
-                  referrerpolicy="no-referrer"
                   class="size-12 rounded-xl border border-[#e1e7dc] object-cover"
                   width="48"
                   height="48"
+                  format="webp"
                 />
                 <span
                   v-else

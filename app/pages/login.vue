@@ -7,6 +7,7 @@ import { authClient } from '~~/lib/auth-client'
 useSeoMeta({
   title: 'Log in — Creda',
   description: 'Log in to Creda with your email or Google account.',
+  robots: 'noindex, nofollow',
 })
 
 const { data: session } = await authClient.useSession(useFetch)

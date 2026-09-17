@@ -9,6 +9,8 @@ import {
 const route = useRoute()
 const googleMapsApiKey = useRuntimeConfig().public.googleMapsApiKey
 const slug = String(route.params.slug)
+const canonicalUrl = useCanonicalUrl('/businesses/' + encodeURIComponent(slug))
+const defaultSocialImage = useCanonicalUrl('/og-image.png')
 const {
   data: business,
   status,
@@ -18,7 +20,19 @@ const {
 useSeoMeta({
   title: computed(() => (business.value ? business.value.name + ' — Creda' : 'Business — Creda')),
   description: computed(() => business.value?.description ?? 'Explore this business on Creda.'),
+  ogTitle: computed(() => (business.value ? business.value.name + ' — Creda' : 'Business — Creda')),
+  ogDescription: computed(() => business.value?.description ?? 'Explore this business on Creda.'),
+  ogUrl: canonicalUrl,
+  ogImage: computed(() => business.value?.coverUrl || defaultSocialImage),
+  ogImageAlt: computed(() =>
+    business.value ? `${business.value.name} on Creda` : 'Creda business profile',
+  ),
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterImage: computed(() => business.value?.coverUrl || defaultSocialImage),
+  robots: computed(() => (business.value ? 'index, follow' : 'noindex, follow')),
 })
+useHead({ link: [{ rel: 'canonical', href: canonicalUrl }] })
 
 const categoryLabel = computed(
   () => businessCategories.find((item) => item.value === business.value?.category)?.label,
@@ -82,22 +96,26 @@ const destinations = computed(() => {
       <template v-else>
         <div class="mt-9 overflow-hidden rounded-3xl border border-[#dfe6dc] bg-white">
           <div class="h-40 bg-[#dcebd4] sm:h-56">
-            <img
+            <NuxtImg
               v-if="business.coverUrl"
               :src="business.coverUrl"
               :alt="`${business.name} cover image`"
+              sizes="100vw sm:1152px"
+              width="1152"
+              height="384"
+              format="webp"
               class="size-full object-cover"
             />
           </div>
           <div class="px-6 pb-8 sm:px-10">
             <div class="-mt-9 flex flex-wrap items-end justify-between gap-4">
-              <img
+              <NuxtImg
                 v-if="business.logoUrl"
                 :src="business.logoUrl"
                 alt=""
                 width="80"
                 height="80"
-                referrerpolicy="no-referrer"
+                format="webp"
                 class="size-20 rounded-2xl border-4 border-white bg-white object-cover shadow-sm"
               />
               <span
@@ -152,10 +170,14 @@ const destinations = computed(() => {
                   :aria-label="`View photo ${index + 1} of ${business.name}`"
                   class="group overflow-hidden rounded-xl bg-[#edf3e7]"
                 >
-                  <img
+                  <NuxtImg
                     :src="url"
                     :alt="`${business.name} gallery photo ${index + 1}`"
                     loading="lazy"
+                    sizes="50vw sm:256px"
+                    width="256"
+                    height="256"
+                    format="webp"
                     class="aspect-square w-full object-cover transition duration-300 group-hover:scale-105"
                   />
                 </a>

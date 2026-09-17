@@ -7,12 +7,14 @@
       <aside
         class="relative hidden min-h-[720px] flex-col overflow-hidden rounded-[28px] bg-[#143e32] p-10 text-white lg:flex xl:p-14"
       >
-        <img
+        <NuxtImg
           src="/images/business-owners.png"
           alt=""
           class="absolute inset-0 h-full w-full object-cover object-center opacity-40"
           width="1536"
           height="1024"
+          sizes="lg:50vw xl:800px"
+          format="webp"
         />
         <div
           class="absolute inset-0 bg-gradient-to-b from-[#102f27]/90 via-[#143e32]/70 to-[#09251e]/95"

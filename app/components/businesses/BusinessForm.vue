@@ -264,10 +264,13 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
           <p class="text-sm font-semibold text-[#143e32]">Logo</p>
           <p class="mt-1 text-xs text-[#657069]">A square image works best.</p>
           <div class="mt-4 flex h-28 items-center rounded-xl bg-[#e7f3d8] p-4">
-            <img
+            <NuxtImg
               v-if="draft.logoUrl"
               :src="draft.logoUrl"
               alt="Logo preview"
+              width="80"
+              height="80"
+              format="webp"
               class="size-20 rounded-xl border border-[#dfe6dc] bg-white object-cover"
             />
             <div v-else class="grid size-20 place-items-center rounded-xl text-2xl text-[#315e42]">
@@ -304,10 +307,13 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
         <div class="rounded-2xl border border-[#dfe6dc] bg-[#fbfcf8] p-5">
           <p class="text-sm font-semibold text-[#143e32]">Cover image</p>
           <p class="mt-1 text-xs text-[#657069]">Set the tone at the top of your profile.</p>
-          <img
+          <NuxtImg
             v-if="draft.coverUrl"
             :src="draft.coverUrl"
             alt="Cover preview"
+            width="512"
+            height="112"
+            format="webp"
             class="mt-4 h-28 w-full rounded-xl object-cover"
           />
           <div
@@ -379,9 +385,12 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
             :key="url"
             class="relative overflow-hidden rounded-xl"
           >
-            <img
+            <NuxtImg
               :src="url"
               :alt="`Gallery photo ${index + 1}`"
+              width="256"
+              height="256"
+              format="webp"
               class="aspect-square w-full object-cover"
             />
             <button

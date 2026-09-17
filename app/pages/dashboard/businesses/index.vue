@@ -82,13 +82,14 @@ const { data, status, error, refresh } = await useFetch<{ items: ManagedBusiness
         >
           <div class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
             <div class="flex min-w-0 items-center gap-4">
-              <img
+              <NuxtImg
                 v-if="item.logoUrl"
                 :src="item.logoUrl"
                 alt=""
                 class="size-14 shrink-0 rounded-xl border border-[#e1e7dc] object-cover"
                 width="56"
                 height="56"
+                format="webp"
               />
               <span
                 v-else

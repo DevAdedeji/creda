@@ -1,0 +1,16 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1200" height="630" viewBox="0 0 1200 630">
+  <rect width="1200" height="630" fill="#143e32"/>
+  <circle cx="1080" cy="100" r="330" fill="#1d4e3d"/>
+  <circle cx="1095" cy="110" r="248" fill="none" stroke="#57836a" stroke-opacity=".38" stroke-width="2"/>
+  <circle cx="1095" cy="110" r="170" fill="none" stroke="#57836a" stroke-opacity=".38" stroke-width="2"/>
+  <path d="M775 630c38-185 159-281 360-288" fill="none" stroke="#57836a" stroke-opacity=".3" stroke-width="2"/>
+  <circle cx="1025" cy="498" r="93" fill="#d8f36a"/>
+  <path d="M1025 440v116M967 498h116M984 457l82 82M1066 457l-82 82" stroke="#143e32" stroke-width="12" stroke-linecap="round"/>
+  <rect x="72" y="71" width="46" height="46" rx="23" fill="#d8f36a"/>
+  <path d="M95 82v24M83 94h24M87 86l16 16M103 86l-16 16" stroke="#143e32" stroke-width="3" stroke-linecap="round"/>
+  <text x="132" y="107" fill="#ffffff" font-family="Arial, sans-serif" font-size="48" font-weight="700" letter-spacing="-3">creda<tspan fill="#d8f36a">.</tspan></text>
+  <text x="72" y="270" fill="#d8f36a" font-family="Arial, sans-serif" font-size="22" font-weight="700" letter-spacing="4">GOOD FINDS START HERE</text>
+  <text x="68" y="370" fill="#ffffff" font-family="Arial, sans-serif" font-size="76" font-weight="700" letter-spacing="-4">Find businesses</text>
+  <text x="68" y="458" fill="#ffffff" font-family="Arial, sans-serif" font-size="76" font-weight="700" letter-spacing="-4">worth knowing.</text>
+  <text x="72" y="548" fill="#d5e3d8" font-family="Arial, sans-serif" font-size="25">Discover the details. Hear real experiences.</text>
+</svg>

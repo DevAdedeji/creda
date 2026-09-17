@@ -9,8 +9,17 @@ export default defineNuxtConfig({
     scheduledTasks: { '*/15 * * * *': ['business-images-cleanup'] },
   },
   devtools: { enabled: true },
-  modules: ['@nuxt/ui'],
-  runtimeConfig: { public: { googleMapsApiKey: '' } },
+  modules: ['@nuxt/ui', '@nuxt/image'],
+  image: {
+    domains: ['cdn.byteship.cloud'],
+    format: ['avif', 'webp'],
+  },
+  runtimeConfig: {
+    public: {
+      googleMapsApiKey: '',
+      siteUrl: process.env.NUXT_PUBLIC_SITE_URL || process.env.BETTER_AUTH_URL || '',
+    },
+  },
   css: ['~/assets/css/main.css'],
   ui: { colorMode: false },
   icon: { clientBundle: { scan: true } },

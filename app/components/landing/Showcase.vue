@@ -30,13 +30,13 @@ const categoryLabel = (category: PublicBusiness['category']) =>
     >
       <template v-if="business">
         <div class="flex items-center justify-between gap-3">
-          <img
+          <NuxtImg
             v-if="business.logoUrl"
             :src="business.logoUrl"
             alt=""
             width="60"
             height="60"
-            referrerpolicy="no-referrer"
+            format="webp"
             class="size-[53px] rounded-[13px] object-cover"
           />
           <span
