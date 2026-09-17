@@ -1,7 +1,7 @@
 <template>
   <div class="min-h-screen bg-[#edf2e9] text-[#172f27] lg:p-3">
     <main
-      class="mx-auto grid min-h-screen max-w-[1600px] lg:min-h-[calc(100vh-24px)] lg:grid-cols-[minmax(0,1fr)_minmax(480px,.92fr)] lg:gap-3"
+      class="mx-auto grid min-h-screen w-full max-w-[1920px] lg:min-h-[calc(100vh-24px)] lg:grid-cols-[minmax(0,1fr)_minmax(480px,.92fr)] lg:gap-3 xl:w-[90%]"
       aria-label="Creda account access"
     >
       <aside

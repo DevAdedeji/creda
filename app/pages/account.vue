@@ -43,7 +43,7 @@ const recentBusinesses = computed(() => owned.value?.items.slice(0, 2) ?? [])
           </p>
         </div>
         <NuxtLink
-          to="/businesses"
+          to="/explore"
           class="inline-flex items-center gap-2 rounded-full bg-[#d8f36a] px-5 py-3 text-sm font-bold text-[#143e32] transition hover:bg-[#c8ec52]"
         >
           Explore businesses <UIcon name="i-lucide-arrow-up-right" />

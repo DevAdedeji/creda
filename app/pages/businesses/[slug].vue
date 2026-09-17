@@ -121,9 +121,9 @@ const destinations = computed(() => {
 <template>
   <div class="min-h-screen bg-[#fcfcf8] text-[#172f27]">
     <LandingHeader />
-    <main class="mx-auto w-full px-5 sm:px-8 xl:px-12 max-w-6xl py-10 sm:py-14">
+    <main class="mx-auto w-full max-w-[1920px] px-5 py-10 sm:px-8 sm:py-14 xl:w-[90%] xl:px-0">
       <NuxtLink
-        to="/businesses"
+        to="/explore"
         class="inline-flex items-center gap-2 text-sm font-semibold text-[#47644d] hover:underline"
         ><UIcon name="i-lucide-arrow-left" /> Explore businesses</NuxtLink
       >
@@ -141,7 +141,7 @@ const destinations = computed(() => {
       >
         <h1 class="text-3xl font-semibold text-[#143e32]">Business not found.</h1>
         <p class="mt-3 text-[#657069]">This profile may not be available yet.</p>
-        <UButton to="/businesses" class="mt-6 !rounded-xl !bg-[#143e32] !text-white"
+        <UButton to="/explore" class="mt-6 !rounded-xl !bg-[#143e32] !text-white"
           >Browse businesses</UButton
         >
       </div>
@@ -152,8 +152,8 @@ const destinations = computed(() => {
               v-if="business.coverUrl"
               :src="business.coverUrl"
               :alt="`${business.name} cover image`"
-              sizes="100vw sm:1152px"
-              width="1152"
+              sizes="100vw xl:90vw"
+              width="1920"
               height="384"
               format="webp"
               class="size-full object-cover"

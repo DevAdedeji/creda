@@ -55,10 +55,7 @@ async function remove(id: string) {
             Keep the good finds close while you decide where to go next.
           </p>
         </div>
-        <UButton
-          to="/businesses"
-          icon="i-lucide-compass"
-          class="!rounded-xl !bg-[#143e32] !text-white"
+        <UButton to="/explore" icon="i-lucide-compass" class="!rounded-xl !bg-[#143e32] !text-white"
           >Explore more</UButton
         >
       </div>
@@ -97,7 +94,7 @@ async function remove(id: string) {
         <p class="mx-auto mt-2 max-w-md text-sm leading-6 text-[#657069]">
           Explore the directory and save businesses you want to revisit.
         </p>
-        <UButton to="/businesses" class="mt-6 !rounded-xl !bg-[#143e32] !text-white"
+        <UButton to="/explore" class="mt-6 !rounded-xl !bg-[#143e32] !text-white"
           >Browse businesses</UButton
         >
       </div>

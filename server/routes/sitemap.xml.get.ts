@@ -27,7 +27,7 @@ export default defineEventHandler(async (event) => {
 
   const urls = [
     { path: '/', updatedAt: null },
-    { path: '/businesses', updatedAt: null },
+    { path: '/explore', updatedAt: null },
     ...listings.map(({ slug, updatedAt }) => ({
       path: `/businesses/${encodeURIComponent(slug)}`,
       updatedAt,

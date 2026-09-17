@@ -5,11 +5,7 @@ const { data: session } = await authClient.useSession(useFetch)
 const menuOpen = ref(false)
 const signingOut = ref(false)
 const toast = useToast()
-const links = [
-  { label: 'Explore businesses', href: '/businesses' },
-  { label: 'How it works', href: '/#how-it-works' },
-  { label: 'For businesses', href: '/#for-businesses' },
-]
+const links = [{ label: 'Explore businesses', href: '/explore' }]
 
 async function signOut() {
   if (signingOut.value) return
@@ -54,7 +50,7 @@ const accountMenu = computed(() => [
 <template>
   <header class="sticky top-0 z-30 border-b border-[#e0e5dd] bg-[#fcfcf8]/95 backdrop-blur-lg">
     <div
-      class="mx-auto flex h-[74px] w-full max-w-[1240px] items-center justify-between gap-4 px-5 sm:px-8 lg:h-24 lg:gap-7 xl:px-12"
+      class="mx-auto flex h-[74px] w-full max-w-[1920px] items-center justify-between gap-4 px-5 sm:px-8 lg:h-24 lg:gap-7 xl:w-[90%] xl:px-0"
     >
       <LandingLogo />
       <nav

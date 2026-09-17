@@ -61,7 +61,7 @@ async function signOut() {
         <LandingLogo compact to="/account" />
         <div class="flex items-center gap-3 sm:gap-6">
           <NuxtLink
-            to="/businesses"
+            to="/explore"
             class="hidden items-center gap-2 text-sm font-medium text-[#526555] transition hover:text-[#143e32] sm:inline-flex"
           >
             <UIcon name="i-lucide-arrow-left" /> Explore businesses
@@ -130,7 +130,7 @@ async function signOut() {
           </nav>
           <div class="mt-7 border-t border-[#e9ede5] pt-5">
             <NuxtLink
-              to="/businesses"
+              to="/explore"
               class="flex items-center gap-3 rounded-xl px-3 py-3 text-sm font-medium text-[#5e6f62] hover:bg-[#f1f6ed] hover:text-[#143e32]"
             >
               <UIcon name="i-lucide-arrow-up-right" class="text-lg" /> Explore the directory
@@ -214,7 +214,7 @@ async function signOut() {
             ><UIcon :name="link.icon" class="text-lg" />{{ link.label }}</NuxtLink
           >
           <NuxtLink
-            to="/businesses"
+            to="/explore"
             class="mt-5 flex items-center gap-3 border-t border-[#e8ede5] px-4 py-4 text-sm font-medium text-[#526555]"
             @click="mobileOpen = false"
             ><UIcon name="i-lucide-arrow-up-right" class="text-lg" />Explore the directory</NuxtLink

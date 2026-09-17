@@ -41,7 +41,7 @@ const featuredBusiness = computed(() => directory.value?.items[0] ?? null)
 const visibleBusinesses = computed(() => directory.value?.items.slice(0, 6) ?? [])
 
 function searchBusinesses() {
-  navigateTo({ path: '/businesses', query: query.value.trim() ? { q: query.value.trim() } : {} })
+  navigateTo({ path: '/explore', query: query.value.trim() ? { q: query.value.trim() } : {} })
 }
 </script>
 
@@ -55,7 +55,7 @@ function searchBusinesses() {
     <LandingHeader />
     <main id="main">
       <section
-        class="mx-auto w-full px-5 sm:px-8 xl:px-12 max-w-[1240px] grid grid-cols-1 items-center gap-10 pb-11 pt-[53px] lg:grid-cols-[1.15fr_.9fr] lg:gap-6 lg:pb-[82px] lg:pt-[78px] xl:gap-14"
+        class="mx-auto grid w-full max-w-[1920px] grid-cols-1 items-center gap-10 px-5 pb-11 pt-[53px] sm:px-8 lg:grid-cols-[1.15fr_.9fr] lg:gap-6 lg:pb-[82px] lg:pt-[78px] xl:w-[90%] xl:gap-14 xl:px-0"
         aria-labelledby="hero-heading"
       >
         <div class="">
@@ -125,7 +125,7 @@ function searchBusinesses() {
 
       <div class="bg-[#d8f36a] border-y border-[#c7df62] py-4">
         <div
-          class="mx-auto w-full px-5 sm:px-8 xl:px-12 max-w-[1240px] flex flex-wrap items-center justify-between gap-x-6 gap-y-3 text-sm font-semibold text-[#143e32]"
+          class="mx-auto flex w-full max-w-[1920px] flex-wrap items-center justify-between gap-x-6 gap-y-3 px-5 text-sm font-semibold text-[#143e32] sm:px-8 xl:w-[90%] xl:px-0"
         >
           <span class="inline-flex items-center gap-1.5"
             ><UIcon name="i-lucide-compass" class="text-xl" /> Independent businesses. Fresh
@@ -144,7 +144,7 @@ function searchBusinesses() {
 
       <section
         id="explore"
-        class="mx-auto w-full px-5 sm:px-8 xl:px-12 max-w-[1240px] py-24 max-md:py-16"
+        class="mx-auto w-full max-w-[1920px] px-5 py-24 sm:px-8 max-md:py-16 xl:w-[90%] xl:px-0"
         aria-labelledby="explore-heading"
       >
         <div class="mb-10 flex flex-wrap items-end justify-between gap-5">
@@ -175,8 +175,8 @@ function searchBusinesses() {
             :key="category.label"
             :to="
               category.value
-                ? { path: '/businesses', query: { category: category.value } }
-                : '/businesses'
+                ? { path: '/explore', query: { category: category.value } }
+                : '/explore'
             "
             class="shrink-0 flex items-center gap-2 rounded-full border border-[#d8ded4] bg-white px-4 py-2.5 text-sm font-semibold text-[#3f5146] transition-all hover:-translate-y-0.5 hover:border-[#143e32]"
             ><UIcon :name="category.icon" />{{ category.label }}</NuxtLink
@@ -190,7 +190,7 @@ function searchBusinesses() {
             BUSINESSES ON CREDA</span
           >
           <NuxtLink
-            to="/businesses"
+            to="/explore"
             class="inline-flex items-center gap-1.5 text-[#315b3a] hover:underline"
             >Explore the directory <UIcon name="i-lucide-arrow-right"
           /></NuxtLink>
@@ -262,7 +262,7 @@ function searchBusinesses() {
         class="bg-[#eff2e9] py-24 max-md:py-16"
         aria-labelledby="how-heading"
       >
-        <div class="mx-auto w-full px-5 sm:px-8 xl:px-12 max-w-[1240px]">
+        <div class="mx-auto w-full max-w-[1920px] px-5 sm:px-8 xl:w-[90%] xl:px-0">
           <div class="mb-10 flex flex-wrap items-end justify-between gap-5">
             <div>
               <p
@@ -336,7 +336,7 @@ function searchBusinesses() {
 
       <section
         id="for-businesses"
-        class="mx-auto w-full px-5 sm:px-8 xl:px-12 max-w-[1240px] grid grid-cols-1 lg:grid-cols-2 gap-12 lg:gap-20 items-center py-24 max-md:py-16"
+        class="mx-auto grid w-full max-w-[1920px] grid-cols-1 items-center gap-12 px-5 py-24 sm:px-8 lg:grid-cols-2 lg:gap-20 max-md:py-16 xl:w-[90%] xl:px-0"
         aria-labelledby="owner-heading"
       >
         <div
@@ -405,7 +405,7 @@ function searchBusinesses() {
       </section>
 
       <section
-        class="mx-auto w-full px-5 sm:px-8 xl:px-12 max-w-[1240px] flex flex-wrap items-center justify-between gap-7 rounded-xl bg-[#143e32] px-9 py-12 max-md:px-6 text-white"
+        class="mx-auto flex w-full max-w-[1920px] flex-wrap items-center justify-between gap-7 rounded-xl bg-[#143e32] px-9 py-12 text-white max-md:px-6 xl:w-[90%]"
       >
         <span class="text-5xl text-[#d8f36a]" aria-hidden="true">✳</span>
         <div class="min-w-[245px] flex-1">
@@ -424,7 +424,7 @@ function searchBusinesses() {
       </section>
     </main>
     <footer
-      class="mx-auto w-full px-5 sm:px-8 xl:px-12 max-w-[1240px] flex flex-wrap items-center justify-between gap-5 py-12 text-sm text-[#657069]"
+      class="mx-auto flex w-full max-w-[1920px] flex-wrap items-center justify-between gap-5 px-5 py-12 text-sm text-[#657069] sm:px-8 xl:w-[90%] xl:px-0"
     >
       <LandingLogo compact />
       <p>Good businesses deserve to be known.</p>
