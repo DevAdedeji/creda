@@ -57,10 +57,10 @@ async function toggleSaved() {
   }
 }
 
-async function copyLink(anchor = '') {
+async function copyLink() {
   try {
-    await navigator.clipboard.writeText(canonicalUrl + anchor)
-    toast.add({ title: anchor ? 'Review link copied' : 'Profile link copied', color: 'success' })
+    await navigator.clipboard.writeText(canonicalUrl)
+    toast.add({ title: 'Profile link copied', color: 'success' })
   } catch {
     toast.add({
       title: 'Could not copy the link',
@@ -208,14 +208,6 @@ const destinations = computed(() => {
                 class="!rounded-xl !border-[#d4e0d0] !text-[#234d37]"
                 @click="copyLink()"
                 >Copy profile link</UButton
-              >
-              <UButton
-                color="neutral"
-                variant="outline"
-                icon="i-lucide-message-square-plus"
-                class="!rounded-xl !border-[#d4e0d0] !text-[#234d37]"
-                @click="copyLink('#reviews')"
-                >Invite a review</UButton
               >
             </div>
             <p class="mt-4 max-w-3xl text-base leading-8 text-[#5c6e60]">
