@@ -25,6 +25,7 @@ const initial = computed<BusinessDraft | undefined>(() => {
     businessTypes: [...item.businessTypes],
     operationMode: item.operationMode,
     location: item.location ?? '',
+    googlePlaceId: item.googlePlaceId ?? '',
     websiteUrl: item.websiteUrl ?? '',
     appStoreUrl: item.appStoreUrl ?? '',
     playStoreUrl: item.playStoreUrl ?? '',

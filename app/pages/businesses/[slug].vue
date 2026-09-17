@@ -7,6 +7,7 @@ import {
 } from '~~/shared/businesses'
 
 const route = useRoute()
+const googleMapsApiKey = useRuntimeConfig().public.googleMapsApiKey
 const slug = String(route.params.slug)
 const {
   data: business,
@@ -30,6 +31,14 @@ const typeLabel = computed(() =>
 const modeLabel = computed(
   () => operationModes.find((item) => item.value === business.value?.operationMode)?.label,
 )
+const mapUrl = computed(() => {
+  const placeId = business.value?.googlePlaceId
+  if (!placeId || !googleMapsApiKey) return null
+  const url = new URL('https://www.google.com/maps/embed/v1/place')
+  url.searchParams.set('key', googleMapsApiKey)
+  url.searchParams.set('q', `place_id:${placeId}`)
+  return url.toString()
+})
 const destinations = computed(() => {
   const item = business.value
   if (!item) return []
@@ -117,29 +126,57 @@ const destinations = computed(() => {
         </div>
 
         <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
-          <section
-            class="rounded-2xl border border-[#dfe6dc] bg-white p-7 sm:p-9"
-            aria-labelledby="reviews-heading"
-          >
-            <div class="flex items-center gap-3">
-              <span
-                class="grid size-11 place-items-center rounded-xl bg-[#e8f4da] text-xl text-[#315b3a]"
-                ><UIcon name="i-lucide-message-circle"
-              /></span>
-              <h2 id="reviews-heading" class="text-2xl font-semibold tracking-tight text-[#143e32]">
-                Customer experiences
-              </h2>
-            </div>
-            <div
-              class="mt-9 rounded-xl border border-dashed border-[#cbd9c6] bg-[#f9fbf6] px-6 py-10 text-center"
+          <div class="space-y-6">
+            <section
+              class="rounded-2xl border border-[#dfe6dc] bg-white p-7 sm:p-9"
+              aria-labelledby="reviews-heading"
             >
-              <UIcon name="i-lucide-messages-square" class="text-3xl text-[#799478]" />
-              <h3 class="mt-3 text-lg font-semibold text-[#143e32]">No reviews yet.</h3>
-              <p class="mt-2 text-sm text-[#657069]">
-                Customer experiences will appear here when available.
-              </p>
-            </div>
-          </section>
+              <div class="flex items-center gap-3">
+                <span
+                  class="grid size-11 place-items-center rounded-xl bg-[#e8f4da] text-xl text-[#315b3a]"
+                  ><UIcon name="i-lucide-message-circle"
+                /></span>
+                <h2
+                  id="reviews-heading"
+                  class="text-2xl font-semibold tracking-tight text-[#143e32]"
+                >
+                  Customer experiences
+                </h2>
+              </div>
+              <div
+                class="mt-9 rounded-xl border border-dashed border-[#cbd9c6] bg-[#f9fbf6] px-6 py-10 text-center"
+              >
+                <UIcon name="i-lucide-messages-square" class="text-3xl text-[#799478]" />
+                <h3 class="mt-3 text-lg font-semibold text-[#143e32]">No reviews yet.</h3>
+                <p class="mt-2 text-sm text-[#657069]">
+                  Customer experiences will appear here when available.
+                </p>
+              </div>
+            </section>
+            <section
+              v-if="mapUrl"
+              class="overflow-hidden rounded-2xl border border-[#dfe6dc] bg-white"
+              aria-labelledby="location-heading"
+            >
+              <div class="px-7 py-6 sm:px-9">
+                <h2
+                  id="location-heading"
+                  class="text-2xl font-semibold tracking-tight text-[#143e32]"
+                >
+                  Location
+                </h2>
+                <p class="mt-2 text-sm text-[#657069]">{{ business.location }}</p>
+              </div>
+              <iframe
+                :src="mapUrl"
+                :title="`Map showing ${business.name}`"
+                loading="lazy"
+                referrerpolicy="no-referrer-when-downgrade"
+                allowfullscreen
+                class="h-72 w-full border-0 sm:h-80"
+              />
+            </section>
+          </div>
           <aside
             class="self-start rounded-2xl border border-[#dfe6dc] bg-white p-6"
             aria-labelledby="links-heading"

@@ -53,6 +53,13 @@ export const businessSubmissionSchema = z
       .trim()
       .max(160)
       .transform((value) => value.replace(/\s+/g, ' ') || null),
+    googlePlaceId: z
+      .string()
+      .trim()
+      .max(255)
+      .regex(/^[A-Za-z0-9:_-]*$/, 'Choose a Google Maps suggestion again.')
+      .default('')
+      .transform((value) => value || null),
     websiteUrl: destinationUrl,
     appStoreUrl: destinationUrl,
     playStoreUrl: destinationUrl,
@@ -61,6 +68,13 @@ export const businessSubmissionSchema = z
     logoUrl: destinationUrl,
   })
   .superRefine((value, context) => {
+    if (value.googlePlaceId && !value.location) {
+      context.addIssue({
+        code: 'custom',
+        path: ['googlePlaceId'],
+        message: 'A Google Maps place needs a location.',
+      })
+    }
     if (value.operationMode !== 'online' && (!value.location || value.location.length < 2)) {
       context.addIssue({
         code: 'custom',

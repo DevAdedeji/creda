@@ -6,6 +6,7 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-09-17',
   devtools: { enabled: true },
   modules: ['@nuxt/ui'],
+  runtimeConfig: { public: { googleMapsApiKey: '' } },
   css: ['~/assets/css/main.css'],
   ui: { colorMode: false },
   icon: { clientBundle: { scan: true } },

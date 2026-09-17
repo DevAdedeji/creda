@@ -55,6 +55,7 @@ export interface BusinessDraft {
   businessTypes: BusinessType[]
   operationMode: OperationMode
   location: string
+  googlePlaceId: string
   websiteUrl: string
   appStoreUrl: string
   playStoreUrl: string
@@ -72,6 +73,7 @@ export interface PublicBusiness {
   businessTypes: BusinessType[]
   operationMode: OperationMode
   location: string | null
+  googlePlaceId: string | null
   websiteUrl: string | null
   appStoreUrl: string | null
   playStoreUrl: string | null

@@ -1,0 +1,1 @@
+ALTER TABLE "business" ADD COLUMN "google_place_id" text;

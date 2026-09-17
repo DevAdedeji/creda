@@ -134,6 +134,7 @@ export const business = pgTable(
     businessTypes: businessType('business_types').array().notNull(),
     operationMode: operationMode('operation_mode').notNull(),
     location: text('location'),
+    googlePlaceId: text('google_place_id'),
     normalizedLocation: text('normalized_location').notNull(),
     websiteUrl: text('website_url'),
     appStoreUrl: text('app_store_url'),

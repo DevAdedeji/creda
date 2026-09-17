@@ -6,6 +6,7 @@ import {
   operationModes,
   type BusinessDraft,
 } from '~~/shared/businesses'
+import LocationInput from '@/components/businesses/LocationInput.vue'
 
 const props = withDefaults(
   defineProps<{
@@ -26,6 +27,7 @@ function emptyDraft(): BusinessDraft {
     businessTypes: ['service_business'],
     operationMode: 'physical',
     location: '',
+    googlePlaceId: '',
     websiteUrl: '',
     appStoreUrl: '',
     playStoreUrl: '',
@@ -165,14 +167,9 @@ function submit() {
             />
           </UFormField>
           <UFormField label="Location" name="location" :required="locationRequired">
-            <UInput
+            <LocationInput
               v-model="draft.location"
-              name="location"
-              placeholder="e.g. Yaba, Lagos, Nigeria"
-              :maxlength="160"
-              class="w-full"
-              size="xl"
-              :ui="fieldUi"
+              v-model:google-place-id="draft.googlePlaceId"
               :required="locationRequired"
             />
             <p v-if="locationError" role="alert" class="mt-2 text-sm text-red-700">
