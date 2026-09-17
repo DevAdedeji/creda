@@ -102,9 +102,10 @@ async function continueWithGoogle() {
       </p>
       <UButton
         :loading="sendingVerification"
-        color="neutral"
-        variant="outline"
-        class="mt-8 !h-12 !rounded-xl !border-[#d6e0d4] !font-semibold"
+        color="primary"
+        size="xl"
+        block
+        class="mt-8 !h-12 !justify-center !rounded-xl !bg-[#143e32] !text-[15px] !font-semibold !text-white hover:!bg-[#24563f]"
         @click="resendVerification"
         >Send another link</UButton
       >

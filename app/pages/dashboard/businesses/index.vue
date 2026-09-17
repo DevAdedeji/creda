@@ -80,44 +80,44 @@ const { data, status, error, refresh } = await useFetch<{ items: ManagedBusiness
           :key="item.id"
           class="rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-7"
         >
-          <div class="flex flex-wrap items-start justify-between gap-4">
-            <div class="flex items-center gap-4">
+          <div class="flex flex-col gap-5 md:flex-row md:items-center md:justify-between">
+            <div class="flex min-w-0 items-center gap-4">
               <img
                 v-if="item.logoUrl"
                 :src="item.logoUrl"
                 alt=""
-                class="size-14 rounded-xl border border-[#e1e7dc] object-cover"
+                class="size-14 shrink-0 rounded-xl border border-[#e1e7dc] object-cover"
                 width="56"
                 height="56"
               />
               <span
                 v-else
-                class="grid size-14 place-items-center rounded-xl bg-[#e8f4da] text-xl font-bold text-[#315b3a]"
+                class="grid size-14 shrink-0 place-items-center rounded-xl bg-[#e8f4da] text-xl font-bold text-[#315b3a]"
                 >{{ item.name.charAt(0).toUpperCase() }}</span
               >
-              <div>
+              <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-[#143e32]">{{ item.name }}</h2>
                 <p class="mt-1 text-sm text-[#657069]">{{ item.location || 'Online' }}</p>
               </div>
             </div>
-          </div>
-          <div class="mt-6 flex flex-wrap gap-3 border-t border-[#edf0e9] pt-5">
-            <UButton
-              :to="'/businesses/' + item.slug"
-              color="neutral"
-              variant="outline"
-              class="!rounded-lg"
-              trailing-icon="i-lucide-arrow-up-right"
-              >View public profile</UButton
-            >
-            <UButton
-              :to="'/dashboard/businesses/' + item.id + '/edit'"
-              color="neutral"
-              variant="outline"
-              class="!rounded-lg"
-              trailing-icon="i-lucide-pencil"
-              >Edit listing</UButton
-            >
+            <div class="flex flex-wrap justify-end gap-2 md:ml-auto md:shrink-0">
+              <UButton
+                :to="'/businesses/' + item.slug"
+                color="neutral"
+                variant="outline"
+                class="!rounded-lg"
+                trailing-icon="i-lucide-arrow-up-right"
+                >View public profile</UButton
+              >
+              <UButton
+                :to="'/dashboard/businesses/' + item.id + '/edit'"
+                color="neutral"
+                variant="outline"
+                class="!rounded-lg"
+                trailing-icon="i-lucide-pencil"
+                >Edit listing</UButton
+              >
+            </div>
           </div>
         </article>
       </div>
