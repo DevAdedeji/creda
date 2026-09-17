@@ -78,7 +78,11 @@ async function continueWithGoogle() {
   pending.value = true
   errorMessage.value = ''
   try {
-    const result = await authClient.signIn.social({ provider: 'google', callbackURL: '/account' })
+    const result = await authClient.signIn.social({
+      provider: 'google',
+      callbackURL: '/account',
+      newUserCallbackURL: '/account?signup=google',
+    })
     if (result.error) errorMessage.value = 'Google sign-in could not start. Please try again.'
   } catch {
     errorMessage.value = 'Google sign-in could not start. Please try again.'

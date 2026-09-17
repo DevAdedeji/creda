@@ -2,6 +2,7 @@
 import AuthShell from '@/components/auth/AuthShell.vue'
 import PasswordInput from '@/components/auth/PasswordInput.vue'
 import { authInputUi } from '@/utils/authInputUi'
+import { trackAnalyticsEvent } from '@/utils/analytics'
 import { authClient } from '~~/lib/auth-client'
 
 useSeoMeta({
@@ -24,6 +25,7 @@ const notice = ref('')
 
 async function createAccount() {
   if (pending.value) return
+  trackAnalyticsEvent('signup_attempted', { method: 'email' })
   if (password.value !== confirmPassword.value) {
     errorMessage.value = 'The passwords do not match.'
     return
@@ -41,6 +43,7 @@ async function createAccount() {
       errorMessage.value = 'We could not create your account. Check the details and try again.'
       return
     }
+    trackAnalyticsEvent('signup_completed', { method: 'email' })
     registered.value = true
     password.value = ''
     confirmPassword.value = ''
@@ -72,10 +75,15 @@ async function resendVerification() {
 
 async function continueWithGoogle() {
   if (pending.value) return
+  trackAnalyticsEvent('signup_attempted', { method: 'google' })
   pending.value = true
   errorMessage.value = ''
   try {
-    const result = await authClient.signIn.social({ provider: 'google', callbackURL: '/account' })
+    const result = await authClient.signIn.social({
+      provider: 'google',
+      callbackURL: '/account',
+      newUserCallbackURL: '/account?signup=google',
+    })
     if (result.error) errorMessage.value = 'Google sign-up could not start. Please try again.'
   } catch {
     errorMessage.value = 'Google sign-up could not start. Please try again.'

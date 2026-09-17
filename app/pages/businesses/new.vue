@@ -1,8 +1,9 @@
 <script setup lang="ts">
 import BusinessForm from '@/components/businesses/BusinessForm.vue'
 import { apiErrorMessage } from '@/utils/apiError'
+import { trackAnalyticsEvent } from '@/utils/analytics'
 import { authClient } from '~~/lib/auth-client'
-import type { BusinessDraft, ManagedBusiness } from '~~/shared/businesses'
+import type { BusinessCreationResponse, BusinessDraft } from '~~/shared/businesses'
 
 useSeoMeta({ title: 'List your business — Creda', robots: 'noindex, nofollow' })
 
@@ -17,7 +18,13 @@ async function submit(draft: BusinessDraft) {
   submitting.value = true
   errorMessage.value = ''
   try {
-    await $fetch<ManagedBusiness>('/api/businesses', { method: 'POST', body: draft })
+    const created = await $fetch<BusinessCreationResponse>('/api/businesses', {
+      method: 'POST',
+      body: draft,
+    })
+    const properties = { category: created.category, operation_mode: created.operationMode }
+    trackAnalyticsEvent('business_created', properties)
+    if (created.isFirstBusiness) trackAnalyticsEvent('first_business_created', properties)
     await navigateTo('/dashboard/businesses?submitted=1')
   } catch (error) {
     errorMessage.value = apiErrorMessage(

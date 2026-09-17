@@ -125,6 +125,10 @@ export interface ManagedBusiness extends PublicBusiness {
   updatedAt: string
 }
 
+export interface BusinessCreationResponse extends ManagedBusiness {
+  isFirstBusiness: boolean
+}
+
 export interface ManagedBusinessListResponse {
   items: ManagedBusiness[]
   page: number

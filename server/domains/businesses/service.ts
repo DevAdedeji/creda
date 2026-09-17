@@ -12,6 +12,7 @@ import {
   user,
 } from '~~/lib/db/schema'
 import type {
+  BusinessCreationResponse,
   BusinessListResponse,
   ManagedBusiness,
   ManagedBusinessListResponse,
@@ -178,12 +179,19 @@ async function ensureNotDuplicate(
 export async function createBusiness(
   ownerUserId: string,
   input: BusinessSubmissionInput,
-): Promise<ManagedBusiness> {
+): Promise<BusinessCreationResponse> {
   validateBusinessMedia(ownerUserId, input)
   await ensureNotDuplicate(input)
   const { mediaProofs: _mediaProofs, ...details } = input
   try {
     const created = await db.transaction(async (tx) => {
+      // Serialize this owner's creations so only one listing can be their first.
+      await tx.select({ id: user.id }).from(user).where(eq(user.id, ownerUserId)).for('update')
+      const [existingBusiness] = await tx
+        .select({ id: business.id })
+        .from(business)
+        .where(eq(business.ownerUserId, ownerUserId))
+        .limit(1)
       await assertAttachableImages(tx, ownerUserId, input)
       const [row] = await tx
         .insert(business)
@@ -199,9 +207,9 @@ export async function createBusiness(
           normalizedLocation: normalizedKey(input.location || 'online'),
         })
         .returning()
-      return row!
+      return { row: row!, isFirstBusiness: !existingBusiness }
     })
-    return toManaged(created)
+    return { ...toManaged(created.row), isFirstBusiness: created.isFirstBusiness }
   } catch (error) {
     if (isUniqueViolation(error)) {
       throw new BusinessDomainError('duplicate', 'This business has already been submitted.')

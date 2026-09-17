@@ -1,11 +1,20 @@
 <script setup lang="ts">
 import { authClient } from '~~/lib/auth-client'
+import { trackAnalyticsEvent } from '@/utils/analytics'
 import type { ManagedBusinessListResponse } from '~~/shared/businesses'
 
 useSeoMeta({ title: 'Your account — Creda', robots: 'noindex, nofollow' })
 
 const { data: session } = await authClient.useSession(useFetch)
 if (!session.value) await navigateTo('/login')
+
+const route = useRoute()
+onMounted(() => {
+  if (!session.value || route.query.signup !== 'google') return
+  trackAnalyticsEvent('signup_completed', { method: 'google' })
+  const { signup: _signup, ...query } = route.query
+  void navigateTo({ path: route.path, query }, { replace: true })
+})
 
 const {
   data: owned,
