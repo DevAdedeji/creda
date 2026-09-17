@@ -112,6 +112,7 @@ function monthLabel(month: string): string {
 
 <template>
   <section
+    id="reviews"
     class="rounded-2xl border border-[#dfe6dc] bg-white p-7 sm:p-9"
     aria-labelledby="reviews-heading"
   >
@@ -278,7 +279,12 @@ function monthLabel(month: string): string {
       </p>
     </div>
     <div v-else class="mt-7 divide-y divide-[#e9eee5] border-t border-[#e9eee5]">
-      <article v-for="review in data.reviews" :key="review.id" class="py-6">
+      <article
+        v-for="review in data.reviews"
+        :id="`review-${review.id}`"
+        :key="review.id"
+        class="py-6 scroll-mt-28"
+      >
         <div class="flex flex-wrap items-start justify-between gap-2">
           <div>
             <strong class="text-[#143e32]">{{ review.authorName }}</strong>
@@ -331,6 +337,9 @@ function monthLabel(month: string): string {
               >
             </div>
           </form>
+        </div>
+        <div class="mt-3 flex justify-end">
+          <ReportsDialog :business-id="businessId" :review-id="review.id" label="Report review" />
         </div>
       </article>
     </div>

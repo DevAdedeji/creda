@@ -11,7 +11,15 @@ useSeoMeta({
 })
 
 const { data: session } = await authClient.useSession(useFetch)
-if (session.value) await navigateTo('/account')
+const returnToQuery = useRoute().query.returnTo
+const returnTo =
+  typeof returnToQuery === 'string' &&
+  returnToQuery.startsWith('/') &&
+  !returnToQuery.startsWith('//') &&
+  !returnToQuery.includes('://')
+    ? returnToQuery
+    : '/account'
+if (session.value) await navigateTo(returnTo)
 
 const route = useRoute()
 const email = ref('')
@@ -38,7 +46,7 @@ async function logIn() {
         : 'That email and password combination did not work.'
       return
     }
-    await navigateTo('/account')
+    await navigateTo(returnTo)
   } catch {
     errorMessage.value = 'Something went wrong. Please try again.'
   } finally {

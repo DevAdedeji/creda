@@ -75,6 +75,11 @@ function openDecision(id: string, choice: 'reject' | 'remove') {
         Read each customer experience before it becomes public. Apply the same standard to positive
         and negative reviews.
       </p>
+      <NuxtLink
+        to="/admin/reports"
+        class="mt-5 inline-flex items-center gap-2 text-sm font-semibold text-[#315e42] hover:underline"
+        ><UIcon name="i-lucide-flag" /> View content reports <UIcon name="i-lucide-arrow-up-right"
+      /></NuxtLink>
 
       <div class="mt-8 flex flex-wrap gap-2" role="group" aria-label="Filter reviews by status">
         <UButton

@@ -18,6 +18,7 @@ import {
   businessImageUpload,
   businessModeration,
   businessReview,
+  savedBusiness,
   ownershipDecision,
   ownershipRequest,
   user,
@@ -106,6 +107,9 @@ function toPublic(row: BusinessRow): PublicBusiness {
     businessTypes: row.businessTypes,
     operationMode: row.operationMode,
     location: row.location,
+    serviceArea: row.serviceArea,
+    openingHours: row.openingHours,
+    services: row.services,
     googlePlaceId: row.googlePlaceId,
     websiteUrl: row.websiteUrl,
     appStoreUrl: row.appStoreUrl,
@@ -232,6 +236,12 @@ export async function updateBusiness(
         .limit(1)
         .for('update')
       if (!locked) throw new BusinessDomainError('not_found', 'Business not found.')
+      if (locked.status === 'suspended') {
+        throw new BusinessDomainError(
+          'not_editable',
+          'This listing is unavailable while it is under review.',
+        )
+      }
       if (locked.updatedAt.getTime() !== current.updatedAt.getTime()) {
         throw new BusinessDomainError(
           'not_editable',
@@ -447,13 +457,23 @@ export async function listPublicBusinesses(
     ? sql<number>`CASE WHEN lower(${business.name}) = ${query.q.toLowerCase()} THEN 0
         WHEN lower(${business.name}) LIKE ${query.q.toLowerCase() + '%'} THEN 1 ELSE 2 END`
     : null
+  const reviewCount = sql<number>`(select count(*) from business_review r where r.business_id = ${business.id} and r.status = 'published')`
+  const averageRating = sql<number>`(select avg(r.rating) from business_review r where r.business_id = ${business.id} and r.status = 'published')`
+  const ordering =
+    query.sort === 'top_rated'
+      ? [desc(averageRating), desc(reviewCount), asc(business.name), asc(business.id)]
+      : query.sort === 'most_reviewed'
+        ? [desc(reviewCount), desc(averageRating), asc(business.name), asc(business.id)]
+        : query.sort === 'newest'
+          ? [desc(business.publishedAt), desc(business.createdAt), asc(business.id)]
+          : [...(rank ? [rank] : []), asc(business.name), asc(business.id)]
 
   const [rows, countRows] = await Promise.all([
     db
       .select()
       .from(business)
       .where(where)
-      .orderBy(...(rank ? [rank] : []), asc(business.name), asc(business.id))
+      .orderBy(...ordering)
       .limit(PAGE_SIZE)
       .offset((query.page - 1) * PAGE_SIZE),
     db
@@ -493,4 +513,82 @@ export async function listPublicBusinesses(
     pageSize: PAGE_SIZE,
     total: countRows[0]?.count ?? 0,
   }
+}
+
+export async function listSavedBusinesses(userId: string, page: number) {
+  const where = and(eq(savedBusiness.userId, userId), eq(business.status, 'approved'))!
+  const [rows, counts] = await Promise.all([
+    db
+      .select({ listing: business, savedAt: savedBusiness.createdAt })
+      .from(savedBusiness)
+      .innerJoin(business, eq(savedBusiness.businessId, business.id))
+      .where(where)
+      .orderBy(desc(savedBusiness.createdAt), desc(savedBusiness.id))
+      .limit(PAGE_SIZE)
+      .offset((page - 1) * PAGE_SIZE),
+    db
+      .select({ count: sql<number>`count(*)::int` })
+      .from(savedBusiness)
+      .innerJoin(business, eq(savedBusiness.businessId, business.id))
+      .where(where),
+  ])
+  const ratings = rows.length
+    ? await db
+        .select({
+          businessId: businessReview.businessId,
+          reviewCount: sql<number>`count(*)::int`,
+          averageRating: sql<number>`round(avg(${businessReview.rating})::numeric, 1)::float`,
+        })
+        .from(businessReview)
+        .where(
+          and(
+            inArray(
+              businessReview.businessId,
+              rows.map((row) => row.listing.id),
+            ),
+            eq(businessReview.status, 'published'),
+          ),
+        )
+        .groupBy(businessReview.businessId)
+    : []
+  const byBusiness = new Map(ratings.map((item) => [item.businessId, item]))
+  return {
+    items: rows.map(({ listing, savedAt }) => ({
+      ...toPublic(listing),
+      savedAt: savedAt.toISOString(),
+      averageRating: byBusiness.get(listing.id)?.averageRating ?? null,
+      reviewCount: byBusiness.get(listing.id)?.reviewCount ?? 0,
+    })),
+    page,
+    pageSize: PAGE_SIZE,
+    total: counts[0]?.count ?? 0,
+  }
+}
+
+export async function isBusinessSaved(userId: string, businessId: string) {
+  const [row] = await db
+    .select({ id: savedBusiness.id })
+    .from(savedBusiness)
+    .where(and(eq(savedBusiness.userId, userId), eq(savedBusiness.businessId, businessId)))
+    .limit(1)
+  return Boolean(row)
+}
+
+export async function saveBusiness(userId: string, businessId: string) {
+  const [listing] = await db
+    .select({ id: business.id })
+    .from(business)
+    .where(and(eq(business.id, businessId), eq(business.status, 'approved')))
+    .limit(1)
+  if (!listing) throw new BusinessDomainError('not_found', 'Business not found.')
+  await db
+    .insert(savedBusiness)
+    .values({ id: randomUUID(), userId, businessId })
+    .onConflictDoNothing()
+}
+
+export async function unsaveBusiness(userId: string, businessId: string) {
+  await db
+    .delete(savedBusiness)
+    .where(and(eq(savedBusiness.userId, userId), eq(savedBusiness.businessId, businessId)))
 }

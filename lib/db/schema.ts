@@ -103,7 +103,12 @@ export const accountRelations = relations(account, ({ one }) => ({
 }))
 
 export const businessCategory = pgEnum('business_category', businessCategoryValues)
-export const businessStatus = pgEnum('business_status', ['pending', 'approved', 'rejected'])
+export const businessStatus = pgEnum('business_status', [
+  'pending',
+  'approved',
+  'rejected',
+  'suspended',
+])
 export const ownershipStatus = pgEnum('ownership_status', [
   'unverified',
   'pending',
@@ -135,6 +140,12 @@ export const business = pgTable(
     businessTypes: businessType('business_types').array().notNull(),
     operationMode: operationMode('operation_mode').notNull(),
     location: text('location'),
+    serviceArea: text('service_area'),
+    openingHours: text('opening_hours'),
+    services: text('services')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     googlePlaceId: text('google_place_id'),
     normalizedLocation: text('normalized_location').notNull(),
     websiteUrl: text('website_url'),
@@ -194,6 +205,24 @@ export const businessImageUpload = pgTable(
   (table) => [
     index('business_image_upload_owner_created_idx').on(table.ownerUserId, table.createdAt),
     index('business_image_upload_cleanup_idx').on(table.status, table.deleteAfter),
+  ],
+)
+
+export const savedBusiness = pgTable(
+  'saved_business',
+  {
+    id: text('id').primaryKey(),
+    userId: text('user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    businessId: text('business_id')
+      .notNull()
+      .references(() => business.id, { onDelete: 'cascade' }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('saved_business_user_business_unique').on(table.userId, table.businessId),
+    index('saved_business_user_created_idx').on(table.userId, table.createdAt),
   ],
 )
 
@@ -284,6 +313,65 @@ export const reviewReply = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   () => [check('review_reply_body_length', sql.raw('length(trim(body)) BETWEEN 2 AND 1000'))],
+)
+
+export const reportStatus = pgEnum('report_status', ['open', 'dismissed', 'actioned', 'restored'])
+
+export const contentReport = pgTable(
+  'content_report',
+  {
+    id: text('id').primaryKey(),
+    reporterUserId: text('reporter_user_id')
+      .notNull()
+      .references(() => user.id),
+    businessId: text('business_id')
+      .notNull()
+      .references(() => business.id),
+    reviewId: text('review_id').references(() => businessReview.id),
+    reason: text('reason').notNull(),
+    details: text('details'),
+    status: reportStatus('status').notNull().default('open'),
+    decisionReason: text('decision_reason'),
+    reviewedByUserId: text('reviewed_by_user_id').references(() => user.id),
+    reviewedAt: timestamp('reviewed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('content_report_open_business_unique')
+      .on(table.reporterUserId, table.businessId)
+      .where(sql`status = 'open' AND review_id IS NULL`),
+    uniqueIndex('content_report_open_review_unique')
+      .on(table.reporterUserId, table.reviewId)
+      .where(sql`status = 'open' AND review_id IS NOT NULL`),
+    index('content_report_status_created_idx').on(table.status, table.createdAt),
+    index('content_report_business_idx').on(table.businessId),
+    index('content_report_review_idx').on(table.reviewId),
+    check(
+      'content_report_details_length',
+      sql.raw('details IS NULL OR length(trim(details)) BETWEEN 10 AND 1000'),
+    ),
+    check(
+      'content_report_reason_allowed',
+      sql.raw("reason IN ('spam', 'misleading', 'abuse', 'conflict_of_interest', 'other')"),
+    ),
+  ],
+)
+
+export const reportDecision = pgTable(
+  'report_decision',
+  {
+    id: text('id').primaryKey(),
+    reportId: text('report_id')
+      .notNull()
+      .references(() => contentReport.id),
+    actorUserId: text('actor_user_id')
+      .notNull()
+      .references(() => user.id),
+    action: text('action').notNull(),
+    reason: text('reason').notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [index('report_decision_report_created_idx').on(table.reportId, table.createdAt)],
 )
 
 export const ownershipRequestStatus = pgEnum('ownership_request_status', [

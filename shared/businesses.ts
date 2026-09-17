@@ -45,7 +45,7 @@ export const operationModes = [
 export type BusinessCategory = (typeof businessCategoryValues)[number]
 export type BusinessType = (typeof businessTypeValues)[number]
 export type OperationMode = (typeof operationModeValues)[number]
-export type BusinessStatus = 'pending' | 'approved' | 'rejected'
+export type BusinessStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
 export type OwnershipStatus = 'unverified' | 'pending' | 'verified' | 'revoked'
 
 export interface BusinessDraft {
@@ -55,6 +55,9 @@ export interface BusinessDraft {
   businessTypes: BusinessType[]
   operationMode: OperationMode
   location: string
+  serviceArea: string
+  openingHours: string
+  services: string[]
   googlePlaceId: string
   websiteUrl: string
   appStoreUrl: string
@@ -76,6 +79,9 @@ export interface PublicBusiness {
   businessTypes: BusinessType[]
   operationMode: OperationMode
   location: string | null
+  serviceArea: string | null
+  openingHours: string | null
+  services: string[]
   googlePlaceId: string | null
   websiteUrl: string | null
   appStoreUrl: string | null
