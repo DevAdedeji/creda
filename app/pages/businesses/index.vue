@@ -40,11 +40,24 @@ const businessType = ref<BusinessType | 'all'>(
     : 'all',
 )
 const location = ref(String(route.query.location ?? ''))
+const sortOptions = [
+  { label: 'Best match', value: 'relevance' },
+  { label: 'Top rated', value: 'top_rated' },
+  { label: 'Most reviewed', value: 'most_reviewed' },
+  { label: 'Newest', value: 'newest' },
+] as const
+type DirectorySort = (typeof sortOptions)[number]['value']
+const sort = ref<DirectorySort>(
+  sortOptions.some((item) => item.value === route.query.sort)
+    ? (route.query.sort as DirectorySort)
+    : 'relevance',
+)
 const apiQuery = computed(() => ({
   q: typeof route.query.q === 'string' ? route.query.q : undefined,
   category: typeof route.query.category === 'string' ? route.query.category : undefined,
   businessType: typeof route.query.businessType === 'string' ? route.query.businessType : undefined,
   location: typeof route.query.location === 'string' ? route.query.location : undefined,
+  sort: typeof route.query.sort === 'string' ? route.query.sort : undefined,
   page: typeof route.query.page === 'string' ? route.query.page : undefined,
 }))
 const { data, status, error, refresh } = await useFetch<BusinessListResponse>('/api/businesses', {
@@ -62,6 +75,9 @@ watch(
       ? (route.query.businessType as BusinessType)
       : 'all'
     location.value = String(route.query.location ?? '')
+    sort.value = sortOptions.some((item) => item.value === route.query.sort)
+      ? (route.query.sort as DirectorySort)
+      : 'relevance'
   },
 )
 
@@ -74,6 +90,7 @@ function applyFilters() {
       category: category.value === 'all' ? undefined : category.value,
       businessType: businessType.value === 'all' ? undefined : businessType.value,
       location: location.value.trim() || undefined,
+      sort: sort.value === 'relevance' ? undefined : sort.value,
     },
   })
 }
@@ -83,6 +100,7 @@ function clearFilters() {
   category.value = 'all'
   businessType.value = 'all'
   location.value = ''
+  sort.value = 'relevance'
   filtersOpen.value = false
   navigateTo('/businesses')
 }
@@ -92,6 +110,17 @@ function pageLink(page: number) {
   if (page === 1) delete query.page
   else query.page = String(page)
   return { path: '/businesses', query }
+}
+
+function applySort() {
+  navigateTo({
+    path: '/businesses',
+    query: {
+      ...route.query,
+      sort: sort.value === 'relevance' ? undefined : sort.value,
+      page: undefined,
+    },
+  })
 }
 </script>
 
@@ -171,6 +200,21 @@ function pageLink(page: number) {
               class="inline-flex self-start items-center gap-2 text-sm font-semibold text-[#315c3c] hover:underline lg:self-auto"
               >List your business <UIcon name="i-lucide-arrow-up-right"
             /></NuxtLink>
+          </div>
+          <div class="mb-6 flex flex-wrap items-center justify-end gap-3">
+            <div class="flex items-center gap-2">
+              <label for="directory-sort" class="text-sm font-semibold text-[#345341]"
+                >Sort by</label
+              >
+              <USelect
+                id="directory-sort"
+                v-model="sort"
+                :items="[...sortOptions]"
+                class="min-w-40"
+                :ui="{ base: '!rounded-lg !border-[#d9e2d8] !ring-0 focus:!ring-0' }"
+                @update:model-value="applySort"
+              />
+            </div>
           </div>
           <div
             v-if="status === 'pending'"

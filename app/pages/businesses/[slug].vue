@@ -5,6 +5,7 @@ import {
   operationModes,
   type PublicBusiness,
 } from '~~/shared/businesses'
+import { authClient } from '~~/lib/auth-client'
 
 const route = useRoute()
 const googleMapsApiKey = useRuntimeConfig().public.googleMapsApiKey
@@ -16,6 +17,58 @@ const {
   status,
   error,
 } = await useFetch<PublicBusiness>('/api/businesses/' + encodeURIComponent(slug))
+const { data: session } = await authClient.useSession(useFetch)
+const { data: saved, status: savedStatus } = await useFetch<{ saved: boolean }>(
+  () => `/api/my/saved-businesses/${business.value?.id}`,
+  { immediate: Boolean(session.value?.user.emailVerified && business.value) },
+)
+const savePending = ref(false)
+const toast = useToast()
+
+async function toggleSaved() {
+  if (!business.value || savePending.value) return
+  if (!session.value) {
+    await navigateTo({ path: '/login', query: { returnTo: route.fullPath } })
+    return
+  }
+  if (!session.value.user.emailVerified) {
+    toast.add({ title: 'Verify your email to save businesses', color: 'warning' })
+    return
+  }
+  savePending.value = true
+  try {
+    const result = await $fetch<{ saved: boolean }>(
+      `/api/my/saved-businesses/${business.value.id}`,
+      { method: saved.value?.saved ? 'DELETE' : 'PUT' },
+    )
+    saved.value = result
+    toast.add({
+      title: result.saved ? 'Saved to your businesses' : 'Removed from saved businesses',
+      color: 'success',
+    })
+  } catch {
+    toast.add({
+      title: 'Could not update saved businesses',
+      description: 'Please try again.',
+      color: 'error',
+    })
+  } finally {
+    savePending.value = false
+  }
+}
+
+async function copyLink(anchor = '') {
+  try {
+    await navigator.clipboard.writeText(canonicalUrl + anchor)
+    toast.add({ title: anchor ? 'Review link copied' : 'Profile link copied', color: 'success' })
+  } catch {
+    toast.add({
+      title: 'Could not copy the link',
+      description: 'Please try again.',
+      color: 'error',
+    })
+  }
+}
 
 useSeoMeta({
   title: computed(() => (business.value ? business.value.name + ' — Creda' : 'Business — Creda')),
@@ -135,6 +188,36 @@ const destinations = computed(() => {
             <h1 class="mt-2 text-4xl font-semibold tracking-[-.06em] text-[#143e32] sm:text-5xl">
               {{ business.name }}
             </h1>
+            <div class="mt-5 flex flex-wrap gap-2">
+              <UButton
+                color="neutral"
+                variant="outline"
+                :icon="saved?.saved ? 'i-lucide-bookmark-check' : 'i-lucide-bookmark'"
+                :loading="savePending"
+                :disabled="
+                  savePending || (Boolean(session?.user.emailVerified) && savedStatus === 'pending')
+                "
+                class="!rounded-xl !border-[#d4e0d0] !text-[#234d37]"
+                @click="toggleSaved"
+                >{{ saved?.saved ? 'Saved' : 'Save business' }}</UButton
+              >
+              <UButton
+                color="neutral"
+                variant="outline"
+                icon="i-lucide-link"
+                class="!rounded-xl !border-[#d4e0d0] !text-[#234d37]"
+                @click="copyLink()"
+                >Copy profile link</UButton
+              >
+              <UButton
+                color="neutral"
+                variant="outline"
+                icon="i-lucide-message-square-plus"
+                class="!rounded-xl !border-[#d4e0d0] !text-[#234d37]"
+                @click="copyLink('#reviews')"
+                >Invite a review</UButton
+              >
+            </div>
             <p class="mt-4 max-w-3xl text-base leading-8 text-[#5c6e60]">
               {{ business.description }}
             </p>
@@ -147,11 +230,44 @@ const destinations = computed(() => {
                 ><UIcon name="i-lucide-monitor-smartphone" /> {{ modeLabel }}</span
               >
             </div>
+            <div
+              v-if="business.openingHours || business.serviceArea"
+              class="mt-6 flex flex-wrap gap-x-7 gap-y-2 border-t border-[#edf0e9] pt-5 text-sm text-[#45614d]"
+            >
+              <span v-if="business.openingHours" class="inline-flex items-start gap-2"
+                ><UIcon name="i-lucide-clock-3" class="mt-0.5 shrink-0" />
+                {{ business.openingHours }}</span
+              >
+              <span v-if="business.serviceArea" class="inline-flex items-start gap-2"
+                ><UIcon name="i-lucide-route" class="mt-0.5 shrink-0" /> Serves
+                {{ business.serviceArea }}</span
+              >
+            </div>
           </div>
         </div>
 
         <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div class="space-y-6">
+            <section
+              v-if="business.services.length"
+              class="rounded-2xl border border-[#dfe6dc] bg-white p-7 sm:p-9"
+              aria-labelledby="services-heading"
+            >
+              <h2
+                id="services-heading"
+                class="text-2xl font-semibold tracking-tight text-[#143e32]"
+              >
+                What they offer
+              </h2>
+              <div class="mt-5 flex flex-wrap gap-2">
+                <span
+                  v-for="service in business.services"
+                  :key="service"
+                  class="rounded-full border border-[#d9e6d1] bg-[#f4f9ef] px-4 py-2 text-sm font-medium text-[#315840]"
+                  >{{ service }}</span
+                >
+              </div>
+            </section>
             <section
               v-if="business.galleryUrls.length"
               class="rounded-2xl border border-[#dfe6dc] bg-white p-7 sm:p-9"
@@ -242,6 +358,9 @@ const destinations = computed(() => {
               Ownership verified means we checked who manages this profile. It is not a guarantee of
               service quality.
             </p>
+            <div class="mt-5 border-t border-[#edf0e9] pt-4">
+              <ReportsDialog :business-id="business.id" label="Report this business" />
+            </div>
           </aside>
         </div>
       </template>

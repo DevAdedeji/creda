@@ -25,6 +25,9 @@ const initial = computed<BusinessDraft | undefined>(() => {
     businessTypes: [...item.businessTypes],
     operationMode: item.operationMode,
     location: item.location ?? '',
+    serviceArea: item.serviceArea ?? '',
+    openingHours: item.openingHours ?? '',
+    services: [...item.services],
     googlePlaceId: item.googlePlaceId ?? '',
     websiteUrl: item.websiteUrl ?? '',
     appStoreUrl: item.appStoreUrl ?? '',
@@ -82,7 +85,15 @@ async function submit(draft: BusinessDraft) {
           </h1>
           <p class="mt-4 text-[#657069]">Update the details people see on your public profile.</p>
         </div>
+        <div
+          v-if="business.status === 'suspended'"
+          class="rounded-2xl border border-amber-200 bg-amber-50 p-7 text-sm leading-6 text-amber-900"
+        >
+          This listing is unavailable following a content review. Changes are paused until an
+          administrator restores it.
+        </div>
         <BusinessForm
+          v-else
           :initial="initial"
           :submitting="submitting"
           :error="errorMessage"

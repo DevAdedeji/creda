@@ -99,7 +99,15 @@ const { data, status, error, refresh } = await useFetch<{ items: ManagedBusiness
               <div class="min-w-0">
                 <h2 class="text-xl font-semibold text-[#143e32]">{{ item.name }}</h2>
                 <p class="mt-1 text-sm text-[#657069]">{{ item.location || 'Online' }}</p>
+                <p
+                  v-if="item.status === 'suspended'"
+                  class="mt-2 max-w-md text-sm font-medium leading-6 text-amber-800"
+                >
+                  This listing is unavailable following a content review. Changes are paused until
+                  an administrator restores it.
+                </p>
                 <NuxtLink
+                  v-if="item.status !== 'suspended'"
                   :to="'/dashboard/businesses/' + item.id + '/verification'"
                   class="mt-2 inline-flex items-center gap-1 text-sm font-semibold text-[#315b3a] hover:underline"
                 >
@@ -118,6 +126,7 @@ const { data, status, error, refresh } = await useFetch<{ items: ManagedBusiness
             </div>
             <div class="flex flex-wrap justify-end gap-2 md:ml-auto md:shrink-0">
               <UButton
+                v-if="item.status === 'approved'"
                 :to="'/businesses/' + item.slug"
                 color="neutral"
                 variant="outline"
@@ -126,6 +135,7 @@ const { data, status, error, refresh } = await useFetch<{ items: ManagedBusiness
                 >View public profile</UButton
               >
               <UButton
+                v-if="item.status !== 'suspended'"
                 :to="'/dashboard/businesses/' + item.id + '/edit'"
                 color="neutral"
                 variant="outline"

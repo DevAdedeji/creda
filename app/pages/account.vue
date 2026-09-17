@@ -111,7 +111,9 @@ const recentBusinesses = computed(() => owned.value?.items.slice(0, 2) ?? [])
                 :to="
                   item.status === 'approved'
                     ? '/businesses/' + item.slug
-                    : '/dashboard/businesses/' + item.id + '/edit'
+                    : item.status === 'suspended'
+                      ? '/dashboard/businesses'
+                      : '/dashboard/businesses/' + item.id + '/edit'
                 "
                 class="group flex items-center gap-4 py-4"
               >
@@ -163,6 +165,22 @@ const recentBusinesses = computed(() => owned.value?.items.slice(0, 2) ?? [])
               >List a business <UIcon name="i-lucide-arrow-right"
             /></NuxtLink>
           </section>
+          <NuxtLink
+            to="/saved"
+            class="group flex items-center gap-5 rounded-2xl border border-[#dfe6dc] bg-white p-6 transition hover:border-[#b8ccb0] sm:p-8"
+          >
+            <span
+              class="grid size-14 shrink-0 place-items-center rounded-2xl bg-[#e8f4da] text-2xl text-[#315b3a]"
+              ><UIcon name="i-lucide-bookmark"
+            /></span>
+            <span class="flex-1"
+              ><strong class="block text-lg text-[#143e32]">Your saved businesses</strong
+              ><span class="mt-1 block text-sm text-[#657069]"
+                >Pick up where you left off with the places you saved.</span
+              ></span
+            >
+            <UIcon name="i-lucide-arrow-up-right" class="text-xl text-[#315b3a]" />
+          </NuxtLink>
           <NuxtLink
             to="/businesses"
             class="group flex items-center gap-5 rounded-2xl border border-[#dfe6dc] bg-[#e7efdE] p-6 transition hover:border-[#b8ccb0] sm:p-8"

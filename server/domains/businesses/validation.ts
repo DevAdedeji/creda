@@ -53,6 +53,23 @@ export const businessSubmissionSchema = z
       .trim()
       .max(160)
       .transform((value) => value.replace(/\s+/g, ' ') || null),
+    serviceArea: z
+      .string()
+      .trim()
+      .max(160)
+      .transform((value) => value.replace(/\s+/g, ' ') || null),
+    openingHours: z
+      .string()
+      .trim()
+      .max(160)
+      .transform((value) => value.replace(/\s+/g, ' ') || null),
+    services: z
+      .array(cleanText(2, 80))
+      .max(8)
+      .refine(
+        (values) => new Set(values.map(normalizedKey)).size === values.length,
+        'List each service only once.',
+      ),
     googlePlaceId: z
       .string()
       .trim()
@@ -104,6 +121,7 @@ export const businessListQuerySchema = z.object({
   category: z.enum(businessCategoryValues).optional(),
   businessType: z.enum(businessTypeValues).optional(),
   location: z.string().trim().max(160).default(''),
+  sort: z.enum(['relevance', 'top_rated', 'most_reviewed', 'newest']).default('relevance'),
   page: z.coerce.number().int().min(1).max(10000).default(1),
 })
 

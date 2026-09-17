@@ -28,6 +28,9 @@ function emptyDraft(): BusinessDraft {
     businessTypes: ['service_business'],
     operationMode: 'physical',
     location: '',
+    serviceArea: '',
+    openingHours: '',
+    services: [],
     googlePlaceId: '',
     websiteUrl: '',
     appStoreUrl: '',
@@ -42,6 +45,7 @@ function emptyDraft(): BusinessDraft {
 }
 
 const draft = reactive<BusinessDraft>(emptyDraft())
+const servicesText = ref('')
 const linkError = ref('')
 const locationError = ref('')
 const mediaError = ref('')
@@ -72,9 +76,11 @@ watch(
       Object.assign(draft, {
         ...value,
         businessTypes: [...value.businessTypes],
+        services: [...value.services],
         galleryUrls: [...value.galleryUrls],
         mediaProofs: [...value.mediaProofs],
       })
+      servicesText.value = value.services.join('\n')
     }
   },
   { immediate: true },
@@ -98,6 +104,11 @@ function submit() {
   }
   const payload: BusinessDraft = {
     ...draft,
+    serviceArea: locationRequired.value ? draft.serviceArea : '',
+    services: servicesText.value
+      .split(/[,\n]/)
+      .map((value) => value.trim())
+      .filter(Boolean),
     businessTypes: [...draft.businessTypes],
     galleryUrls: [...draft.galleryUrls],
     mediaProofs: [draft.logoUrl, draft.coverUrl, ...draft.galleryUrls]
@@ -242,6 +253,53 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
             </p>
           </UFormField>
         </div>
+        <div class="grid gap-5 sm:grid-cols-2">
+          <UFormField
+            label="Hours & availability"
+            name="openingHours"
+            description="Optional. For example: Mon–Fri, 9am–5pm WAT."
+          >
+            <UInput
+              v-model="draft.openingHours"
+              name="openingHours"
+              :maxlength="160"
+              placeholder="When can customers reach you?"
+              class="w-full"
+              size="xl"
+              :ui="fieldUi"
+            />
+          </UFormField>
+          <UFormField
+            v-if="locationRequired"
+            label="Service area"
+            name="serviceArea"
+            description="Optional. Where do you serve customers?"
+          >
+            <UInput
+              v-model="draft.serviceArea"
+              name="serviceArea"
+              :maxlength="160"
+              placeholder="e.g. Lagos and nearby areas"
+              class="w-full"
+              size="xl"
+              :ui="fieldUi"
+            />
+          </UFormField>
+        </div>
+        <UFormField
+          label="Services & specialties"
+          name="services"
+          description="Optional. Add up to 8, one per line. Help people see exactly what you offer."
+        >
+          <UTextarea
+            v-model="servicesText"
+            name="services"
+            :rows="3"
+            placeholder="Brand design&#10;Website design"
+            class="w-full"
+            :ui="fieldUi"
+          />
+        </UFormField>
       </div>
     </section>
 

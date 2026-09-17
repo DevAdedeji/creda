@@ -37,6 +37,7 @@ const accountMenu = computed(() => [
   [
     { label: 'Your account', icon: 'i-lucide-user-round', to: '/account' },
     { label: 'Your businesses', icon: 'i-lucide-store', to: '/dashboard/businesses' },
+    { label: 'Saved businesses', icon: 'i-lucide-bookmark', to: '/saved' },
   ],
   [
     {
@@ -147,6 +148,12 @@ const accountMenu = computed(() => [
           class="flex items-center justify-between border-b border-[#e0e5dd] py-3 text-[15px] font-semibold text-[#172f27]"
           @click="menuOpen = false"
           >Your businesses <UIcon name="i-lucide-store"
+        /></NuxtLink>
+        <NuxtLink
+          to="/saved"
+          class="flex items-center justify-between border-b border-[#e0e5dd] py-3 text-[15px] font-semibold text-[#172f27]"
+          @click="menuOpen = false"
+          >Saved businesses <UIcon name="i-lucide-bookmark"
         /></NuxtLink>
         <button
           type="button"
