@@ -9,6 +9,7 @@ const props = defineProps<{
 const emit = defineEmits<{
   'update:modelValue': [value: string]
   'update:googlePlaceId': [value: string]
+  placeSelected: [value: { city: string; state: string }]
 }>()
 
 const apiKey = useRuntimeConfig().public.googleMapsApiKey
@@ -88,12 +89,19 @@ async function choose(prediction: google.maps.places.PlacePrediction) {
   emit('update:googlePlaceId', '')
   try {
     const place = prediction.toPlace()
-    await place.fetchFields({ fields: ['id', 'formattedAddress'] })
+    await place.fetchFields({ fields: ['id', 'formattedAddress', 'addressComponents'] })
     if (currentRequest !== requestId) return
     const address = place.formattedAddress || fallback
     input.value = address
     emit('update:modelValue', address)
     emit('update:googlePlaceId', place.id || '')
+    const components = place.addressComponents ?? []
+    const find = (type: string) =>
+      components.find((part) => part.types.includes(type))?.longText ?? ''
+    emit('placeSelected', {
+      city: find('locality') || find('postal_town') || find('administrative_area_level_2'),
+      state: find('administrative_area_level_1'),
+    })
     sessionToken = undefined
   } catch {
     if (currentRequest === requestId) {

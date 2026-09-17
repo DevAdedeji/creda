@@ -1,9 +1,11 @@
 <script setup lang="ts">
-import { businessCategories, type BusinessListItem } from '~~/shared/businesses'
+import { businessCategories, operationModes, type BusinessListItem } from '~~/shared/businesses'
 
 defineProps<{ business: BusinessListItem }>()
 const categoryLabel = (value: BusinessListItem['category']) =>
   businessCategories.find((item) => item.value === value)?.label ?? value
+const modeLabel = (value: BusinessListItem['operationMode']) =>
+  operationModes.find((item) => item.value === value)?.label ?? value
 </script>
 
 <template>
@@ -36,6 +38,9 @@ const categoryLabel = (value: BusinessListItem['category']) =>
       <span class="rounded-full bg-[#eff4e9] px-2.5 py-1 text-xs font-semibold text-[#466c4e]">{{
         categoryLabel(business.category)
       }}</span>
+      <span class="rounded-full bg-[#f2f5f1] px-2.5 py-1 text-xs font-semibold text-[#536c59]">{{
+        modeLabel(business.operationMode)
+      }}</span>
       <span
         v-if="business.ownershipStatus === 'verified'"
         class="inline-flex items-center gap-1 rounded-full bg-[#e4f2db] px-2.5 py-1 text-xs font-semibold text-[#2f6241]"
@@ -60,7 +65,12 @@ const categoryLabel = (value: BusinessListItem['category']) =>
     <div
       class="mt-6 flex items-center gap-1.5 border-t border-[#edf0e9] pt-4 text-xs font-medium text-[#6b796e]"
     >
-      <UIcon name="i-lucide-map-pin" /> {{ business.location || 'Online' }}
+      <UIcon
+        :name="business.operationMode === 'online' ? 'i-lucide-globe-2' : 'i-lucide-map-pin'"
+      />
+      {{
+        [business.city, business.state].filter(Boolean).join(', ') || business.location || 'Online'
+      }}
     </div>
   </NuxtLink>
 </template>

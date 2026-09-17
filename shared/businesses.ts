@@ -4,16 +4,17 @@ export const businessCategoryValues = [
   'retail',
   'services',
   'food',
+  'home_services',
+  'health',
+  'beauty',
+  'automotive',
+  'education',
+  'fitness',
+  'entertainment',
+  'travel',
+  'pets',
+  'finance',
   'other',
-] as const
-
-export const businessTypeValues = [
-  'web_app',
-  'mobile_app',
-  'desktop_app',
-  'online_store',
-  'service_business',
-  'physical_business',
 ] as const
 
 export const operationModeValues = ['online', 'physical', 'hybrid'] as const
@@ -24,26 +25,42 @@ export const businessCategories = [
   { value: 'retail', label: 'Shopping & retail' },
   { value: 'services', label: 'Professional services' },
   { value: 'food', label: 'Food & hospitality' },
+  { value: 'home_services', label: 'Home services' },
+  { value: 'health', label: 'Health & medical' },
+  { value: 'beauty', label: 'Beauty & wellness' },
+  { value: 'automotive', label: 'Automotive' },
+  { value: 'education', label: 'Education' },
+  { value: 'fitness', label: 'Fitness & recreation' },
+  { value: 'entertainment', label: 'Arts & entertainment' },
+  { value: 'travel', label: 'Travel & accommodation' },
+  { value: 'pets', label: 'Pets' },
+  { value: 'finance', label: 'Financial services' },
   { value: 'other', label: 'Other' },
 ] as const
 
-export const businessTypes = [
-  { value: 'web_app', label: 'Web app' },
-  { value: 'mobile_app', label: 'Mobile app' },
-  { value: 'desktop_app', label: 'Desktop app' },
-  { value: 'online_store', label: 'Online store' },
-  { value: 'service_business', label: 'Service business' },
-  { value: 'physical_business', label: 'Physical business' },
+export const businessDays = [
+  { value: 1, label: 'Monday' },
+  { value: 2, label: 'Tuesday' },
+  { value: 3, label: 'Wednesday' },
+  { value: 4, label: 'Thursday' },
+  { value: 5, label: 'Friday' },
+  { value: 6, label: 'Saturday' },
+  { value: 7, label: 'Sunday' },
 ] as const
+
+export interface BusinessHoursDay {
+  day: number
+  start: string
+  end: string
+}
 
 export const operationModes = [
   { value: 'online', label: 'Online' },
-  { value: 'physical', label: 'Physical' },
+  { value: 'physical', label: 'In person' },
   { value: 'hybrid', label: 'Online and in person' },
 ] as const
 
 export type BusinessCategory = (typeof businessCategoryValues)[number]
-export type BusinessType = (typeof businessTypeValues)[number]
 export type OperationMode = (typeof operationModeValues)[number]
 export type BusinessStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
 export type OwnershipStatus = 'unverified' | 'pending' | 'verified' | 'revoked'
@@ -51,12 +68,15 @@ export type OwnershipStatus = 'unverified' | 'pending' | 'verified' | 'revoked'
 export interface BusinessDraft {
   name: string
   description: string
-  category: BusinessCategory
-  businessTypes: BusinessType[]
+  category: BusinessCategory | ''
   operationMode: OperationMode
   location: string
+  city: string
+  state: string
   serviceArea: string
   openingHours: string
+  weeklyHours: BusinessHoursDay[]
+  hoursTimeZone: string
   services: string[]
   googlePlaceId: string
   websiteUrl: string
@@ -76,11 +96,14 @@ export interface PublicBusiness {
   name: string
   description: string
   category: BusinessCategory
-  businessTypes: BusinessType[]
   operationMode: OperationMode
   location: string | null
+  city: string | null
+  state: string | null
   serviceArea: string | null
   openingHours: string | null
+  weeklyHours: BusinessHoursDay[]
+  hoursTimeZone: string | null
   services: string[]
   googlePlaceId: string | null
   websiteUrl: string | null
@@ -116,28 +139,10 @@ export interface BusinessListResponse {
 
 export type BusinessLinks = Pick<
   BusinessDraft,
-  'businessTypes' | 'websiteUrl' | 'appStoreUrl' | 'playStoreUrl' | 'socialUrl' | 'contactUrl'
+  'websiteUrl' | 'appStoreUrl' | 'playStoreUrl' | 'socialUrl' | 'contactUrl'
 >
 
 export function businessLinkError(input: BusinessLinks): string | null {
-  const types = input.businessTypes
-  if (
-    types.some((type) => ['web_app', 'desktop_app', 'online_store'].includes(type)) &&
-    !input.websiteUrl
-  ) {
-    return 'Add a website or download-page link for the selected business type.'
-  }
-  if (types.includes('mobile_app') && !input.appStoreUrl && !input.playStoreUrl) {
-    return 'Add an App Store or Google Play link for the mobile app.'
-  }
-  if (
-    types.some((type) => ['service_business', 'physical_business'].includes(type)) &&
-    !input.websiteUrl &&
-    !input.socialUrl &&
-    !input.contactUrl
-  ) {
-    return 'Add a website, official social profile, or contact link for this business.'
-  }
   if (
     !input.websiteUrl &&
     !input.appStoreUrl &&

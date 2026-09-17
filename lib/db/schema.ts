@@ -4,6 +4,7 @@ import {
   check,
   index,
   integer,
+  jsonb,
   pgEnum,
   pgTable,
   text,
@@ -140,8 +141,15 @@ export const business = pgTable(
     businessTypes: businessType('business_types').array().notNull(),
     operationMode: operationMode('operation_mode').notNull(),
     location: text('location'),
+    city: text('city'),
+    state: text('state'),
     serviceArea: text('service_area'),
     openingHours: text('opening_hours'),
+    weeklyHours: jsonb('weekly_hours')
+      .$type<{ day: number; start: string; end: string }[]>()
+      .notNull()
+      .default([]),
+    hoursTimeZone: text('hours_time_zone'),
     services: text('services')
       .array()
       .notNull()
@@ -171,6 +179,7 @@ export const business = pgTable(
   (table) => [
     uniqueIndex('business_name_location_unique').on(table.normalizedName, table.normalizedLocation),
     index('business_status_name_idx').on(table.status, table.name),
+    index('business_status_state_city_idx').on(table.status, table.state, table.city),
     index('business_owner_idx').on(table.ownerUserId),
     check(
       'business_destination_required',
@@ -178,7 +187,6 @@ export const business = pgTable(
         'website_url IS NOT NULL OR app_store_url IS NOT NULL OR play_store_url IS NOT NULL OR social_url IS NOT NULL OR contact_url IS NOT NULL',
       ),
     ),
-    check('business_types_required', sql.raw('cardinality(business_types) > 0')),
     check(
       'business_physical_location_required',
       sql.raw(

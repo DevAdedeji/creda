@@ -1,17 +1,5 @@
 import { randomBytes, randomUUID } from 'node:crypto'
-import {
-  and,
-  arrayContains,
-  asc,
-  desc,
-  eq,
-  ilike,
-  inArray,
-  ne,
-  or,
-  sql,
-  type SQL,
-} from 'drizzle-orm'
+import { and, asc, desc, eq, ilike, inArray, isNull, ne, or, sql, type SQL } from 'drizzle-orm'
 import { db } from '~~/lib/db'
 import {
   business,
@@ -104,11 +92,14 @@ function toPublic(row: BusinessRow): PublicBusiness {
     name: row.name,
     description: row.description,
     category: row.category,
-    businessTypes: row.businessTypes,
     operationMode: row.operationMode,
     location: row.location,
+    city: row.city,
+    state: row.state,
     serviceArea: row.serviceArea,
     openingHours: row.openingHours,
+    weeklyHours: row.weeklyHours,
+    hoursTimeZone: row.hoursTimeZone,
     services: row.services,
     googlePlaceId: row.googlePlaceId,
     websiteUrl: row.websiteUrl,
@@ -194,6 +185,7 @@ export async function createBusiness(
           id: randomUUID(),
           slug: slugFor(input.name, input.location),
           ownerUserId,
+          businessTypes: [],
           ...details,
           status: 'approved',
           publishedAt: sql`now()`,
@@ -367,7 +359,6 @@ export async function listPendingBusinesses() {
       name: business.name,
       description: business.description,
       category: business.category,
-      businessTypes: business.businessTypes,
       operationMode: business.operationMode,
       location: business.location,
       googlePlaceId: business.googlePlaceId,
@@ -446,12 +437,26 @@ export async function listPublicBusinesses(
     conditions.push(or(ilike(business.name, term), ilike(business.description, term))!)
   }
   if (query.category) conditions.push(eq(business.category, query.category))
-  if (query.businessType)
-    conditions.push(arrayContains(business.businessTypes, [query.businessType]))
   if (query.location) {
     const location = '%' + query.location.replace(/[\\%_]/g, '\\$&') + '%'
     conditions.push(ilike(business.location, location))
   }
+  if (query.city) {
+    const city = `%${query.city.replace(/[\\%_]/g, '\\$&')}%`
+    conditions.push(
+      or(ilike(business.city, city), and(isNull(business.city), ilike(business.location, city)))!,
+    )
+  }
+  if (query.state) {
+    const state = `%${query.state.replace(/\s+state$/i, '').replace(/[\\%_]/g, '\\$&')}%`
+    conditions.push(
+      or(
+        ilike(business.state, state),
+        and(isNull(business.state), ilike(business.location, state)),
+      )!,
+    )
+  }
+  if (query.operationMode) conditions.push(eq(business.operationMode, query.operationMode))
   const where = and(...conditions)!
   const rank = query.q
     ? sql<number>`CASE WHEN lower(${business.name}) = ${query.q.toLowerCase()} THEN 0

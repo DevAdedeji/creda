@@ -2,18 +2,19 @@
 import { authInputUi } from '@/utils/authInputUi'
 import {
   businessCategories,
-  businessTypes,
+  operationModes,
   type BusinessCategory,
-  type BusinessType,
+  type OperationMode,
 } from '~~/shared/businesses'
 
 const search = defineModel<string>('search', { required: true })
 const category = defineModel<BusinessCategory | 'all'>('category', { required: true })
-const businessType = defineModel<BusinessType | 'all'>('businessType', { required: true })
-const location = defineModel<string>('location', { required: true })
+const city = defineModel<string>('city', { required: true })
+const state = defineModel<string>('state', { required: true })
+const operationMode = defineModel<OperationMode | 'all'>('operationMode', { required: true })
 
 const categoryItems = [{ label: 'All categories', value: 'all' }, ...businessCategories]
-const typeItems = [{ label: 'All types', value: 'all' }, ...businessTypes]
+const modeItems = [{ label: 'Online or in person', value: 'all' }, ...operationModes]
 </script>
 
 <template>
@@ -37,20 +38,23 @@ const typeItems = [{ label: 'All types', value: 'all' }, ...businessTypes]
         :ui="authInputUi"
       />
     </UFormField>
-    <UFormField label="Type" name="businessType">
+    <UFormField label="How it operates" name="operationMode">
       <USelect
-        v-model="businessType"
-        :items="typeItems"
-        name="businessType"
+        v-model="operationMode"
+        :items="modeItems"
+        name="operationMode"
         class="w-full"
         :ui="authInputUi"
       />
     </UFormField>
-    <UFormField label="Location" name="location">
+    <UFormField label="City" name="city">
+      <UInput v-model="city" name="city" placeholder="Any city" class="w-full" :ui="authInputUi" />
+    </UFormField>
+    <UFormField label="State" name="state">
       <UInput
-        v-model="location"
-        name="location"
-        placeholder="Any location"
+        v-model="state"
+        name="state"
+        placeholder="Any state"
         class="w-full"
         :ui="authInputUi"
       />

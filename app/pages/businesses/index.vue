@@ -3,10 +3,10 @@ import BusinessCard from '@/components/businesses/BusinessCard.vue'
 import FilterFields from '@/components/businesses/FilterFields.vue'
 import {
   businessCategories,
-  businessTypes,
+  operationModes,
   type BusinessListResponse,
   type BusinessCategory,
-  type BusinessType,
+  type OperationMode,
 } from '~~/shared/businesses'
 
 const canonicalUrl = useCanonicalUrl('/businesses')
@@ -34,12 +34,13 @@ const category = ref<BusinessCategory | 'all'>(
     ? (route.query.category as BusinessCategory)
     : 'all',
 )
-const businessType = ref<BusinessType | 'all'>(
-  businessTypes.some((item) => item.value === route.query.businessType)
-    ? (route.query.businessType as BusinessType)
+const city = ref(String(route.query.city ?? ''))
+const state = ref(String(route.query.state ?? ''))
+const operationMode = ref<OperationMode | 'all'>(
+  operationModes.some((item) => item.value === route.query.operationMode)
+    ? (route.query.operationMode as OperationMode)
     : 'all',
 )
-const location = ref(String(route.query.location ?? ''))
 const sortOptions = [
   { label: 'Best match', value: 'relevance' },
   { label: 'Top rated', value: 'top_rated' },
@@ -55,8 +56,11 @@ const sort = ref<DirectorySort>(
 const apiQuery = computed(() => ({
   q: typeof route.query.q === 'string' ? route.query.q : undefined,
   category: typeof route.query.category === 'string' ? route.query.category : undefined,
-  businessType: typeof route.query.businessType === 'string' ? route.query.businessType : undefined,
   location: typeof route.query.location === 'string' ? route.query.location : undefined,
+  city: typeof route.query.city === 'string' ? route.query.city : undefined,
+  state: typeof route.query.state === 'string' ? route.query.state : undefined,
+  operationMode:
+    typeof route.query.operationMode === 'string' ? route.query.operationMode : undefined,
   sort: typeof route.query.sort === 'string' ? route.query.sort : undefined,
   page: typeof route.query.page === 'string' ? route.query.page : undefined,
 }))
@@ -71,10 +75,11 @@ watch(
     category.value = businessCategories.some((item) => item.value === route.query.category)
       ? (route.query.category as BusinessCategory)
       : 'all'
-    businessType.value = businessTypes.some((item) => item.value === route.query.businessType)
-      ? (route.query.businessType as BusinessType)
+    city.value = String(route.query.city ?? '')
+    state.value = String(route.query.state ?? '')
+    operationMode.value = operationModes.some((item) => item.value === route.query.operationMode)
+      ? (route.query.operationMode as OperationMode)
       : 'all'
-    location.value = String(route.query.location ?? '')
     sort.value = sortOptions.some((item) => item.value === route.query.sort)
       ? (route.query.sort as DirectorySort)
       : 'relevance'
@@ -88,8 +93,9 @@ function applyFilters() {
     query: {
       q: search.value.trim() || undefined,
       category: category.value === 'all' ? undefined : category.value,
-      businessType: businessType.value === 'all' ? undefined : businessType.value,
-      location: location.value.trim() || undefined,
+      city: city.value.trim() || undefined,
+      state: state.value.trim() || undefined,
+      operationMode: operationMode.value === 'all' ? undefined : operationMode.value,
       sort: sort.value === 'relevance' ? undefined : sort.value,
     },
   })
@@ -98,8 +104,9 @@ function applyFilters() {
 function clearFilters() {
   search.value = ''
   category.value = 'all'
-  businessType.value = 'all'
-  location.value = ''
+  city.value = ''
+  state.value = ''
+  operationMode.value = 'all'
   sort.value = 'relevance'
   filtersOpen.value = false
   navigateTo('/businesses')
@@ -164,8 +171,9 @@ function applySort() {
               <FilterFields
                 v-model:search="search"
                 v-model:category="category"
-                v-model:business-type="businessType"
-                v-model:location="location"
+                v-model:city="city"
+                v-model:state="state"
+                v-model:operation-mode="operationMode"
               />
             </div>
             <UButton type="submit" block class="mt-7 !rounded-lg !bg-[#143e32] !text-white"
@@ -314,8 +322,9 @@ function applySort() {
           <FilterFields
             v-model:search="search"
             v-model:category="category"
-            v-model:business-type="businessType"
-            v-model:location="location"
+            v-model:city="city"
+            v-model:state="state"
+            v-model:operation-mode="operationMode"
           />
         </form>
       </template>

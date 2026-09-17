@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import {
   businessCategories,
-  businessTypes,
+  businessDays,
   operationModes,
   type PublicBusiness,
 } from '~~/shared/businesses'
@@ -90,14 +90,13 @@ useHead({ link: [{ rel: 'canonical', href: canonicalUrl }] })
 const categoryLabel = computed(
   () => businessCategories.find((item) => item.value === business.value?.category)?.label,
 )
-const typeLabel = computed(() =>
-  business.value?.businessTypes
-    .map((type) => businessTypes.find((item) => item.value === type)?.label ?? type)
-    .join(' · '),
-)
 const modeLabel = computed(
   () => operationModes.find((item) => item.value === business.value?.operationMode)?.label,
 )
+function hoursLabel(day: number): string {
+  const row = business.value?.weeklyHours.find((item) => item.day === day)
+  return row ? `${row.start}–${row.end}` : 'Closed'
+}
 const mapUrl = computed(() => {
   const placeId = business.value?.googlePlaceId
   if (!placeId || !googleMapsApiKey) return null
@@ -215,21 +214,24 @@ const destinations = computed(() => {
             </p>
             <div class="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#607162]">
               <span class="inline-flex items-center gap-2"
-                ><UIcon name="i-lucide-map-pin" /> {{ business.location || 'Online' }}</span
-              ><span class="inline-flex items-center gap-2"
-                ><UIcon name="i-lucide-building-2" /> {{ typeLabel }}</span
+                ><UIcon
+                  :name="
+                    business.operationMode === 'online' ? 'i-lucide-globe-2' : 'i-lucide-map-pin'
+                  "
+                />
+                {{
+                  [business.city, business.state].filter(Boolean).join(', ') ||
+                  business.location ||
+                  'Online'
+                }}</span
               ><span class="inline-flex items-center gap-2"
                 ><UIcon name="i-lucide-monitor-smartphone" /> {{ modeLabel }}</span
               >
             </div>
             <div
-              v-if="business.openingHours || business.serviceArea"
+              v-if="business.serviceArea"
               class="mt-6 flex flex-wrap gap-x-7 gap-y-2 border-t border-[#edf0e9] pt-5 text-sm text-[#45614d]"
             >
-              <span v-if="business.openingHours" class="inline-flex items-start gap-2"
-                ><UIcon name="i-lucide-clock-3" class="mt-0.5 shrink-0" />
-                {{ business.openingHours }}</span
-              >
               <span v-if="business.serviceArea" class="inline-flex items-start gap-2"
                 ><UIcon name="i-lucide-route" class="mt-0.5 shrink-0" /> Serves
                 {{ business.serviceArea }}</span
@@ -342,6 +344,28 @@ const destinations = computed(() => {
                   ><UIcon :name="link.icon" /> {{ link.label }}</span
                 ><UIcon name="i-lucide-arrow-up-right"
               /></a>
+            </div>
+            <div
+              v-if="business.weeklyHours.length || business.openingHours"
+              class="mt-6 border-t border-[#edf0e9] pt-5"
+            >
+              <h3 class="flex items-center gap-2 text-sm font-semibold text-[#143e32]">
+                <UIcon name="i-lucide-clock-3" /> Business hours
+              </h3>
+              <div v-if="business.weeklyHours.length" class="mt-4 space-y-2">
+                <div
+                  v-for="day in businessDays"
+                  :key="day.value"
+                  class="flex justify-between gap-3 text-xs text-[#526653]"
+                >
+                  <span>{{ day.label }}</span>
+                  <span>{{ hoursLabel(day.value) }}</span>
+                </div>
+                <p v-if="business.hoursTimeZone" class="pt-2 text-xs text-[#778679]">
+                  {{ business.hoursTimeZone.replaceAll('_', ' ') }} time
+                </p>
+              </div>
+              <p v-else class="mt-3 text-sm text-[#526653]">{{ business.openingHours }}</p>
             </div>
             <p
               v-if="business.ownershipStatus === 'verified'"

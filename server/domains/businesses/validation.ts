@@ -2,7 +2,6 @@ import { z } from 'zod'
 import {
   businessCategoryValues,
   businessLinkError,
-  businessTypeValues,
   operationModeValues,
 } from '~~/shared/businesses'
 
@@ -39,19 +38,21 @@ export const businessSubmissionSchema = z
     name: cleanText(2, 120),
     description: cleanText(30, 600),
     category: z.enum(businessCategoryValues),
-    businessTypes: z
-      .array(z.enum(businessTypeValues))
-      .min(1)
-      .max(businessTypeValues.length)
-      .refine(
-        (types) => new Set(types).size === types.length,
-        'Choose each business type only once.',
-      ),
     operationMode: z.enum(operationModeValues),
     location: z
       .string()
       .trim()
       .max(160)
+      .transform((value) => value.replace(/\s+/g, ' ') || null),
+    city: z
+      .string()
+      .trim()
+      .max(100)
+      .transform((value) => value.replace(/\s+/g, ' ') || null),
+    state: z
+      .string()
+      .trim()
+      .max(100)
       .transform((value) => value.replace(/\s+/g, ' ') || null),
     serviceArea: z
       .string()
@@ -63,6 +64,28 @@ export const businessSubmissionSchema = z
       .trim()
       .max(160)
       .transform((value) => value.replace(/\s+/g, ' ') || null),
+    weeklyHours: z
+      .array(
+        z.object({
+          day: z.number().int().min(1).max(7),
+          start: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+          end: z.string().regex(/^([01]\d|2[0-3]):[0-5]\d$/),
+        }),
+      )
+      .max(7)
+      .refine(
+        (rows) => new Set(rows.map((row) => row.day)).size === rows.length,
+        'Choose each day once.',
+      )
+      .refine(
+        (rows) => rows.every((row) => row.start < row.end),
+        'Closing time must be after opening time.',
+      ),
+    hoursTimeZone: z
+      .string()
+      .trim()
+      .max(80)
+      .transform((value) => value || null),
     services: z
       .array(cleanText(2, 80))
       .max(8)
@@ -105,6 +128,35 @@ export const businessSubmissionSchema = z
         message: 'Add a location for an in-person business.',
       })
     }
+    if (value.operationMode !== 'online') {
+      for (const field of ['city', 'state'] as const) {
+        if (!value[field] || value[field].length < 2) {
+          context.addIssue({
+            code: 'custom',
+            path: [field],
+            message: `Add a ${field} for an in-person business.`,
+          })
+        }
+      }
+    }
+    if (value.weeklyHours.length && !value.hoursTimeZone) {
+      context.addIssue({
+        code: 'custom',
+        path: ['hoursTimeZone'],
+        message: 'Choose a time zone for business hours.',
+      })
+    }
+    if (value.hoursTimeZone) {
+      try {
+        new Intl.DateTimeFormat('en', { timeZone: value.hoursTimeZone })
+      } catch {
+        context.addIssue({
+          code: 'custom',
+          path: ['hoursTimeZone'],
+          message: 'Choose a valid time zone.',
+        })
+      }
+    }
     const linkError = businessLinkError({
       ...value,
       websiteUrl: value.websiteUrl ?? '',
@@ -119,8 +171,10 @@ export const businessSubmissionSchema = z
 export const businessListQuerySchema = z.object({
   q: z.string().trim().max(80).default(''),
   category: z.enum(businessCategoryValues).optional(),
-  businessType: z.enum(businessTypeValues).optional(),
   location: z.string().trim().max(160).default(''),
+  city: z.string().trim().max(100).default(''),
+  state: z.string().trim().max(100).default(''),
+  operationMode: z.enum(operationModeValues).optional(),
   sort: z.enum(['relevance', 'top_rated', 'most_reviewed', 'newest']).default('relevance'),
   page: z.coerce.number().int().min(1).max(10000).default(1),
 })

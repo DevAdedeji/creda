@@ -2,11 +2,11 @@
 import {
   businessCategories,
   businessLinkError,
-  businessTypes,
-  operationModes,
+  type BusinessCategory,
   type BusinessDraft,
 } from '~~/shared/businesses'
 import LocationInput from '@/components/businesses/LocationInput.vue'
+import BusinessHoursEditor from '@/components/businesses/BusinessHoursEditor.vue'
 import { apiErrorMessage } from '@/utils/apiError'
 
 const props = withDefaults(
@@ -24,12 +24,15 @@ function emptyDraft(): BusinessDraft {
   return {
     name: '',
     description: '',
-    category: 'services',
-    businessTypes: ['service_business'],
+    category: '',
     operationMode: 'physical',
     location: '',
+    city: '',
+    state: '',
     serviceArea: '',
     openingHours: '',
+    weeklyHours: [],
+    hoursTimeZone: '',
     services: [],
     googlePlaceId: '',
     websiteUrl: '',
@@ -48,26 +51,41 @@ const draft = reactive<BusinessDraft>(emptyDraft())
 const servicesText = ref('')
 const linkError = ref('')
 const locationError = ref('')
+const areaError = ref('')
+const categoryError = ref('')
+const hoursError = ref('')
 const mediaError = ref('')
 const uploading = ref<'logo' | 'cover' | 'gallery' | null>(null)
 const uploadedProofs = new Map<string, string>()
 const locationRequired = computed(() => draft.operationMode !== 'online')
-const needsWebsite = computed(() =>
-  draft.businessTypes.some((type) => ['web_app', 'desktop_app', 'online_store'].includes(type)),
+const selectedCategory = computed<BusinessCategory | undefined>({
+  get: () => draft.category || undefined,
+  set: (value) => {
+    draft.category = value ?? ''
+  },
+})
+const modeChoices = [
+  {
+    value: 'online',
+    icon: 'i-lucide-globe-2',
+    title: 'Online',
+    detail: 'Website, app, or online service',
+  },
+  {
+    value: 'physical',
+    icon: 'i-lucide-map-pin',
+    title: 'In person',
+    detail: 'A location or local service area',
+  },
+  { value: 'hybrid', icon: 'i-lucide-store', title: 'Both', detail: 'Online and in person' },
+] as const
+const showAppStores = computed(
+  () => draft.operationMode !== 'physical' || Boolean(draft.appStoreUrl || draft.playStoreUrl),
 )
-const showWebsite = computed(() => needsWebsite.value || Boolean(props.initial?.websiteUrl))
-const needsMobileStores = computed(
-  () =>
-    draft.businessTypes.includes('mobile_app') ||
-    Boolean(props.initial?.appStoreUrl || props.initial?.playStoreUrl),
-)
-const showSocialContact = computed(
-  () =>
-    Boolean(props.initial?.socialUrl || props.initial?.contactUrl) ||
-    draft.businessTypes.some((type) =>
-      ['online_store', 'service_business', 'physical_business'].includes(type),
-    ),
-)
+function onPlaceSelected(place: { city: string; state: string }) {
+  if (place.city) draft.city = place.city
+  if (place.state) draft.state = place.state
+}
 watch(
   () => props.initial,
   (value) => {
@@ -75,7 +93,7 @@ watch(
       uploadedProofs.clear()
       Object.assign(draft, {
         ...value,
-        businessTypes: [...value.businessTypes],
+        weeklyHours: value.weeklyHours.map((day) => ({ ...day })),
         services: [...value.services],
         galleryUrls: [...value.galleryUrls],
         mediaProofs: [...value.mediaProofs],
@@ -93,32 +111,47 @@ const fieldUi = {
 function submit() {
   if (uploading.value) return
   locationError.value = ''
+  areaError.value = ''
+  categoryError.value = ''
+  hoursError.value = ''
   linkError.value = ''
-  if (!draft.businessTypes.length) {
-    linkError.value = 'Choose at least one business type.'
+  if (!draft.category) {
+    categoryError.value = 'Choose a category for this business.'
     return
   }
   if (locationRequired.value && draft.location.trim().length < 2) {
     locationError.value = 'Add a location for an in-person business.'
     return
   }
+  if (locationRequired.value && (draft.city.trim().length < 2 || draft.state.trim().length < 2)) {
+    areaError.value = 'Add the city and state for an in-person business.'
+    return
+  }
+  if (draft.weeklyHours.some((row) => !row.start || !row.end || row.start >= row.end)) {
+    hoursError.value = 'Each open day needs a closing time after its opening time.'
+    return
+  }
   const payload: BusinessDraft = {
     ...draft,
+    location: locationRequired.value ? draft.location : '',
+    googlePlaceId: locationRequired.value ? draft.googlePlaceId : '',
     serviceArea: locationRequired.value ? draft.serviceArea : '',
     services: servicesText.value
       .split(/[,\n]/)
       .map((value) => value.trim())
       .filter(Boolean),
-    businessTypes: [...draft.businessTypes],
+    weeklyHours: draft.weeklyHours.map((day) => ({ ...day })),
+    hoursTimeZone: draft.weeklyHours.length ? draft.hoursTimeZone : '',
+    openingHours: draft.weeklyHours.length ? '' : draft.openingHours,
     galleryUrls: [...draft.galleryUrls],
     mediaProofs: [draft.logoUrl, draft.coverUrl, ...draft.galleryUrls]
       .map((url) => uploadedProofs.get(url))
       .filter((proof): proof is string => Boolean(proof)),
-    websiteUrl: showWebsite.value ? draft.websiteUrl : '',
-    appStoreUrl: needsMobileStores.value ? draft.appStoreUrl : '',
-    playStoreUrl: needsMobileStores.value ? draft.playStoreUrl : '',
-    socialUrl: showSocialContact.value ? draft.socialUrl : '',
-    contactUrl: showSocialContact.value ? draft.contactUrl : '',
+    websiteUrl: draft.websiteUrl,
+    appStoreUrl: showAppStores.value ? draft.appStoreUrl : '',
+    playStoreUrl: showAppStores.value ? draft.playStoreUrl : '',
+    socialUrl: draft.socialUrl,
+    contactUrl: draft.contactUrl,
   }
   const linkIssue = businessLinkError(payload)
   if (linkIssue) {
@@ -170,154 +203,76 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
 <template>
   <form class="space-y-8" @submit.prevent="submit">
     <section class="rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-8">
-      <div class="mb-7 flex items-start gap-3">
+      <div class="mb-6 flex items-start gap-3">
         <span
           class="grid size-10 shrink-0 place-items-center rounded-xl bg-[#e7f3d8] text-xl text-[#315e42]"
-          ><UIcon name="i-lucide-store"
+          ><UIcon name="i-lucide-compass"
         /></span>
         <div>
-          <h2 class="text-xl font-semibold tracking-tight text-[#143e32]">The basics</h2>
+          <h2 class="text-xl font-semibold tracking-tight text-[#143e32]">
+            How can people find this business?
+          </h2>
           <p class="mt-1 text-sm text-[#657069]">
-            Tell people what this business does and where it operates.
+            Choose the option that best describes how customers use it.
           </p>
         </div>
       </div>
-      <div class="space-y-5">
-        <UFormField label="Business name" name="name" required>
-          <UInput
-            v-model="draft.name"
-            name="name"
-            placeholder="e.g. Kora Studio"
-            :maxlength="120"
-            class="w-full"
-            size="xl"
-            :ui="fieldUi"
-            required
-          />
-        </UFormField>
-        <UFormField label="Short description" name="description" required>
-          <UTextarea
-            v-model="draft.description"
-            name="description"
-            placeholder="What does the business offer, and who is it for?"
-            :rows="4"
-            :maxlength="600"
-            class="w-full"
-            :ui="fieldUi"
-            required
-          />
-        </UFormField>
-        <div class="grid gap-5 sm:grid-cols-2">
-          <UFormField label="Category" name="category" required>
-            <USelect
-              v-model="draft.category"
-              :items="[...businessCategories]"
-              name="category"
-              class="w-full"
-              size="xl"
-              :ui="fieldUi"
-            />
-          </UFormField>
-          <UFormField label="Business types" name="businessTypes" required>
-            <USelectMenu
-              v-model="draft.businessTypes"
-              :items="[...businessTypes]"
-              value-key="value"
-              multiple
-              :search-input="false"
-              placeholder="Select all that apply"
-              name="businessTypes"
-              class="w-full"
-              size="xl"
-              :ui="fieldUi"
-            />
-          </UFormField>
-          <UFormField label="How it operates" name="operationMode" required>
-            <USelect
-              v-model="draft.operationMode"
-              :items="[...operationModes]"
-              name="operationMode"
-              class="w-full"
-              size="xl"
-              :ui="fieldUi"
-            />
-          </UFormField>
-          <UFormField label="Location" name="location" :required="locationRequired">
-            <LocationInput
-              v-model="draft.location"
-              v-model:google-place-id="draft.googlePlaceId"
-              :required="locationRequired"
-            />
-            <p v-if="locationError" role="alert" class="mt-2 text-sm text-red-700">
-              {{ locationError }}
-            </p>
-          </UFormField>
-        </div>
-        <div class="grid gap-5 sm:grid-cols-2">
-          <UFormField
-            label="Hours & availability"
-            name="openingHours"
-            description="Optional. For example: Mon–Fri, 9am–5pm WAT."
-          >
-            <UInput
-              v-model="draft.openingHours"
-              name="openingHours"
-              :maxlength="160"
-              placeholder="When can customers reach you?"
-              class="w-full"
-              size="xl"
-              :ui="fieldUi"
-            />
-          </UFormField>
-          <UFormField
-            v-if="locationRequired"
-            label="Service area"
-            name="serviceArea"
-            description="Optional. Where do you serve customers?"
-          >
-            <UInput
-              v-model="draft.serviceArea"
-              name="serviceArea"
-              :maxlength="160"
-              placeholder="e.g. Lagos and nearby areas"
-              class="w-full"
-              size="xl"
-              :ui="fieldUi"
-            />
-          </UFormField>
-        </div>
-        <UFormField
-          label="Services & specialties"
-          name="services"
-          description="Optional. Add up to 8, one per line. Help people see exactly what you offer."
+      <div
+        class="grid gap-3 sm:grid-cols-3"
+        role="radiogroup"
+        aria-label="How the business operates"
+      >
+        <label
+          v-for="choice in modeChoices"
+          :key="choice.value"
+          class="relative flex cursor-pointer gap-3 rounded-2xl border p-4 transition-colors"
+          :class="
+            draft.operationMode === choice.value
+              ? 'border-[#315e42] bg-[#eff6e9] ring-1 ring-[#315e42]'
+              : 'border-[#dfe6dc] hover:border-[#9bb79b]'
+          "
         >
-          <UTextarea
-            v-model="servicesText"
-            name="services"
-            :rows="3"
-            placeholder="Brand design&#10;Website design"
-            class="w-full"
-            :ui="fieldUi"
+          <input
+            v-model="draft.operationMode"
+            type="radio"
+            name="operationMode"
+            :value="choice.value"
+            class="sr-only"
           />
-        </UFormField>
+          <UIcon :name="choice.icon" class="mt-0.5 shrink-0 text-xl text-[#315e42]" />
+          <span
+            ><span class="block text-sm font-semibold text-[#143e32]">{{ choice.title }}</span
+            ><span class="mt-1 block text-xs leading-5 text-[#657069]">{{
+              choice.detail
+            }}</span></span
+          >
+        </label>
       </div>
     </section>
-
-    <section class="rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-8">
-      <div class="mb-7 flex items-start gap-3">
+    <details
+      class="group rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-8"
+      :open="!!(draft.logoUrl || draft.coverUrl || draft.galleryUrls.length) || undefined"
+    >
+      <summary
+        class="flex cursor-pointer list-none items-start gap-3 [&::-webkit-details-marker]:hidden"
+      >
         <span
           class="grid size-10 shrink-0 place-items-center rounded-xl bg-[#e7f3d8] text-xl text-[#315e42]"
         >
           <UIcon name="i-lucide-images" />
         </span>
         <div>
-          <h2 class="text-xl font-semibold tracking-tight text-[#143e32]">Make it yours</h2>
+          <h2 class="text-xl font-semibold tracking-tight text-[#143e32]">Add photos</h2>
           <p class="mt-1 text-sm text-[#657069]">
             Add a logo, a cover image, and photos that show what you do.
           </p>
         </div>
-      </div>
-      <div class="grid gap-5 sm:grid-cols-2">
+        <UIcon
+          name="i-lucide-chevron-down"
+          class="ml-auto mt-2 shrink-0 text-[#49604e] transition-transform group-open:rotate-180"
+        />
+      </summary>
+      <div class="mt-7 grid gap-5 sm:grid-cols-2">
         <div class="rounded-2xl border border-[#dfe6dc] bg-[#fbfcf8] p-5">
           <p class="text-sm font-semibold text-[#143e32]">Logo</p>
           <p class="mt-1 text-xs text-[#657069]">A square image works best.</p>
@@ -417,7 +372,7 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
           <div>
             <p class="text-sm font-semibold text-[#143e32]">Gallery photos</p>
             <p class="mt-1 text-xs text-[#657069]">
-              Optional · up to 8 photos. The gallery appears only when you add some.
+              Add up to 8 photos. The gallery appears when you add some.
             </p>
           </div>
           <input
@@ -466,7 +421,198 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
       <p v-if="mediaError" role="alert" class="mt-3 text-sm font-medium text-red-700">
         {{ mediaError }}
       </p>
+    </details>
+
+    <section class="rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-8">
+      <div class="mb-7 flex items-start gap-3">
+        <span
+          class="grid size-10 shrink-0 place-items-center rounded-xl bg-[#e7f3d8] text-xl text-[#315e42]"
+          ><UIcon name="i-lucide-store"
+        /></span>
+        <div>
+          <h2 class="text-xl font-semibold tracking-tight text-[#143e32]">The basics</h2>
+          <p class="mt-1 text-sm text-[#657069]">
+            Start with the details people need to recognize it.
+          </p>
+        </div>
+      </div>
+      <div class="space-y-5">
+        <UFormField label="Business name" name="name" required>
+          <UInput
+            v-model="draft.name"
+            name="name"
+            placeholder="e.g. Kora Studio"
+            :maxlength="120"
+            class="w-full"
+            size="xl"
+            :ui="fieldUi"
+            required
+          />
+        </UFormField>
+        <UFormField label="Short description" name="description" required>
+          <UTextarea
+            v-model="draft.description"
+            name="description"
+            placeholder="What does the business offer, and who is it for?"
+            :rows="4"
+            :maxlength="600"
+            class="w-full"
+            :ui="fieldUi"
+            required
+          />
+        </UFormField>
+        <UFormField label="Category" name="category" required>
+          <USelectMenu
+            v-model="selectedCategory"
+            :items="[...businessCategories]"
+            value-key="value"
+            :search-input="{ placeholder: 'Find a category' }"
+            placeholder="Choose a category"
+            name="category"
+            class="w-full"
+            size="xl"
+            :ui="fieldUi"
+          />
+          <p v-if="categoryError" role="alert" class="mt-2 text-sm text-red-700">
+            {{ categoryError }}
+          </p>
+        </UFormField>
+        <div class="rounded-2xl border border-[#dfe6dc] bg-[#fbfcf8] p-5 sm:p-6">
+          <h3 class="text-base font-semibold text-[#143e32]">
+            {{ locationRequired ? 'Where is it located?' : 'Where is it based?' }}
+          </h3>
+          <p class="mt-1 text-sm text-[#657069]">
+            {{
+              locationRequired
+                ? 'Add the city and state for local discovery. Choose a Google Maps suggestion if one appears.'
+                : 'Online businesses can add a city and state to appear in local searches.'
+            }}
+          </p>
+          <div class="mt-5 grid gap-5 sm:grid-cols-2">
+            <UFormField label="City" name="city" :required="locationRequired">
+              <UInput
+                v-model="draft.city"
+                name="city"
+                placeholder="e.g. Lagos"
+                :maxlength="100"
+                class="w-full"
+                size="xl"
+                :ui="fieldUi"
+                :required="locationRequired"
+              />
+            </UFormField>
+            <UFormField label="State" name="state" :required="locationRequired">
+              <UInput
+                v-model="draft.state"
+                name="state"
+                placeholder="e.g. Lagos State"
+                :maxlength="100"
+                class="w-full"
+                size="xl"
+                :ui="fieldUi"
+                :required="locationRequired"
+              />
+            </UFormField>
+          </div>
+          <p v-if="areaError" role="alert" class="mt-2 text-sm text-red-700">{{ areaError }}</p>
+          <UFormField
+            v-if="locationRequired"
+            label="Address or area"
+            name="location"
+            required
+            class="mt-5"
+          >
+            <LocationInput
+              v-model="draft.location"
+              v-model:google-place-id="draft.googlePlaceId"
+              :required="true"
+              @place-selected="onPlaceSelected"
+            />
+            <p v-if="locationError" role="alert" class="mt-2 text-sm text-red-700">
+              {{ locationError }}
+            </p>
+          </UFormField>
+        </div>
+      </div>
     </section>
+
+    <details
+      class="group rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-8"
+      :open="!!(draft.weeklyHours.length || draft.openingHours) || undefined"
+    >
+      <summary
+        class="flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden"
+      >
+        <span
+          class="grid size-10 shrink-0 place-items-center rounded-xl bg-[#e7f3d8] text-xl text-[#315e42]"
+          ><UIcon name="i-lucide-clock-3"
+        /></span>
+        <span class="text-xl font-semibold tracking-tight text-[#143e32]">Business hours</span>
+        <UIcon
+          name="i-lucide-chevron-down"
+          class="ml-auto text-[#49604e] transition-transform group-open:rotate-180"
+        />
+      </summary>
+      <p class="mb-5 mt-4 text-sm text-[#657069]">
+        Turn on the days you are open, then set the start and end times.
+      </p>
+      <BusinessHoursEditor v-model="draft.weeklyHours" v-model:time-zone="draft.hoursTimeZone" />
+      <p v-if="hoursError" role="alert" class="mt-3 text-sm text-red-700">{{ hoursError }}</p>
+      <p v-if="draft.openingHours && !draft.weeklyHours.length" class="mt-3 text-xs text-[#657069]">
+        Previously listed hours: {{ draft.openingHours }}
+      </p>
+    </details>
+
+    <details
+      class="group rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-8"
+      :open="!!(draft.serviceArea || servicesText) || undefined"
+    >
+      <summary
+        class="flex cursor-pointer list-none items-center gap-3 [&::-webkit-details-marker]:hidden"
+      >
+        <span
+          class="grid size-10 shrink-0 place-items-center rounded-xl bg-[#e7f3d8] text-xl text-[#315e42]"
+          ><UIcon name="i-lucide-sparkles"
+        /></span>
+        <span class="text-xl font-semibold tracking-tight text-[#143e32]">More details</span>
+        <UIcon
+          name="i-lucide-chevron-down"
+          class="ml-auto text-[#49604e] transition-transform group-open:rotate-180"
+        />
+      </summary>
+      <div class="mt-6 space-y-5">
+        <UFormField
+          v-if="locationRequired"
+          label="Service area"
+          name="serviceArea"
+          description="Where can you serve customers?"
+        >
+          <UInput
+            v-model="draft.serviceArea"
+            name="serviceArea"
+            :maxlength="160"
+            placeholder="e.g. Lagos and nearby areas"
+            class="w-full"
+            size="xl"
+            :ui="fieldUi"
+          />
+        </UFormField>
+        <UFormField
+          label="Services & specialties"
+          name="services"
+          description="Add up to 8, one per line."
+        >
+          <UTextarea
+            v-model="servicesText"
+            name="services"
+            :rows="3"
+            placeholder="Brand design&#10;Website design"
+            class="w-full"
+            :ui="fieldUi"
+          />
+        </UFormField>
+      </div>
+    </details>
 
     <section class="rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-8">
       <div class="mb-7 flex items-start gap-3">
@@ -476,22 +622,13 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
         /></span>
         <div>
           <h2 class="text-xl font-semibold tracking-tight text-[#143e32]">
-            Where can people find you?
+            Where can people reach this business?
           </h2>
-          <p class="mt-1 text-sm text-[#657069]">
-            The links we ask for match the business types you selected.
-          </p>
+          <p class="mt-1 text-sm text-[#657069]">Add at least one official link.</p>
         </div>
       </div>
       <div class="grid gap-5 sm:grid-cols-2">
-        <UFormField
-          v-if="showWebsite"
-          :label="
-            draft.businessTypes.includes('desktop_app') ? 'Website or download page' : 'Website'
-          "
-          name="websiteUrl"
-          :required="needsWebsite"
-        >
+        <UFormField label="Website" name="websiteUrl">
           <UInput
             v-model="draft.websiteUrl"
             name="websiteUrl"
@@ -501,10 +638,9 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
             class="w-full"
             size="xl"
             :ui="fieldUi"
-            :required="needsWebsite"
           />
         </UFormField>
-        <template v-if="needsMobileStores">
+        <template v-if="showAppStores">
           <UFormField label="Apple App Store" name="appStoreUrl">
             <UInput
               v-model="draft.appStoreUrl"
@@ -530,7 +666,21 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
             />
           </UFormField>
         </template>
-        <template v-if="showSocialContact">
+      </div>
+      <details
+        class="group mt-6 rounded-xl border border-[#dfe6dc] bg-[#fbfcf8] p-4"
+        :open="!!(draft.socialUrl || draft.contactUrl) || undefined"
+      >
+        <summary
+          class="flex cursor-pointer list-none items-center gap-2 text-sm font-semibold text-[#143e32] [&::-webkit-details-marker]:hidden"
+        >
+          <UIcon name="i-lucide-message-circle" /> Social profile or contact link
+          <UIcon
+            name="i-lucide-chevron-down"
+            class="ml-auto transition-transform group-open:rotate-180"
+          />
+        </summary>
+        <div class="mt-5 grid gap-5 sm:grid-cols-2">
           <UFormField label="Official social profile" name="socialUrl">
             <UInput
               v-model="draft.socialUrl"
@@ -555,8 +705,8 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
               :ui="fieldUi"
             />
           </UFormField>
-        </template>
-      </div>
+        </div>
+      </details>
       <p v-if="linkError" role="alert" class="mt-4 text-sm font-medium text-red-700">
         {{ linkError }}
       </p>
