@@ -1,6 +1,9 @@
 <script setup lang="ts">
+import { serializeJsonLd } from '@/utils/jsonLd'
+
 const canonicalUrl = useCanonicalUrl('/')
 const socialImage = useCanonicalUrl('/og-image.png')
+const siteOrigin = new URL(canonicalUrl).origin
 
 useSeoMeta({
   title: 'Creda — Find businesses worth knowing',
@@ -12,11 +15,40 @@ useSeoMeta({
   ogUrl: canonicalUrl,
   ogImage: socialImage,
   ogImageAlt: 'Creda — Find businesses worth knowing',
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
   ogType: 'website',
   twitterCard: 'summary_large_image',
   twitterImage: socialImage,
 })
-useHead({ link: [{ rel: 'canonical', href: canonicalUrl }] })
+useHead({
+  link: [{ rel: 'canonical', href: canonicalUrl }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: serializeJsonLd({
+        '@context': 'https://schema.org',
+        '@graph': [
+          {
+            '@type': 'Organization',
+            '@id': `${siteOrigin}/#organization`,
+            name: 'Creda',
+            url: canonicalUrl,
+            logo: useCanonicalUrl('/creda-logo.png'),
+          },
+          {
+            '@type': 'WebSite',
+            '@id': `${siteOrigin}/#website`,
+            name: 'Creda',
+            url: canonicalUrl,
+            inLanguage: 'en-NG',
+            publisher: { '@id': `${siteOrigin}/#organization` },
+          },
+        ],
+      }),
+    },
+  ],
+})
 
 import BusinessCard from '@/components/businesses/BusinessCard.vue'
 import type { BusinessListResponse } from '~~/shared/businesses'

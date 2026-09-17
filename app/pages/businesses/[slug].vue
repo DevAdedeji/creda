@@ -6,17 +6,23 @@ import {
   type PublicBusiness,
 } from '~~/shared/businesses'
 import { authClient } from '~~/lib/auth-client'
+import { serializeJsonLd } from '@/utils/jsonLd'
 
 const route = useRoute()
 const googleMapsApiKey = useRuntimeConfig().public.googleMapsApiKey
 const slug = String(route.params.slug)
 const canonicalUrl = useCanonicalUrl('/businesses/' + encodeURIComponent(slug))
 const defaultSocialImage = useCanonicalUrl('/og-image.png')
+const homeUrl = useCanonicalUrl('/')
+const exploreUrl = useCanonicalUrl('/explore')
 const {
   data: business,
   status,
   error,
 } = await useFetch<PublicBusiness>('/api/businesses/' + encodeURIComponent(slug))
+if (import.meta.server && (error.value || !business.value)) {
+  setResponseStatus(error.value && error.value.statusCode !== 404 ? 500 : 404)
+}
 const { data: session } = await authClient.useSession(useFetch)
 const { data: saved, status: savedStatus } = await useFetch<{ saved: boolean }>(
   () => `/api/my/saved-businesses/${business.value?.id}`,
@@ -70,22 +76,100 @@ async function copyLink() {
   }
 }
 
+const seoLocation = computed(() => {
+  const item = business.value
+  return item && item.operationMode !== 'online'
+    ? [item.city, item.state].filter(Boolean).join(', ')
+    : ''
+})
+const seoTitle = computed(() => {
+  const item = business.value
+  return item
+    ? `${item.name}${seoLocation.value ? ` in ${seoLocation.value}` : ''} — Creda`
+    : 'Business — Creda'
+})
+const seoDescription = computed(() => {
+  const item = business.value
+  if (!item) return 'Explore this business on Creda.'
+  const introduction = seoLocation.value ? `${item.name} in ${seoLocation.value}. ` : ''
+  const description = `${introduction}${item.description}`.replace(/\s+/g, ' ').trim()
+  return description.length > 160 ? `${description.slice(0, 157).trimEnd()}…` : description
+})
+
 useSeoMeta({
-  title: computed(() => (business.value ? business.value.name + ' — Creda' : 'Business — Creda')),
-  description: computed(() => business.value?.description ?? 'Explore this business on Creda.'),
-  ogTitle: computed(() => (business.value ? business.value.name + ' — Creda' : 'Business — Creda')),
-  ogDescription: computed(() => business.value?.description ?? 'Explore this business on Creda.'),
+  title: seoTitle,
+  description: seoDescription,
+  ogTitle: seoTitle,
+  ogDescription: seoDescription,
   ogUrl: canonicalUrl,
   ogImage: computed(() => business.value?.coverUrl || defaultSocialImage),
   ogImageAlt: computed(() =>
     business.value ? `${business.value.name} on Creda` : 'Creda business profile',
   ),
+  ogImageWidth: computed(() => (business.value?.coverUrl ? undefined : 1200)),
+  ogImageHeight: computed(() => (business.value?.coverUrl ? undefined : 630)),
   ogType: 'website',
   twitterCard: 'summary_large_image',
   twitterImage: computed(() => business.value?.coverUrl || defaultSocialImage),
   robots: computed(() => (business.value ? 'index, follow' : 'noindex, follow')),
 })
-useHead({ link: [{ rel: 'canonical', href: canonicalUrl }] })
+useHead(() => {
+  const item = business.value
+  if (!item) return {}
+
+  const images = [item.coverUrl, item.logoUrl, ...item.galleryUrls].filter((url): url is string =>
+    Boolean(url),
+  )
+  return {
+    link: [{ rel: 'canonical', href: canonicalUrl }],
+    script: [
+      {
+        type: 'application/ld+json',
+        innerHTML: serializeJsonLd({
+          '@context': 'https://schema.org',
+          '@graph': [
+            {
+              '@type': 'WebPage',
+              '@id': canonicalUrl,
+              url: canonicalUrl,
+              name: seoTitle.value,
+              description: seoDescription.value,
+              inLanguage: 'en-NG',
+              mainEntity: { '@id': `${canonicalUrl}#business` },
+              ...(images[0] ? { primaryImageOfPage: images[0] } : {}),
+            },
+            {
+              '@type': 'Organization',
+              '@id': `${canonicalUrl}#business`,
+              name: item.name,
+              description: item.description,
+              ...(item.websiteUrl ? { url: item.websiteUrl } : {}),
+              ...(item.logoUrl ? { logo: item.logoUrl } : {}),
+              ...(images.length ? { image: images } : {}),
+              ...(seoLocation.value ? { areaServed: seoLocation.value } : {}),
+              ...(item.ownershipStatus === 'verified' && item.socialUrl
+                ? { sameAs: [item.socialUrl] }
+                : {}),
+            },
+            {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Home', item: homeUrl },
+                {
+                  '@type': 'ListItem',
+                  position: 2,
+                  name: 'Explore businesses',
+                  item: exploreUrl,
+                },
+                { '@type': 'ListItem', position: 3, name: item.name, item: canonicalUrl },
+              ],
+            },
+          ],
+        }),
+      },
+    ],
+  }
+})
 
 const categoryLabel = computed(
   () => businessCategories.find((item) => item.value === business.value?.category)?.label,
@@ -139,8 +223,16 @@ const destinations = computed(() => {
         v-else-if="error || !business"
         class="mt-9 rounded-2xl border border-[#dfe6dc] bg-white p-10"
       >
-        <h1 class="text-3xl font-semibold text-[#143e32]">Business not found.</h1>
-        <p class="mt-3 text-[#657069]">This profile may not be available yet.</p>
+        <h1 class="text-3xl font-semibold text-[#143e32]">
+          {{ error && error.statusCode !== 404 ? 'Profile unavailable.' : 'Business not found.' }}
+        </h1>
+        <p class="mt-3 text-[#657069]">
+          {{
+            error && error.statusCode !== 404
+              ? 'We could not load this profile right now. Please try again later.'
+              : 'This profile may not be available yet.'
+          }}
+        </p>
         <UButton to="/explore" class="mt-6 !rounded-xl !bg-[#143e32] !text-white"
           >Browse businesses</UButton
         >

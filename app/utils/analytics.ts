@@ -1,3 +1,5 @@
+import { isProductionHost } from '~~/shared/site'
+
 type Sabilytics = {
   track: (name: string, properties?: Record<string, string>) => void
 }
@@ -5,7 +7,7 @@ type Sabilytics = {
 type AnalyticsWindow = Window & { sabilytics?: Sabilytics }
 
 export function isAnalyticsEnabled(hostname: string): boolean {
-  return !import.meta.dev && (hostname === 'creda.ng' || hostname === 'www.creda.ng')
+  return !import.meta.dev && isProductionHost(hostname)
 }
 
 export function trackAnalyticsEvent(name: string, properties?: Record<string, string>): void {

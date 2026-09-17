@@ -1,45 +1,31 @@
-import { eq } from 'drizzle-orm'
-import { getRequestURL, setHeader } from 'h3'
+import { count, eq } from 'drizzle-orm'
 import { db } from '~~/lib/db'
 import { business } from '~~/lib/db/schema'
-
-function escapeXml(value: string) {
-  return value.replace(
-    /[&<>"']/g,
-    (character) =>
-      ({
-        '&': '&amp;',
-        '<': '&lt;',
-        '>': '&gt;',
-        '"': '&quot;',
-        "'": '&apos;',
-      })[character]!,
-  )
-}
+import { productionOrigin } from '~~/shared/site'
+import {
+  assertProductionSitemap,
+  businessSitemapPageSize,
+  escapeXml,
+  setSitemapHeaders,
+} from '@server/utils/sitemap'
 
 export default defineEventHandler(async (event) => {
-  const origin =
-    process.env.NUXT_PUBLIC_SITE_URL || process.env.BETTER_AUTH_URL || getRequestURL(event).origin
-  const listings = await db
-    .select({ slug: business.slug, updatedAt: business.updatedAt })
+  assertProductionSitemap(event)
+  const [result] = await db
+    .select({ total: count() })
     .from(business)
     .where(eq(business.status, 'approved'))
-
-  const urls = [
-    { path: '/', updatedAt: null },
-    { path: '/explore', updatedAt: null },
-    ...listings.map(({ slug, updatedAt }) => ({
-      path: `/businesses/${encodeURIComponent(slug)}`,
-      updatedAt,
-    })),
+  const pages = Math.ceil((result?.total ?? 0) / businessSitemapPageSize)
+  const paths = [
+    '/sitemap-static.xml',
+    ...Array.from({ length: pages }, (_, index) => `/sitemap-businesses.xml?page=${index + 1}`),
   ]
 
-  setHeader(event, 'content-type', 'application/xml; charset=utf-8')
-  setHeader(event, 'cache-control', 'public, max-age=300')
-  return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${urls
+  setSitemapHeaders(event)
+  return `<?xml version="1.0" encoding="UTF-8"?>\n<sitemapindex xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${paths
     .map(
-      ({ path, updatedAt }) =>
-        `<url><loc>${escapeXml(new URL(path, origin).toString())}</loc>${updatedAt ? `<lastmod>${updatedAt.toISOString()}</lastmod>` : ''}</url>`,
+      (path) =>
+        `<sitemap><loc>${escapeXml(new URL(path, productionOrigin).toString())}</loc></sitemap>`,
     )
-    .join('')}</urlset>`
+    .join('')}</sitemapindex>`
 })

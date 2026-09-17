@@ -3,6 +3,12 @@ import { isAnalyticsEnabled } from '@/utils/analytics'
 
 const hostname = useRequestURL().hostname
 
+useSeoMeta({
+  ogSiteName: 'Creda',
+  ogLocale: 'en_NG',
+  twitterCard: 'summary_large_image',
+})
+
 if (isAnalyticsEnabled(hostname)) {
   useHead({
     script: [

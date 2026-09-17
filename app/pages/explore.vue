@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import BusinessCard from '@/components/businesses/BusinessCard.vue'
 import FilterFields from '@/components/businesses/FilterFields.vue'
+import { serializeJsonLd } from '@/utils/jsonLd'
 import { authClient } from '~~/lib/auth-client'
 import {
   businessCategories,
@@ -21,11 +22,34 @@ useSeoMeta({
   ogUrl: canonicalUrl,
   ogImage: socialImage,
   ogImageAlt: 'Discover businesses on Creda',
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
   ogType: 'website',
   twitterCard: 'summary_large_image',
   twitterImage: socialImage,
 })
-useHead({ link: [{ rel: 'canonical', href: canonicalUrl }] })
+useHead({
+  link: [{ rel: 'canonical', href: canonicalUrl }],
+  script: [
+    {
+      type: 'application/ld+json',
+      innerHTML: serializeJsonLd({
+        '@context': 'https://schema.org',
+        '@type': 'CollectionPage',
+        name: 'Explore businesses — Creda',
+        url: canonicalUrl,
+        description: 'Find businesses worth knowing, starting in Nigeria.',
+        breadcrumb: {
+          '@type': 'BreadcrumbList',
+          itemListElement: [
+            { '@type': 'ListItem', position: 1, name: 'Home', item: useCanonicalUrl('/') },
+            { '@type': 'ListItem', position: 2, name: 'Explore businesses', item: canonicalUrl },
+          ],
+        },
+      }),
+    },
+  ],
+})
 
 const route = useRoute()
 const filtersOpen = ref(false)

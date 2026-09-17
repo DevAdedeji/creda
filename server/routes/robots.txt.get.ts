@@ -1,21 +1,15 @@
 import { getRequestURL, setHeader } from 'h3'
+import { isProductionHost, productionOrigin } from '~~/shared/site'
 
 export default defineEventHandler((event) => {
-  const origin =
-    process.env.NUXT_PUBLIC_SITE_URL || process.env.BETTER_AUTH_URL || getRequestURL(event).origin
+  const hostname = getRequestURL(event, { xForwardedHost: true }).hostname
   setHeader(event, 'content-type', 'text/plain; charset=utf-8')
+  if (!isProductionHost(hostname)) return 'User-agent: *\nAllow: /\n'
   return [
     'User-agent: *',
     'Allow: /',
     'Disallow: /api/',
-    'Disallow: /account',
-    'Disallow: /admin/',
-    'Disallow: /dashboard/',
-    'Disallow: /login',
-    'Disallow: /signup',
-    'Disallow: /forgot-password',
-    'Disallow: /reset-password',
-    `Sitemap: ${new URL('/sitemap.xml', origin)}`,
+    `Sitemap: ${new URL('/sitemap.xml', productionOrigin)}`,
     '',
   ].join('\n')
 })
