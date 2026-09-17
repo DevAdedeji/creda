@@ -363,29 +363,13 @@ const destinations = computed(() => {
               aria-labelledby="gallery-heading"
             >
               <h2 id="gallery-heading" class="text-2xl font-semibold tracking-tight text-[#143e32]">
-                Photos
+                Gallery
               </h2>
-              <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <a
-                  v-for="(url, index) in business.galleryUrls"
-                  :key="url"
-                  :href="url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  :aria-label="`View photo ${index + 1} of ${business.name}`"
-                  class="group overflow-hidden rounded-xl bg-[#edf3e7]"
-                >
-                  <NuxtImg
-                    :src="url"
-                    :alt="`${business.name} gallery photo ${index + 1}`"
-                    loading="lazy"
-                    width="256"
-                    height="256"
-                    format="webp"
-                    class="aspect-square w-full object-cover transition duration-300 group-hover:scale-105"
-                  />
-                </a>
-              </div>
+              <BusinessesGallery
+                :images="business.galleryUrls"
+                :business-name="business.name"
+                class="mt-6"
+              />
             </section>
             <ReviewsSection
               :business-id="business.id"

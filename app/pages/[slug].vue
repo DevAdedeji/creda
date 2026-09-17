@@ -244,28 +244,12 @@ useHead(() =>
               </div>
             </section>
             <section v-if="business.galleryUrls.length" class="rounded-3xl bg-white p-7 sm:p-9">
-              <h2 class="text-2xl font-semibold tracking-tight">Take a look around</h2>
-              <div class="mt-5 grid grid-cols-2 gap-3 sm:grid-cols-3">
-                <a
-                  v-for="(url, index) in business.galleryUrls"
-                  :key="url"
-                  :href="url"
-                  target="_blank"
-                  rel="noopener noreferrer"
-                  :aria-label="`View photo ${index + 1} of ${business.name}`"
-                  class="overflow-hidden rounded-xl bg-[#eef3e9]"
-                >
-                  <NuxtImg
-                    :src="url"
-                    :alt="`${business.name} photo ${index + 1}`"
-                    loading="lazy"
-                    width="256"
-                    height="256"
-                    format="webp"
-                    class="aspect-square w-full object-cover transition duration-300 hover:scale-105"
-                  />
-                </a>
-              </div>
+              <h2 class="text-2xl font-semibold tracking-tight">Gallery</h2>
+              <BusinessesGallery
+                :images="business.galleryUrls"
+                :business-name="business.name"
+                class="mt-5"
+              />
             </section>
             <section v-if="mapUrl" class="overflow-hidden rounded-3xl bg-white">
               <div class="p-7 sm:p-9">
