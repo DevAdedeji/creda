@@ -62,6 +62,9 @@ export interface BusinessDraft {
   socialUrl: string
   contactUrl: string
   logoUrl: string
+  coverUrl: string
+  galleryUrls: string[]
+  mediaProofs: string[]
 }
 
 export interface PublicBusiness {
@@ -80,6 +83,8 @@ export interface PublicBusiness {
   socialUrl: string | null
   contactUrl: string | null
   logoUrl: string | null
+  coverUrl: string | null
+  galleryUrls: string[]
   ownershipStatus: OwnershipStatus
   publishedAt: string | null
 }

@@ -32,6 +32,9 @@ const initial = computed<BusinessDraft | undefined>(() => {
     socialUrl: item.socialUrl ?? '',
     contactUrl: item.contactUrl ?? '',
     logoUrl: item.logoUrl ?? '',
+    coverUrl: item.coverUrl ?? '',
+    galleryUrls: [...item.galleryUrls],
+    mediaProofs: [],
   }
 })
 const submitting = ref(false)

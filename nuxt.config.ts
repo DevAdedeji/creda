@@ -4,6 +4,10 @@ export default defineNuxtConfig({
   alias: { '@server': fileURLToPath(new URL('./server', import.meta.url)) },
   devServer: { port: 4002 },
   compatibilityDate: '2026-09-17',
+  nitro: {
+    experimental: { tasks: true },
+    scheduledTasks: { '*/15 * * * *': ['business-images-cleanup'] },
+  },
   devtools: { enabled: true },
   modules: ['@nuxt/ui'],
   runtimeConfig: { public: { googleMapsApiKey: '' } },

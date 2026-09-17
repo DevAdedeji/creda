@@ -1,13 +1,50 @@
 import { randomBytes, randomUUID } from 'node:crypto'
 import { and, arrayContains, asc, desc, eq, ilike, ne, or, sql, type SQL } from 'drizzle-orm'
 import { db } from '~~/lib/db'
-import { business, businessModeration, user } from '~~/lib/db/schema'
+import { business, businessImageUpload, businessModeration, user } from '~~/lib/db/schema'
 import type { BusinessListResponse, ManagedBusiness, PublicBusiness } from '~~/shared/businesses'
 import type { BusinessListQuery, BusinessReviewInput, BusinessSubmissionInput } from './validation'
 import { normalizedKey } from './validation'
+import { validateBusinessMedia } from './media'
+import { deleteUnusedBusinessImages } from './image-storage'
 
 const PAGE_SIZE = 12
 type BusinessRow = typeof business.$inferSelect
+type BusinessTransaction = Parameters<Parameters<typeof db.transaction>[0]>[0]
+
+function imageUrls(value: {
+  logoUrl: string | null
+  coverUrl: string | null
+  galleryUrls: string[]
+}) {
+  return [
+    ...new Set(
+      [value.logoUrl, value.coverUrl, ...value.galleryUrls].filter((url): url is string =>
+        Boolean(url),
+      ),
+    ),
+  ].sort()
+}
+
+async function assertAttachableImages(
+  tx: BusinessTransaction,
+  ownerUserId: string,
+  input: BusinessSubmissionInput,
+) {
+  for (const url of imageUrls(input)) {
+    const [image] = await tx
+      .select()
+      .from(businessImageUpload)
+      .where(eq(businessImageUpload.url, url))
+      .for('update')
+    if (image && (image.ownerUserId !== ownerUserId || image.status !== 'ready')) {
+      throw new BusinessDomainError(
+        'not_editable',
+        'An image is no longer available. Upload it again.',
+      )
+    }
+  }
+}
 
 export class BusinessDomainError extends Error {
   constructor(
@@ -56,6 +93,8 @@ function toPublic(row: BusinessRow): PublicBusiness {
     socialUrl: row.socialUrl,
     contactUrl: row.contactUrl,
     logoUrl: row.logoUrl,
+    coverUrl: row.coverUrl,
+    galleryUrls: row.galleryUrls,
     ownershipStatus: row.ownershipStatus,
     publishedAt: row.publishedAt?.toISOString() ?? null,
   }
@@ -119,22 +158,28 @@ export async function createBusiness(
   ownerUserId: string,
   input: BusinessSubmissionInput,
 ): Promise<ManagedBusiness> {
+  validateBusinessMedia(ownerUserId, input)
   await ensureNotDuplicate(input)
+  const { mediaProofs: _mediaProofs, ...details } = input
   try {
-    const [created] = await db
-      .insert(business)
-      .values({
-        id: randomUUID(),
-        slug: slugFor(input.name, input.location),
-        ownerUserId,
-        ...input,
-        status: 'approved',
-        publishedAt: sql`now()`,
-        normalizedName: normalizedKey(input.name),
-        normalizedLocation: normalizedKey(input.location || 'online'),
-      })
-      .returning()
-    return toManaged(created!)
+    const created = await db.transaction(async (tx) => {
+      await assertAttachableImages(tx, ownerUserId, input)
+      const [row] = await tx
+        .insert(business)
+        .values({
+          id: randomUUID(),
+          slug: slugFor(input.name, input.location),
+          ownerUserId,
+          ...details,
+          status: 'approved',
+          publishedAt: sql`now()`,
+          normalizedName: normalizedKey(input.name),
+          normalizedLocation: normalizedKey(input.location || 'online'),
+        })
+        .returning()
+      return row!
+    })
+    return toManaged(created)
   } catch (error) {
     if (isUniqueViolation(error)) {
       throw new BusinessDomainError('duplicate', 'This business has already been submitted.')
@@ -154,10 +199,12 @@ export async function updateBusiness(
     .where(and(eq(business.id, id), eq(business.ownerUserId, ownerUserId)))
     .limit(1)
   if (!current) throw new BusinessDomainError('not_found', 'Business not found.')
+  validateBusinessMedia(ownerUserId, input, current)
   await ensureNotDuplicate(input, id)
+  const { mediaProofs: _mediaProofs, ...details } = input
 
   try {
-    return await db.transaction(async (tx) => {
+    const result = await db.transaction(async (tx) => {
       const [locked] = await tx
         .select()
         .from(business)
@@ -171,10 +218,11 @@ export async function updateBusiness(
           'This listing changed. Refresh and try again.',
         )
       }
+      await assertAttachableImages(tx, ownerUserId, input)
       const [updated] = await tx
         .update(business)
         .set({
-          ...input,
+          ...details,
           normalizedName: normalizedKey(input.name),
           normalizedLocation: normalizedKey(input.location || 'online'),
           status: 'approved',
@@ -196,8 +244,22 @@ export async function updateBusiness(
           reason: 'Owner updated the listing.',
         })
       }
-      return toManaged(updated!)
+      const selected = new Set(imageUrls(input))
+      const removed = imageUrls(locked).filter((url) => !selected.has(url))
+      for (const url of removed) {
+        await tx
+          .update(businessImageUpload)
+          .set({ deleteAfter: new Date() })
+          .where(and(eq(businessImageUpload.url, url), eq(businessImageUpload.status, 'ready')))
+      }
+      return { managed: toManaged(updated!), removed }
     })
+    try {
+      await deleteUnusedBusinessImages(result.removed)
+    } catch (error) {
+      console.error('Business image cleanup was queued for retry:', error)
+    }
+    return result.managed
   } catch (error) {
     if (isUniqueViolation(error)) {
       throw new BusinessDomainError('duplicate', 'This business has already been submitted.')

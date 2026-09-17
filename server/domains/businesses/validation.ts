@@ -66,6 +66,12 @@ export const businessSubmissionSchema = z
     socialUrl: destinationUrl,
     contactUrl: destinationUrl,
     logoUrl: destinationUrl,
+    coverUrl: destinationUrl,
+    galleryUrls: z
+      .array(z.url().max(500))
+      .max(8)
+      .refine((urls) => new Set(urls).size === urls.length, 'Choose each gallery image only once.'),
+    mediaProofs: z.array(z.string().max(2000)).max(10),
   })
   .superRefine((value, context) => {
     if (value.googlePlaceId && !value.location) {

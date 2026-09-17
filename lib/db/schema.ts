@@ -142,6 +142,11 @@ export const business = pgTable(
     socialUrl: text('social_url'),
     contactUrl: text('contact_url'),
     logoUrl: text('logo_url'),
+    coverUrl: text('cover_url'),
+    galleryUrls: text('gallery_urls')
+      .array()
+      .notNull()
+      .default(sql`'{}'::text[]`),
     status: businessStatus('status').notNull().default('approved'),
     ownershipStatus: ownershipStatus('ownership_status').notNull().default('unverified'),
     rejectionReason: text('rejection_reason'),
@@ -168,6 +173,26 @@ export const business = pgTable(
         "operation_mode = 'online' OR (location IS NOT NULL AND length(trim(location)) >= 2)",
       ),
     ),
+  ],
+)
+
+export const businessImageUpload = pgTable(
+  'business_image_upload',
+  {
+    id: text('id').primaryKey(),
+    ownerUserId: text('owner_user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    path: text('path').notNull().unique(),
+    url: text('url').unique(),
+    status: text('status').notNull().default('uploading'),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    deleteAfter: timestamp('delete_after', { withTimezone: true }),
+    deletedAt: timestamp('deleted_at', { withTimezone: true }),
+  },
+  (table) => [
+    index('business_image_upload_owner_created_idx').on(table.ownerUserId, table.createdAt),
+    index('business_image_upload_cleanup_idx').on(table.status, table.deleteAfter),
   ],
 )
 

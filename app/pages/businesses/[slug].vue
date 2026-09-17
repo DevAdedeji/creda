@@ -81,7 +81,14 @@ const destinations = computed(() => {
       </div>
       <template v-else>
         <div class="mt-9 overflow-hidden rounded-3xl border border-[#dfe6dc] bg-white">
-          <div class="h-24 bg-[#dcebd4] sm:h-32" />
+          <div class="h-40 bg-[#dcebd4] sm:h-56">
+            <img
+              v-if="business.coverUrl"
+              :src="business.coverUrl"
+              :alt="`${business.name} cover image`"
+              class="size-full object-cover"
+            />
+          </div>
           <div class="px-6 pb-8 sm:px-10">
             <div class="-mt-9 flex flex-wrap items-end justify-between gap-4">
               <img
@@ -127,6 +134,33 @@ const destinations = computed(() => {
 
         <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div class="space-y-6">
+            <section
+              v-if="business.galleryUrls.length"
+              class="rounded-2xl border border-[#dfe6dc] bg-white p-7 sm:p-9"
+              aria-labelledby="gallery-heading"
+            >
+              <h2 id="gallery-heading" class="text-2xl font-semibold tracking-tight text-[#143e32]">
+                Photos
+              </h2>
+              <div class="mt-6 grid grid-cols-2 gap-3 sm:grid-cols-3">
+                <a
+                  v-for="(url, index) in business.galleryUrls"
+                  :key="url"
+                  :href="url"
+                  target="_blank"
+                  rel="noopener noreferrer"
+                  :aria-label="`View photo ${index + 1} of ${business.name}`"
+                  class="group overflow-hidden rounded-xl bg-[#edf3e7]"
+                >
+                  <img
+                    :src="url"
+                    :alt="`${business.name} gallery photo ${index + 1}`"
+                    loading="lazy"
+                    class="aspect-square w-full object-cover transition duration-300 group-hover:scale-105"
+                  />
+                </a>
+              </div>
+            </section>
             <section
               class="rounded-2xl border border-[#dfe6dc] bg-white p-7 sm:p-9"
               aria-labelledby="reviews-heading"
