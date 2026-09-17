@@ -1,6 +1,6 @@
 <script setup lang="ts">
 import BusinessCard from '@/components/businesses/BusinessCard.vue'
-import { authInputUi } from '@/utils/authInputUi'
+import FilterFields from '@/components/businesses/FilterFields.vue'
 import {
   businessCategories,
   businessTypes,
@@ -15,6 +15,7 @@ useSeoMeta({
 })
 
 const route = useRoute()
+const filtersOpen = ref(false)
 const search = ref(String(route.query.q ?? ''))
 const category = ref<BusinessCategory | 'all'>(
   businessCategories.some((item) => item.value === route.query.category)
@@ -27,9 +28,6 @@ const businessType = ref<BusinessType | 'all'>(
     : 'all',
 )
 const location = ref(String(route.query.location ?? ''))
-const categoryItems = [{ label: 'All categories', value: 'all' }, ...businessCategories]
-const typeItems = [{ label: 'All types', value: 'all' }, ...businessTypes]
-
 const apiQuery = computed(() => ({
   q: typeof route.query.q === 'string' ? route.query.q : undefined,
   category: typeof route.query.category === 'string' ? route.query.category : undefined,
@@ -56,6 +54,7 @@ watch(
 )
 
 function applyFilters() {
+  filtersOpen.value = false
   navigateTo({
     path: '/businesses',
     query: {
@@ -67,8 +66,20 @@ function applyFilters() {
   })
 }
 
+function clearFilters() {
+  search.value = ''
+  category.value = 'all'
+  businessType.value = 'all'
+  location.value = ''
+  filtersOpen.value = false
+  navigateTo('/businesses')
+}
+
 function pageLink(page: number) {
-  return { path: '/businesses', query: { ...route.query, page: String(page) } }
+  const query = { ...route.query }
+  if (page === 1) delete query.page
+  else query.page = String(page)
+  return { path: '/businesses', query }
 }
 </script>
 
@@ -98,7 +109,7 @@ function pageLink(page: number) {
       <div
         class="mx-auto w-full px-5 sm:px-8 xl:px-12 max-w-[1240px] grid gap-9 py-10 lg:grid-cols-[245px_minmax(0,1fr)] lg:py-14"
       >
-        <aside>
+        <aside class="hidden lg:block">
           <form
             class="rounded-2xl border border-[#dfe6dc] bg-white p-5 lg:sticky lg:top-28"
             aria-label="Filter businesses"
@@ -108,65 +119,44 @@ function pageLink(page: number) {
               <h2 class="text-lg font-semibold text-[#143e32]">Filter results</h2>
               <UIcon name="i-lucide-sliders-horizontal" class="text-[#5f785d]" />
             </div>
-            <div class="mt-6 space-y-5">
-              <UFormField label="Search" name="q"
-                ><UInput
-                  v-model="search"
-                  name="q"
-                  placeholder="Name or keyword"
-                  leading-icon="i-lucide-search"
-                  class="w-full"
-                  :ui="authInputUi"
-              /></UFormField>
-              <UFormField label="Category" name="category">
-                <USelect
-                  v-model="category"
-                  :items="categoryItems"
-                  name="category"
-                  class="w-full"
-                  :ui="authInputUi"
-                />
-              </UFormField>
-              <UFormField label="Type" name="businessType">
-                <USelect
-                  v-model="businessType"
-                  :items="typeItems"
-                  name="businessType"
-                  class="w-full"
-                  :ui="authInputUi"
-                />
-              </UFormField>
-              <UFormField label="Location" name="location"
-                ><UInput
-                  v-model="location"
-                  name="location"
-                  placeholder="Any location"
-                  class="w-full"
-                  :ui="authInputUi"
-              /></UFormField>
+            <div class="mt-6">
+              <FilterFields
+                v-model:search="search"
+                v-model:category="category"
+                v-model:business-type="businessType"
+                v-model:location="location"
+              />
             </div>
             <UButton type="submit" block class="mt-7 !rounded-lg !bg-[#143e32] !text-white"
               >Show businesses</UButton
             >
-            <NuxtLink
-              to="/businesses"
-              class="mt-4 block text-center text-xs font-semibold text-[#657069] hover:underline"
-              >Clear filters</NuxtLink
+            <button
+              type="button"
+              class="mt-4 block w-full text-center text-xs font-semibold text-[#657069] hover:underline"
+              @click="clearFilters"
             >
+              Clear filters
+            </button>
           </form>
         </aside>
 
         <section aria-live="polite">
-          <div class="mb-6 flex flex-wrap items-end justify-between gap-3">
-            <div>
-              <p class="text-xs font-bold tracking-[.14em] text-[#668269]">THE DIRECTORY</p>
-              <h2 class="mt-1 text-2xl font-semibold tracking-tight text-[#143e32]">
-                {{ data?.total ?? 0 }} {{ data?.total === 1 ? 'business' : 'businesses' }}
-              </h2>
+          <div class="mb-6 flex flex-col gap-2.5 lg:flex-row lg:items-center lg:justify-between">
+            <div class="flex items-center justify-between gap-3">
+              <h2 class="text-2xl font-semibold tracking-tight text-[#143e32]">The directory</h2>
+              <UButton
+                color="neutral"
+                variant="outline"
+                icon="i-lucide-sliders-horizontal"
+                aria-label="Filter businesses"
+                title="Filter businesses"
+                class="!rounded-xl !border-[#d5dfd2] !bg-white !text-[#143e32] lg:!hidden"
+                @click="filtersOpen = true"
+              />
             </div>
             <NuxtLink
               to="/businesses/new"
-              class="inline-flex items-center gap-2 text-sm font-semibold text-[#315c3c] hover:underline"
+              class="inline-flex self-start items-center gap-2 text-sm font-semibold text-[#315c3c] hover:underline lg:self-auto"
               >List your business <UIcon name="i-lucide-arrow-up-right"
             /></NuxtLink>
           </div>
@@ -196,8 +186,8 @@ function pageLink(page: number) {
               No businesses found.
             </h3>
             <p class="mt-2 max-w-lg text-sm leading-6 text-[#657069]">
-              Try another search or a broader filter. New businesses are added as their profiles are
-              reviewed.
+              Try another search or a broader filter. New businesses appear as soon as they are
+              listed.
             </p>
             <NuxtLink
               to="/businesses"
@@ -208,34 +198,81 @@ function pageLink(page: number) {
           <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
             <BusinessCard v-for="item in data.items" :key="item.id" :business="item" />
           </div>
-          <div
-            v-if="data && data.total > data.pageSize"
-            class="mt-9 flex items-center justify-between gap-4"
-          >
-            <UButton
-              v-if="data.page > 1"
-              :to="pageLink(data.page - 1)"
-              color="neutral"
-              variant="outline"
-              class="!rounded-lg"
-              icon="i-lucide-arrow-left"
-              >Previous</UButton
-            ><span v-else />
-            <span class="text-sm text-[#657069]"
-              >Page {{ data.page }} of {{ Math.ceil(data.total / data.pageSize) }}</span
+          <div v-if="data && data.total > data.pageSize" class="mt-9">
+            <nav
+              aria-label="Business pages"
+              class="flex flex-wrap items-center justify-between gap-3"
             >
-            <UButton
-              v-if="data.page * data.pageSize < data.total"
-              :to="pageLink(data.page + 1)"
-              color="neutral"
-              variant="outline"
-              class="!rounded-lg"
-              trailing-icon="i-lucide-arrow-right"
-              >Next</UButton
-            ><span v-else />
+              <UButton
+                :to="data.page > 1 ? pageLink(data.page - 1) : undefined"
+                :disabled="data.page <= 1"
+                size="sm"
+                color="neutral"
+                variant="outline"
+                class="!rounded-lg"
+                icon="i-lucide-arrow-left"
+                >Previous</UButton
+              >
+              <UPagination
+                :page="data.page"
+                :total="data.total"
+                :items-per-page="data.pageSize"
+                :sibling-count="1"
+                :show-controls="false"
+                :to="pageLink"
+                class="hidden sm:flex"
+              />
+              <span class="text-sm text-[#657069] sm:hidden">
+                Page {{ data.page }} of {{ Math.ceil(data.total / data.pageSize) }}
+              </span>
+              <UButton
+                :to="data.page * data.pageSize < data.total ? pageLink(data.page + 1) : undefined"
+                :disabled="data.page * data.pageSize >= data.total"
+                size="sm"
+                color="neutral"
+                variant="outline"
+                class="!rounded-lg"
+                trailing-icon="i-lucide-arrow-right"
+                >Next</UButton
+              >
+            </nav>
           </div>
         </section>
       </div>
     </main>
+    <UDrawer
+      v-model:open="filtersOpen"
+      title="Filter results"
+      close
+      :ui="{
+        content: 'max-h-[90dvh] rounded-t-3xl bg-white',
+        container: 'max-h-[90dvh] !gap-0 !overflow-hidden !p-0',
+        header: 'shrink-0 border-b border-[#e5ebe2] px-6 py-5',
+        body: 'min-h-0 overflow-y-auto px-6 py-6',
+        footer:
+          'shrink-0 border-t border-[#e5ebe2] px-6 pb-[max(1rem,env(safe-area-inset-bottom))] pt-4',
+      }"
+    >
+      <template #body>
+        <form id="mobile-business-filters" @submit.prevent="applyFilters">
+          <FilterFields
+            v-model:search="search"
+            v-model:category="category"
+            v-model:business-type="businessType"
+            v-model:location="location"
+          />
+        </form>
+      </template>
+      <template #footer>
+        <UButton
+          type="submit"
+          form="mobile-business-filters"
+          block
+          class="!rounded-lg !bg-[#143e32] !text-white"
+          >Show businesses</UButton
+        >
+        <UButton color="neutral" variant="ghost" block @click="clearFilters">Clear filters</UButton>
+      </template>
+    </UDrawer>
   </div>
 </template>
