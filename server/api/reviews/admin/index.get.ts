@@ -5,7 +5,7 @@ import { listAdminReviews } from '@server/domains/reviews/service'
 
 const querySchema = z.object({
   page: z.coerce.number().int().min(1).max(10000).default(1),
-  status: z.enum(['pending', 'published', 'rejected', 'removed']).default('pending'),
+  status: z.enum(['pending', 'published', 'rejected', 'removed']).default('published'),
 })
 
 export default defineEventHandler(async (event) => {

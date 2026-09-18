@@ -72,7 +72,7 @@ async function decide(item: AdminReport) {
       <NuxtLink
         to="/admin/reviews"
         class="inline-flex items-center gap-2 text-sm font-semibold text-[#496c51] hover:underline"
-        ><UIcon name="i-lucide-arrow-left" /> Review moderation</NuxtLink
+        ><UIcon name="i-lucide-arrow-left" /> Manage reviews</NuxtLink
       >
       <div class="mt-8 flex flex-wrap items-end justify-between gap-5">
         <div>

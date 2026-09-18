@@ -30,6 +30,7 @@ export interface ReviewListResponse {
   totalPages: number
   myReview: MyReview | null
   canReview: boolean
+  reviewBlocked: boolean
   isOwner: boolean
 }
 

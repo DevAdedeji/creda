@@ -4,15 +4,14 @@ import type { AdminReview, ReviewStatus } from '~~/shared/reviews'
 
 type AdminResponse = { reviews: AdminReview[]; page: number; totalPages: number }
 
-useSeoMeta({ title: 'Review moderation — Creda', robots: 'noindex, nofollow' })
+useSeoMeta({ title: 'Manage reviews — Creda', robots: 'noindex, nofollow' })
 
-const statusFilter = ref<ReviewStatus>('pending')
+const statusFilter = ref<ReviewStatus>('published')
 const page = ref(1)
 const { data, status, error, refresh } = await useFetch<AdminResponse>('/api/reviews/admin', {
   query: { page, status: statusFilter },
 })
 const decisionReviewId = ref<string | null>(null)
-const decision = ref<'reject' | 'remove'>('reject')
 const reason = ref('')
 const actionError = ref('')
 const actionErrorReviewId = ref<string | null>(null)
@@ -25,15 +24,14 @@ watch(statusFilter, () => {
   actionErrorReviewId.value = null
 })
 
-async function moderate(id: string, choice: 'publish' | 'reject' | 'remove') {
+async function removeReview(id: string) {
   actionError.value = ''
   actionErrorReviewId.value = null
   actingId.value = id
   try {
     await $fetch(`/api/reviews/admin/${id}/moderate`, {
       method: 'POST',
-      body:
-        choice === 'publish' ? { decision: choice } : { decision: choice, reason: reason.value },
+      body: { decision: 'remove', reason: reason.value },
     })
     decisionReviewId.value = null
     reason.value = ''
@@ -49,9 +47,8 @@ async function moderate(id: string, choice: 'publish' | 'reject' | 'remove') {
   }
 }
 
-function openDecision(id: string, choice: 'reject' | 'remove') {
+function openDecision(id: string) {
   decisionReviewId.value = id
-  decision.value = choice
   reason.value = ''
   actionError.value = ''
   actionErrorReviewId.value = null
@@ -69,10 +66,10 @@ function openDecision(id: string, choice: 'reject' | 'remove') {
       <p class="mt-9 text-xs font-bold uppercase tracking-[.15em] text-[#65836a]">
         Creda administration
       </p>
-      <h1 class="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Review moderation</h1>
+      <h1 class="mt-2 text-3xl font-semibold tracking-tight sm:text-4xl">Manage reviews</h1>
       <p class="mt-3 max-w-2xl text-sm leading-7 text-[#647367]">
-        Read each customer experience before it becomes public. Apply the same standard to positive
-        and negative reviews.
+        Reviews appear as soon as people post them. Remove a public review if it violates Creda's
+        standards.
       </p>
       <NuxtLink
         to="/admin/reports"
@@ -82,7 +79,7 @@ function openDecision(id: string, choice: 'reject' | 'remove') {
 
       <div class="mt-8 flex flex-wrap gap-2" role="group" aria-label="Filter reviews by status">
         <UButton
-          v-for="item in ['pending', 'published', 'rejected', 'removed'] as const"
+          v-for="item in ['published', 'removed'] as const"
           :key="item"
           type="button"
           :variant="statusFilter === item ? 'solid' : 'outline'"
@@ -93,7 +90,7 @@ function openDecision(id: string, choice: 'reject' | 'remove') {
         >
       </div>
 
-      <div v-if="status === 'pending'" class="mt-8 space-y-4" aria-label="Loading review queue">
+      <div v-if="status === 'pending'" class="mt-8 space-y-4" aria-label="Loading reviews">
         <div v-for="item in 3" :key="item" class="h-52 animate-pulse rounded-2xl bg-[#eaf0e5]" />
       </div>
       <div
@@ -147,27 +144,6 @@ function openDecision(id: string, choice: 'reject' | 'remove') {
             class="mt-3 inline-flex items-center gap-1 text-sm font-semibold text-[#376a49] hover:underline"
             >View business <UIcon name="i-lucide-arrow-up-right"
           /></NuxtLink>
-          <div
-            v-if="statusFilter === 'pending'"
-            class="mt-5 flex flex-wrap gap-2 border-t border-[#e9eee5] pt-5"
-          >
-            <UButton
-              type="button"
-              :loading="actingId === review.id"
-              :disabled="Boolean(actingId)"
-              class="!rounded-xl !bg-[#173e32] !text-white"
-              @click="moderate(review.id, 'publish')"
-              >Publish review</UButton
-            >
-            <UButton
-              type="button"
-              variant="outline"
-              :disabled="Boolean(actingId)"
-              class="!rounded-xl"
-              @click="openDecision(review.id, 'reject')"
-              >Reject</UButton
-            >
-          </div>
           <div v-if="statusFilter === 'published'" class="mt-5 border-t border-[#e9eee5] pt-5">
             <UButton
               type="button"
@@ -175,7 +151,7 @@ function openDecision(id: string, choice: 'reject' | 'remove') {
               color="error"
               :disabled="Boolean(actingId)"
               class="!rounded-xl"
-              @click="openDecision(review.id, 'remove')"
+              @click="openDecision(review.id)"
               >Remove from public page</UButton
             >
           </div>
@@ -183,10 +159,10 @@ function openDecision(id: string, choice: 'reject' | 'remove') {
             v-if="decisionReviewId === review.id"
             method="post"
             class="mt-5 rounded-xl bg-[#f7faf4] p-4"
-            @submit.prevent="moderate(review.id, decision)"
+            @submit.prevent="removeReview(review.id)"
           >
             <label :for="`reason-${review.id}`" class="text-sm font-semibold"
-              >Reason for {{ decision === 'reject' ? 'rejection' : 'removal' }}</label
+              >Reason for removal</label
             >
             <textarea
               :id="`reason-${review.id}`"
@@ -205,7 +181,7 @@ function openDecision(id: string, choice: 'reject' | 'remove') {
                 :disabled="Boolean(actingId)"
                 color="error"
                 class="!rounded-xl"
-                >Confirm {{ decision }}</UButton
+                >Confirm removal</UButton
               ><UButton
                 type="button"
                 variant="outline"

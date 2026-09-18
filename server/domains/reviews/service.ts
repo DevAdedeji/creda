@@ -74,6 +74,7 @@ export async function listReviews(
     .offset((safePage - 1) * PAGE_SIZE)
 
   let myReview: MyReview | null = null
+  let reviewBlocked = false
   if (viewerUserId) {
     const [mine] = await db
       .select()
@@ -98,6 +99,16 @@ export async function listReviews(
           .limit(1)
         myReview.moderationReason = decision?.reason ?? null
       }
+    } else if (mine?.status === 'removed') {
+      const [removal] = await db
+        .select({ actorUserId: reviewModeration.actorUserId })
+        .from(reviewModeration)
+        .where(
+          and(eq(reviewModeration.reviewId, mine.id), eq(reviewModeration.toStatus, 'removed')),
+        )
+        .orderBy(desc(reviewModeration.createdAt))
+        .limit(1)
+      reviewBlocked = !removal || removal.actorUserId !== viewerUserId
     }
   }
 
@@ -120,7 +131,8 @@ export async function listReviews(
     page: safePage,
     totalPages,
     myReview,
-    canReview: Boolean(viewerUserId && viewerUserId !== listing.ownerUserId),
+    canReview: Boolean(viewerUserId && viewerUserId !== listing.ownerUserId && !reviewBlocked),
+    reviewBlocked,
     isOwner: viewerUserId === listing.ownerUserId,
   }
 }
@@ -163,6 +175,19 @@ export async function submitReview(
         'You have already reviewed this business. Edit your review instead.',
       )
     }
+    if (existing?.status === 'removed') {
+      const [removal] = await tx
+        .select({ actorUserId: reviewModeration.actorUserId })
+        .from(reviewModeration)
+        .where(
+          and(eq(reviewModeration.reviewId, existing.id), eq(reviewModeration.toStatus, 'removed')),
+        )
+        .orderBy(desc(reviewModeration.createdAt))
+        .limit(1)
+      if (!removal || removal.actorUserId !== authorUserId) {
+        throw new ReviewDomainError(403, 'This review was removed by Creda and cannot be reposted.')
+      }
+    }
 
     const [daily] = await tx
       .select({ count: sql<number>`count(*)::int` })
@@ -184,14 +209,14 @@ export async function submitReview(
       await tx.delete(reviewReply).where(eq(reviewReply.reviewId, existing.id))
       const [row] = await tx
         .update(businessReview)
-        .set({ ...input, status: 'pending', updatedAt: sql`now()` })
+        .set({ ...input, status: 'published', updatedAt: sql`now()` })
         .where(eq(businessReview.id, existing.id))
         .returning()
       return toMine(row!)
     }
     const [row] = await tx
       .insert(businessReview)
-      .values({ id: randomUUID(), ...input, authorUserId, status: 'pending' })
+      .values({ id: randomUUID(), ...input, authorUserId, status: 'published' })
       .returning()
     return toMine(row!)
   })
@@ -220,7 +245,7 @@ export async function editReview(
     await tx.delete(reviewReply).where(eq(reviewReply.reviewId, id))
     const [updated] = await tx
       .update(businessReview)
-      .set({ ...input, status: 'pending', updatedAt: sql`now()` })
+      .set({ ...input, status: 'published', updatedAt: sql`now()` })
       .where(eq(businessReview.id, id))
       .returning()
     return toMine(updated!)
@@ -341,28 +366,19 @@ export async function moderateReview(
       .where(eq(businessReview.id, id))
       .for('update')
     if (!current) throw new ReviewDomainError(404, 'Review not found.')
-    const nextStatus =
-      input.decision === 'publish'
-        ? 'published'
-        : input.decision === 'reject'
-          ? 'rejected'
-          : 'removed'
-    const allowed =
-      (current.status === 'pending' && nextStatus !== 'removed') ||
-      (current.status === 'published' && nextStatus === 'removed')
-    if (!allowed)
-      throw new ReviewDomainError(409, 'This review is no longer awaiting that decision.')
+    if (current.status !== 'published')
+      throw new ReviewDomainError(409, 'This review is no longer public.')
     await tx
       .update(businessReview)
-      .set({ status: nextStatus, updatedAt: sql`now()` })
+      .set({ status: 'removed', updatedAt: sql`now()` })
       .where(eq(businessReview.id, id))
     await tx.insert(reviewModeration).values({
       id: randomUUID(),
       reviewId: id,
       actorUserId,
       fromStatus: current.status,
-      toStatus: nextStatus,
-      reason: input.decision === 'publish' ? null : input.reason,
+      toStatus: 'removed',
+      reason: input.reason,
     })
   })
 }

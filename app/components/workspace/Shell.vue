@@ -19,7 +19,7 @@ const links = [
 ] as const
 const adminLinks = [
   { label: 'Ownership checks', icon: 'i-lucide-badge-check', to: '/admin/verification' },
-  { label: 'Review moderation', icon: 'i-lucide-message-square', to: '/admin/reviews' },
+  { label: 'Manage reviews', icon: 'i-lucide-message-square', to: '/admin/reviews' },
   { label: 'Content reports', icon: 'i-lucide-flag', to: '/admin/reports' },
 ] as const
 

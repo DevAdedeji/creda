@@ -21,11 +21,10 @@ export const submitReviewSchema = z.object({
 
 export const editReviewSchema = submitReviewSchema.omit({ businessId: true })
 export const replySchema = z.object({ body: normalizedText(2, 1000) })
-export const moderateReviewSchema = z.discriminatedUnion('decision', [
-  z.object({ decision: z.literal('publish') }),
-  z.object({ decision: z.literal('reject'), reason: normalizedText(8, 500) }),
-  z.object({ decision: z.literal('remove'), reason: normalizedText(8, 500) }),
-])
+export const moderateReviewSchema = z.object({
+  decision: z.literal('remove'),
+  reason: normalizedText(8, 500),
+})
 
 export type SubmitReviewInput = z.output<typeof submitReviewSchema>
 export type EditReviewInput = z.output<typeof editReviewSchema>

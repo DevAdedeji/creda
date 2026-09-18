@@ -56,7 +56,8 @@ async function saveReview() {
       },
     })
     formOpen.value = false
-    message.value = 'Your review was sent for moderation. It will appear here after approval.'
+    message.value = isEditing.value ? 'Your updated review is live.' : 'Your review is live.'
+    page.value = 1
     await refresh()
   } catch (error) {
     formError.value = apiErrorMessage(error, 'Your review could not be saved. Please try again.')
@@ -152,6 +153,9 @@ function monthLabel(month: string): string {
     >
       {{ formError }}
     </p>
+    <p v-if="data?.reviewBlocked" class="mt-5 text-sm text-[#657069]">
+      Your review of this business was removed by Creda and cannot be reposted.
+    </p>
 
     <div
       v-if="data?.myReview && !formOpen"
@@ -164,9 +168,7 @@ function monthLabel(month: string): string {
         <span
           v-if="data.myReview.status !== 'published'"
           class="rounded-full bg-[#e8efdf] px-2.5 py-1 text-xs font-medium capitalize text-[#45624a]"
-          >{{
-            data.myReview.status === 'pending' ? 'Awaiting moderation' : data.myReview.status
-          }}</span
+          >{{ data.myReview.status === 'pending' ? 'Publishing' : data.myReview.status }}</span
         >
       </div>
       <div v-if="data.myReview.status !== 'published'" class="mt-2">
@@ -189,77 +191,75 @@ function monthLabel(month: string): string {
       >
     </div>
 
-    <form
-      v-if="formOpen"
-      method="post"
-      class="mt-6 rounded-xl border border-[#d7e4d1] bg-[#f9fbf6] p-5 sm:p-6"
-      @submit.prevent="saveReview"
+    <UModal
+      v-model:open="formOpen"
+      :title="isEditing ? 'Edit your review' : `Review ${businessName}`"
+      description="Share an honest experience to help others decide. Your review appears right away."
+      :ui="{ content: 'max-w-xl rounded-2xl', body: 'max-h-[70vh] overflow-y-auto' }"
     >
-      <h3 class="font-semibold text-[#143e32]">
-        {{ isEditing ? 'Edit your experience' : `Review ${businessName}` }}
-      </h3>
-      <p class="mt-1 text-sm text-[#647367]">
-        Your review will be checked before it appears publicly.
-      </p>
-      <fieldset class="mt-5">
-        <legend class="text-sm font-semibold text-[#143e32]">Your rating</legend>
-        <div class="mt-2 flex gap-1">
-          <button
-            v-for="star in 5"
-            :key="star"
-            type="button"
-            :aria-label="`${star} ${star === 1 ? 'star' : 'stars'}`"
-            :aria-pressed="rating === star"
-            class="grid size-11 place-items-center rounded-lg text-[#d59b34] transition hover:bg-[#eef4e8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#376c47]"
-            @click="rating = star"
+      <template #body>
+        <form id="business-review-form" method="post" @submit.prevent="saveReview">
+          <fieldset>
+            <legend class="text-sm font-semibold text-[#143e32]">Your rating</legend>
+            <div class="mt-2 flex gap-1">
+              <button
+                v-for="star in 5"
+                :key="star"
+                type="button"
+                :aria-label="`${star} ${star === 1 ? 'star' : 'stars'}`"
+                :aria-pressed="rating === star"
+                class="grid size-11 place-items-center rounded-lg text-[#d59b34] transition hover:bg-[#eef4e8] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#376c47]"
+                @click="rating = star"
+              >
+                <span
+                  class="text-3xl leading-none"
+                  :class="star <= rating ? 'text-[#d59b34]' : 'text-[#b9c2b7]'"
+                  aria-hidden="true"
+                  >{{ star <= rating ? '★' : '☆' }}</span
+                >
+              </button>
+            </div>
+          </fieldset>
+          <label class="mt-5 block text-sm font-semibold text-[#143e32]" for="review-month"
+            >When did you experience this business?</label
           >
-            <span
-              class="text-3xl leading-none"
-              :class="star <= rating ? 'text-[#d59b34]' : 'text-[#b9c2b7]'"
-              aria-hidden="true"
-              >{{ star <= rating ? '★' : '☆' }}</span
+          <input
+            id="review-month"
+            v-model="experienceMonth"
+            type="month"
+            required
+            :max="new Date().toISOString().slice(0, 7)"
+            class="mt-2 w-full rounded-xl border border-[#cad9c8] bg-white px-4 py-3 text-[#143e32] outline-none focus:border-[#376c47]"
+          />
+          <label class="mt-5 block text-sm font-semibold text-[#143e32]" for="review-body"
+            >Your experience</label
+          >
+          <textarea
+            id="review-body"
+            v-model="body"
+            required
+            minlength="30"
+            maxlength="2000"
+            rows="5"
+            placeholder="What was your experience like? Share details that would help someone else decide."
+            class="mt-2 w-full resize-y rounded-xl border border-[#cad9c8] bg-white px-4 py-3 text-[#143e32] outline-none focus:border-[#376c47]"
+          />
+          <p v-if="formError" role="alert" class="mt-3 text-sm text-red-700">{{ formError }}</p>
+          <div class="mt-5 flex flex-wrap justify-end gap-2">
+            <UButton type="button" variant="outline" class="!rounded-xl" @click="formOpen = false"
+              >Cancel</UButton
             >
-          </button>
-        </div>
-      </fieldset>
-      <label class="mt-5 block text-sm font-semibold text-[#143e32]" for="review-month"
-        >When did you experience this business?</label
-      >
-      <input
-        id="review-month"
-        v-model="experienceMonth"
-        type="month"
-        required
-        :max="new Date().toISOString().slice(0, 7)"
-        class="mt-2 w-full rounded-xl border border-[#cad9c8] bg-white px-4 py-3 text-[#143e32] outline-none focus:border-[#376c47]"
-      />
-      <label class="mt-5 block text-sm font-semibold text-[#143e32]" for="review-body"
-        >Your experience</label
-      >
-      <textarea
-        id="review-body"
-        v-model="body"
-        required
-        minlength="30"
-        maxlength="2000"
-        rows="5"
-        placeholder="What was your experience like? Share details that would help someone else decide."
-        class="mt-2 w-full resize-y rounded-xl border border-[#cad9c8] bg-white px-4 py-3 text-[#143e32] outline-none focus:border-[#376c47]"
-      />
-      <p v-if="formError" role="alert" class="mt-3 text-sm text-red-700">{{ formError }}</p>
-      <div class="mt-5 flex flex-wrap gap-2">
-        <UButton
-          type="submit"
-          :loading="saving"
-          :disabled="saving"
-          class="!rounded-xl !bg-[#173e32] !text-white"
-          >{{ isEditing ? 'Save review' : 'Submit review' }}</UButton
-        >
-        <UButton type="button" variant="outline" class="!rounded-xl" @click="formOpen = false"
-          >Cancel</UButton
-        >
-      </div>
-    </form>
+            <UButton
+              type="submit"
+              :loading="saving"
+              :disabled="saving"
+              class="!rounded-xl !bg-[#173e32] !text-white"
+              >{{ isEditing ? 'Save review' : 'Submit review' }}</UButton
+            >
+          </div>
+        </form>
+      </template>
+    </UModal>
 
     <div v-if="status === 'pending'" class="mt-7 space-y-3" aria-label="Loading reviews">
       <div v-for="item in 2" :key="item" class="h-28 animate-pulse rounded-xl bg-[#eef3e9]" />
@@ -274,9 +274,7 @@ function monthLabel(month: string): string {
     >
       <UIcon name="i-lucide-messages-square" class="text-3xl text-[#799478]" />
       <h3 class="mt-3 text-lg font-semibold text-[#143e32]">No reviews yet</h3>
-      <p class="mt-2 text-sm text-[#657069]">
-        Be the first to share an experience after moderation.
-      </p>
+      <p class="mt-2 text-sm text-[#657069]">Be the first to share an experience.</p>
     </div>
     <div v-else class="mt-7 divide-y divide-[#e9eee5] border-t border-[#e9eee5]">
       <article
@@ -352,7 +350,9 @@ function monthLabel(month: string): string {
       <UButton variant="outline" :disabled="page >= data.totalPages" @click="page++">Next</UButton>
     </div>
     <p
-      v-if="!data?.canReview && !data?.isOwner && !data?.myReview && !formOpen"
+      v-if="
+        !data?.canReview && !data?.isOwner && !data?.myReview && !data?.reviewBlocked && !formOpen
+      "
       class="mt-6 text-sm text-[#657069]"
     >
       Want to share your experience?

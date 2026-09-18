@@ -287,7 +287,7 @@ export const businessReview = pgTable(
     rating: integer('rating').notNull(),
     body: text('body').notNull(),
     experienceMonth: text('experience_month').notNull(),
-    status: reviewStatus('status').notNull().default('pending'),
+    status: reviewStatus('status').notNull().default('published'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
