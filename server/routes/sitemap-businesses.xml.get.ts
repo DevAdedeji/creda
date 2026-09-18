@@ -22,7 +22,11 @@ export default defineEventHandler(async (event) => {
   }
 
   const listings = await db
-    .select({ slug: business.slug, updatedAt: business.updatedAt })
+    .select({
+      slug: business.slug,
+      updatedAt: business.updatedAt,
+      listingSource: business.listingSource,
+    })
     .from(business)
     .where(eq(business.status, 'approved'))
     .orderBy(asc(business.createdAt), asc(business.id))
@@ -32,8 +36,11 @@ export default defineEventHandler(async (event) => {
 
   setSitemapHeaders(event)
   return `<?xml version="1.0" encoding="UTF-8"?>\n<urlset xmlns="http://www.sitemaps.org/schemas/sitemap/0.9">${listings
-    .flatMap(({ slug, updatedAt }) =>
-      [`/${encodeURIComponent(slug)}`, `/businesses/${encodeURIComponent(slug)}`].map(
+    .flatMap(({ slug, updatedAt, listingSource }) =>
+      [
+        ...(listingSource === 'member' ? [`/${encodeURIComponent(slug)}`] : []),
+        `/businesses/${encodeURIComponent(slug)}`,
+      ].map(
         (path) =>
           `<url><loc>${escapeXml(new URL(path, productionOrigin).toString())}</loc><lastmod>${updatedAt.toISOString()}</lastmod></url>`,
       ),

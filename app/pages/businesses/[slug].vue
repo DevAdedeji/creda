@@ -307,6 +307,9 @@ const destinations = computed(() => {
             <p class="mt-4 max-w-3xl text-base leading-8 text-[#5c6e60]">
               {{ business.description }}
             </p>
+            <p v-if="business.listingSource === 'curated'" class="mt-3 text-xs text-[#718174]">
+              Added by Creda from public information. This profile is not managed by the business.
+            </p>
             <div class="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#607162]">
               <span class="inline-flex items-center gap-2"
                 ><UIcon

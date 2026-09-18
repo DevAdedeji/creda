@@ -11,6 +11,8 @@
     "typecheck": "nuxt typecheck",
     "db:generate": "drizzle-kit generate",
     "db:migrate": "node scripts/migrate.mjs",
+    "db:seed:curated": "node scripts/seed-curated-businesses.mjs",
+    "db:deploy": "npm run db:migrate && npm run db:seed:curated -- --apply",
     "lint": "oxlint --vue-plugin",
     "lint:fix": "oxlint --vue-plugin --fix",
     "format": "oxfmt",

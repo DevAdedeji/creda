@@ -125,15 +125,17 @@ export const businessType = pgEnum('business_type', [
   'physical_business',
 ])
 export const operationMode = pgEnum('operation_mode', ['online', 'physical', 'hybrid'])
+export const listingSource = pgEnum('listing_source', ['member', 'curated'])
 
 export const business = pgTable(
   'business',
   {
     id: text('id').primaryKey(),
     slug: text('slug').notNull().unique(),
-    ownerUserId: text('owner_user_id')
-      .notNull()
-      .references(() => user.id),
+    ownerUserId: text('owner_user_id').references(() => user.id),
+    listingSource: listingSource('listing_source').notNull().default('member'),
+    curationSourceUrl: text('curation_source_url'),
+    curationCheckedAt: timestamp('curation_checked_at', { withTimezone: true }),
     name: text('name').notNull(),
     normalizedName: text('normalized_name').notNull(),
     description: text('description').notNull(),
@@ -181,6 +183,12 @@ export const business = pgTable(
     index('business_status_name_idx').on(table.status, table.name),
     index('business_status_state_city_idx').on(table.status, table.state, table.city),
     index('business_owner_idx').on(table.ownerUserId),
+    check(
+      'business_listing_source_owner',
+      sql.raw(
+        "(listing_source = 'member' AND owner_user_id IS NOT NULL) OR (listing_source = 'curated' AND owner_user_id IS NULL AND ownership_status = 'unverified' AND curation_source_url IS NOT NULL)",
+      ),
+    ),
     check(
       'business_destination_required',
       sql.raw(

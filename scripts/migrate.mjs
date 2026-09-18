@@ -3,7 +3,9 @@ import { drizzle } from 'drizzle-orm/postgres-js'
 import { migrate } from 'drizzle-orm/postgres-js/migrator'
 import postgres from 'postgres'
 
-if (existsSync('.env')) process.loadEnvFile()
+if (!process.env.DIRECT_URL && !process.env.DATABASE_URL && existsSync('.env')) {
+  process.loadEnvFile()
+}
 
 const url = process.env.DIRECT_URL || process.env.DATABASE_URL
 if (!url) {

@@ -64,6 +64,7 @@ export type BusinessCategory = (typeof businessCategoryValues)[number]
 export type OperationMode = (typeof operationModeValues)[number]
 export type BusinessStatus = 'pending' | 'approved' | 'rejected' | 'suspended'
 export type OwnershipStatus = 'unverified' | 'pending' | 'verified' | 'revoked'
+export type ListingSource = 'member' | 'curated'
 
 export interface BusinessDraft {
   name: string
@@ -115,6 +116,7 @@ export interface PublicBusiness {
   coverUrl: string | null
   galleryUrls: string[]
   ownershipStatus: OwnershipStatus
+  listingSource: ListingSource
   publishedAt: string | null
 }
 

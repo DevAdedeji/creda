@@ -12,7 +12,9 @@ const {
   status,
   error,
 } = await useFetch<PublicBusiness>('/api/businesses/' + encodeURIComponent(slug))
-if (business.value && business.value.slug !== slug) {
+if (business.value?.listingSource === 'curated') {
+  await navigateTo('/businesses/' + encodeURIComponent(business.value.slug), { redirectCode: 302 })
+} else if (business.value && business.value.slug !== slug) {
   await navigateTo('/' + encodeURIComponent(business.value.slug), { redirectCode: 301 })
 }
 if (import.meta.server && (error.value || !business.value)) {

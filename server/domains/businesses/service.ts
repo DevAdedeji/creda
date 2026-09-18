@@ -119,6 +119,7 @@ function toPublic(row: BusinessRow): PublicBusiness {
     coverUrl: row.coverUrl,
     galleryUrls: row.galleryUrls,
     ownershipStatus: row.ownershipStatus,
+    listingSource: row.listingSource,
     publishedAt: row.publishedAt?.toISOString() ?? null,
   }
 }
