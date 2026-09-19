@@ -217,7 +217,7 @@ watch(
               :to="'/dashboard/businesses/' + item.id + '/edit'"
               class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#315b3a] hover:underline"
             >
-              Edit listing <UIcon name="i-lucide-pencil" class="text-sm" />
+              Edit listing <UIcon name="i-lucide-square-pen" class="text-sm" />
             </NuxtLink>
           </div>
         </article>

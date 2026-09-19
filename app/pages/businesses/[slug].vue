@@ -180,6 +180,11 @@ const categoryLabel = computed(
 const modeLabel = computed(
   () => operationModes.find((item) => item.value === business.value?.operationMode)?.label,
 )
+const locationSummary = computed(() => {
+  const item = business.value
+  if (!item) return null
+  return [item.city, item.state].filter(Boolean).join(', ') || item.location || null
+})
 function hoursLabel(day: number): string {
   const row = business.value?.weeklyHours.find((item) => item.day === day)
   return row ? `${row.start}–${row.end}` : 'Closed'
@@ -311,17 +316,13 @@ const destinations = computed(() => {
               Added by Creda from public information. This profile is not managed by the business.
             </p>
             <div class="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#607162]">
-              <span class="inline-flex items-center gap-2"
+              <span v-if="locationSummary" class="inline-flex items-center gap-2"
                 ><UIcon
                   :name="
                     business.operationMode === 'online' ? 'i-lucide-globe-2' : 'i-lucide-map-pin'
                   "
                 />
-                {{
-                  [business.city, business.state].filter(Boolean).join(', ') ||
-                  business.location ||
-                  'Online'
-                }}</span
+                {{ locationSummary }}</span
               ><span class="inline-flex items-center gap-2"
                 ><UIcon name="i-lucide-monitor-smartphone" /> {{ modeLabel }}</span
               >
@@ -374,13 +375,8 @@ const destinations = computed(() => {
                 class="mt-6"
               />
             </section>
-            <ReviewsSection
-              :business-id="business.id"
-              :slug="business.slug"
-              :business-name="business.name"
-            />
             <section
-              v-if="mapUrl"
+              v-if="business.location"
               class="overflow-hidden rounded-2xl border border-[#dfe6dc] bg-white"
               aria-labelledby="location-heading"
             >
@@ -389,11 +385,12 @@ const destinations = computed(() => {
                   id="location-heading"
                   class="text-2xl font-semibold tracking-tight text-[#143e32]"
                 >
-                  Location
+                  Address
                 </h2>
                 <p class="mt-2 text-sm text-[#657069]">{{ business.location }}</p>
               </div>
               <iframe
+                v-if="mapUrl"
                 :src="mapUrl"
                 :title="`Map showing ${business.name}`"
                 loading="lazy"
@@ -402,6 +399,11 @@ const destinations = computed(() => {
                 class="h-72 w-full border-0 sm:h-80"
               />
             </section>
+            <ReviewsSection
+              :business-id="business.id"
+              :slug="business.slug"
+              :business-name="business.name"
+            />
           </div>
           <aside
             class="self-start rounded-2xl border border-[#dfe6dc] bg-white p-6"

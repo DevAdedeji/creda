@@ -13,13 +13,13 @@ const formOpen = ref(false)
 const isEditing = ref(false)
 const saving = ref(false)
 const formError = ref('')
-const message = ref('')
 const rating = ref(0)
 const body = ref('')
 const experienceMonth = ref(new Date().toISOString().slice(0, 7))
 const replyId = ref<string | null>(null)
 const replyBody = ref('')
 const replySaving = ref(false)
+const toast = useToast()
 
 function startReview() {
   const mine = data.value?.myReview
@@ -33,7 +33,6 @@ function startReview() {
 
 async function saveReview() {
   formError.value = ''
-  message.value = ''
   if (rating.value < 1 || rating.value > 5) {
     formError.value = 'Choose a star rating.'
     return
@@ -56,9 +55,13 @@ async function saveReview() {
       },
     })
     formOpen.value = false
-    message.value = isEditing.value ? 'Your updated review is live.' : 'Your review is live.'
     page.value = 1
     await refresh()
+    toast.add({
+      title: isEditing.value ? 'Review updated' : 'Review published',
+      description: isEditing.value ? 'Your changes are now live.' : 'Your review is now live.',
+      color: 'success',
+    })
   } catch (error) {
     formError.value = apiErrorMessage(error, 'Your review could not be saved. Please try again.')
   } finally {
@@ -73,8 +76,8 @@ async function removeReview() {
   try {
     await $fetch(`/api/reviews/${mine.id}`, { method: 'DELETE' })
     formOpen.value = false
-    message.value = 'Your review was deleted.'
     await refresh()
+    toast.add({ title: 'Review deleted', color: 'success' })
   } catch (error) {
     formError.value = apiErrorMessage(error, 'Your review could not be deleted. Please try again.')
   }
@@ -135,17 +138,14 @@ function monthLabel(month: string): string {
         </div>
       </div>
       <UButton
-        v-if="data?.canReview && !formOpen"
+        v-if="data?.canReview && !data.myReview && !formOpen"
         color="primary"
         class="!rounded-xl !bg-[#173e32] !px-4 !py-2.5 !text-white"
         @click="startReview"
-        >{{ data.myReview ? 'Edit your review' : 'Write a review' }}</UButton
+        >Write a review</UButton
       >
     </div>
 
-    <p v-if="message" role="status" class="mt-5 rounded-xl bg-[#e8f4da] p-3 text-sm text-[#27583a]">
-      {{ message }}
-    </p>
     <p
       v-if="formError && !formOpen"
       role="alert"
@@ -156,40 +156,6 @@ function monthLabel(month: string): string {
     <p v-if="data?.reviewBlocked" class="mt-5 text-sm text-[#657069]">
       Your review of this business was removed by Creda and cannot be reposted.
     </p>
-
-    <div
-      v-if="data?.myReview && !formOpen"
-      class="mt-6 rounded-xl border border-[#d7e4d1] bg-[#f7faf5] p-5"
-    >
-      <div class="flex flex-wrap items-center gap-2">
-        <span class="font-semibold text-[#143e32]">{{
-          data.myReview.status === 'published' ? 'Your review is live' : 'Your review'
-        }}</span>
-        <span
-          v-if="data.myReview.status !== 'published'"
-          class="rounded-full bg-[#e8efdf] px-2.5 py-1 text-xs font-medium capitalize text-[#45624a]"
-          >{{ data.myReview.status === 'pending' ? 'Publishing' : data.myReview.status }}</span
-        >
-      </div>
-      <div v-if="data.myReview.status !== 'published'" class="mt-2">
-        <ReviewsStars :rating="data.myReview.rating" />
-      </div>
-      <p
-        v-if="data.myReview.status !== 'published'"
-        class="mt-2 whitespace-pre-line text-sm leading-6 text-[#52655a]"
-      >
-        {{ data.myReview.body }}
-      </p>
-      <p
-        v-if="data.myReview.moderationReason"
-        class="mt-3 rounded-lg bg-amber-50 p-3 text-sm text-amber-900"
-      >
-        Needs changes: {{ data.myReview.moderationReason }}
-      </p>
-      <UButton variant="link" color="error" class="mt-2 !px-0" @click="removeReview"
-        >Delete your review</UButton
-      >
-    </div>
 
     <UModal
       v-model:open="formOpen"
@@ -336,8 +302,39 @@ function monthLabel(month: string): string {
             </div>
           </form>
         </div>
-        <div class="mt-3 flex justify-end">
-          <ReportsDialog :business-id="businessId" :review-id="review.id" label="Report review" />
+        <div class="mt-3 flex items-center justify-end">
+          <div
+            class="inline-flex items-center gap-0.5 rounded-xl border border-[#e2e8df] bg-[#fafbf8] p-1"
+            aria-label="Review actions"
+          >
+            <UTooltip v-if="data.myReview?.id === review.id" text="Edit review">
+              <UButton
+                aria-label="Edit review"
+                color="neutral"
+                variant="ghost"
+                icon="i-lucide-square-pen"
+                class="!size-9 !justify-center !rounded-lg !p-0 !text-[#4f6657] hover:!bg-[#edf4e9] hover:!text-[#143e32]"
+                @click="startReview"
+              />
+            </UTooltip>
+            <UTooltip v-if="data.myReview?.id === review.id" text="Delete review">
+              <UButton
+                aria-label="Delete review"
+                color="error"
+                variant="ghost"
+                icon="i-lucide-trash-2"
+                class="!size-9 !justify-center !rounded-lg !p-0 hover:!bg-red-50"
+                @click="removeReview"
+              />
+            </UTooltip>
+            <ReportsDialog
+              v-else
+              :business-id="businessId"
+              :review-id="review.id"
+              label="Report review"
+              icon-only
+            />
+          </div>
         </div>
       </article>
     </div>

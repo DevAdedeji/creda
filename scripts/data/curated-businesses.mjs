@@ -1,7 +1,7 @@
 // Manually reviewed official destinations. Keep descriptions original and factual.
 // Logos are stored on Byteship; their URLs live in curated-logo-urls.mjs.
-// Cover images, hours,
-// precise addresses, and ownership claims are not inferred.
+// Cover images, hours, and ownership claims are not inferred. Addresses and
+// app links are included only when they can be verified on an official source.
 export const curatedBusinesses = [
   {
     name: 'Paystack',
@@ -11,6 +11,11 @@ export const curatedBusinesses = [
       'Payment infrastructure for Nigerian businesses to accept online and in-person payments and manage transactions.',
     websiteUrl: 'https://paystack.com/',
     sourceUrl: 'https://paystack.com/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/paystack-merchant/id1481413006',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.paystack.go',
+    location: '126 Joel Ogunnaike Street, Ikeja GRA, Ikeja, Lagos, Nigeria',
+    city: 'Ikeja',
+    state: 'Lagos',
   },
   {
     name: 'Flutterwave',
@@ -20,6 +25,11 @@ export const curatedBusinesses = [
       'Payment technology for businesses to collect payments, send money, and serve customers across markets.',
     websiteUrl: 'https://flutterwave.com/ng/',
     sourceUrl: 'https://flutterwave.com/ng/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/flutterwave/id1534897339',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.flutterwave.app',
+    location: '8 Providence Street, Lekki Phase One, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'PiggyVest',
@@ -29,6 +39,12 @@ export const curatedBusinesses = [
       'Digital savings and investment platform with tools for personal saving goals and investment plans.',
     websiteUrl: 'https://www.piggyvest.com/',
     sourceUrl: 'https://www.piggyvest.com/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/piggyvest-save-invest-today/id1263117994',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.piggybankng.piggy',
+    location:
+      'Tesmot House, 3 Abdulrahman Okene Close, off Ligali Ayorinde Street, Victoria Island, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'Cowrywise',
@@ -38,6 +54,11 @@ export const curatedBusinesses = [
       'Digital platform for saving and investing with plans designed around individual financial goals.',
     websiteUrl: 'https://cowrywise.com/',
     sourceUrl: 'https://cowrywise.com/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/cowrywise-save-invest-money/id1436590033',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.cowrywise.android',
+    location: '5C Reverend Ogunbiyi Street, GRA Ikeja, Lagos State, Nigeria',
+    city: 'Ikeja',
+    state: 'Lagos',
   },
   {
     name: 'Kuda',
@@ -47,6 +68,11 @@ export const curatedBusinesses = [
       'Digital banking app offering accounts, transfers, cards, and money management for individuals.',
     websiteUrl: 'https://www.kuda.com/',
     sourceUrl: 'https://www.kuda.com/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/kuda-free-transfer-payment/id1467373738',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.kudabank.app',
+    location: '1–11 Commercial Avenue, Yaba, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'Moniepoint',
@@ -56,6 +82,11 @@ export const curatedBusinesses = [
       'Banking and payment services for individuals and businesses, including accounts and business tools.',
     websiteUrl: 'https://moniepoint.com/ng/',
     sourceUrl: 'https://moniepoint.com/ng/about',
+    appStoreUrl: 'https://apps.apple.com/ng/app/moniepoint-personal-banking/id6452756675',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.moniepoint.personal',
+    location: 'The Post Square, off Adeola Odeku, Victoria Island, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'Bumpa',
@@ -65,6 +96,8 @@ export const curatedBusinesses = [
       'Commerce tools that help merchants create storefronts, manage inventory, and handle customer orders.',
     websiteUrl: 'https://www.getbumpa.com/',
     sourceUrl: 'https://www.getbumpa.com/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/bumpa-manage-orders-easily/id1497638594',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.salescabal.app',
   },
   {
     name: 'Selar',
@@ -74,6 +107,8 @@ export const curatedBusinesses = [
       'Platform for creators to sell digital products, courses, and other offerings to their audiences.',
     websiteUrl: 'https://selar.com/',
     sourceUrl: 'https://selar.com/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/selar-access-digital-products/id6748024658',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.selar.consumer',
   },
   {
     name: 'Jumia Nigeria',
@@ -83,6 +118,11 @@ export const curatedBusinesses = [
       'Online marketplace where shoppers can browse products across electronics, fashion, home, and other categories.',
     websiteUrl: 'https://www.jumia.com.ng/',
     sourceUrl: 'https://www.jumia.com.ng/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/jumia-online-shopping/id925015459',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.jumia.android',
+    location: '9 Canal View Layout, Ajao Estate, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'Taeillo',
@@ -100,6 +140,9 @@ export const curatedBusinesses = [
       'Online printing service for business cards, marketing materials, packaging, and branded products.',
     websiteUrl: 'https://printivo.com/',
     sourceUrl: 'https://printivo.com/',
+    location: 'Moyosore House, 180/182 Ikorodu Road, Onipanu, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'uLesson',
@@ -109,6 +152,10 @@ export const curatedBusinesses = [
       'Learning platform offering video lessons, practice resources, and educational support for students.',
     websiteUrl: 'https://ulesson.com/',
     sourceUrl: 'https://ulesson.com/',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.ulesson',
+    location: '1059 O.P. Fingesi Road, Jabi, Abuja 900108, Nigeria',
+    city: 'Abuja',
+    state: 'Federal Capital Territory',
   },
   {
     name: 'AltSchool Africa',
@@ -126,6 +173,11 @@ export const curatedBusinesses = [
     description: 'Travel booking platform for flights, hotels, and other travel planning services.',
     websiteUrl: 'https://www.wakanow.com/',
     sourceUrl: 'https://www.wakanow.com/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/wakanow-flights-hotels-cars/id1467891138',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.wakanow.android',
+    location: 'Plot 8, Elegushi Beach Road, Ikate Roundabout, Lekki, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'GIG Mobility',
@@ -137,6 +189,8 @@ export const curatedBusinesses = [
     sourceUrl: 'https://www.gigm.com/',
     operationMode: 'hybrid',
     location: 'Multiple terminals in Nigeria',
+    appStoreUrl: 'https://apps.apple.com/ng/app/gig-mobility/id1154045195',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.gigm',
   },
   {
     name: 'Helium Health',
@@ -146,6 +200,9 @@ export const curatedBusinesses = [
       'Health technology company providing digital tools for healthcare providers and patient operations.',
     websiteUrl: 'https://heliumhealth.com/',
     sourceUrl: 'https://heliumhealth.com/',
+    location: 'Block 22, Babatunde Anjous Avenue, Lekki Phase 1, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'Reliance HMO',
@@ -155,6 +212,11 @@ export const curatedBusinesses = [
       'Health insurance and care services offering plans and access to healthcare for individuals and organisations.',
     websiteUrl: 'https://getreliancehealth.com/nigeria/',
     sourceUrl: 'https://getreliancehealth.com/nigeria/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/reliance-care/id1538245836',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.reliancehmo.app',
+    location: '32 Lanre Awolokun Street, Gbagada, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'So Fresh',
@@ -165,7 +227,9 @@ export const curatedBusinesses = [
     websiteUrl: 'https://sofreshng.com/',
     sourceUrl: 'https://sofreshng.com/',
     operationMode: 'hybrid',
-    location: 'Multiple outlets in Nigeria',
+    location: '71 Opebi Road, Ikeja, Lagos State, Nigeria',
+    city: 'Ikeja',
+    state: 'Lagos',
   },
   {
     name: 'ORÍKÌ',
@@ -175,7 +239,9 @@ export const curatedBusinesses = [
     websiteUrl: 'https://www.orikigroup.com/',
     sourceUrl: 'https://www.orikigroup.com/',
     operationMode: 'hybrid',
-    location: 'Multiple locations in Nigeria',
+    location: 'Oriental Hotel, 3 Lekki Way, 4th Floor, New Wing, Victoria Island, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'i-Fitness',
@@ -186,7 +252,9 @@ export const curatedBusinesses = [
     websiteUrl: 'https://ifitness.ng/',
     sourceUrl: 'https://ifitness.ng/',
     operationMode: 'physical',
-    location: 'Multiple clubs in Nigeria',
+    location: '10 Gabby Adeosun Street, off Admiralty Way, Lekki Phase 1, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'Filmhouse Cinemas',
@@ -197,7 +265,11 @@ export const curatedBusinesses = [
     websiteUrl: 'https://fh-frontend.filmhouseng.com/',
     sourceUrl: 'https://fh-frontend.filmhouseng.com/about-us',
     operationMode: 'hybrid',
-    location: 'Multiple cinemas in Nigeria',
+    appStoreUrl: 'https://apps.apple.com/ng/app/filmhouse/id6749002056',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=cinesync.io.filmhouse',
+    location: '1378 Joseph Nahman Close, Victoria Island, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'Chowdeck',
@@ -207,6 +279,11 @@ export const curatedBusinesses = [
       'Delivery platform connecting customers with restaurants, groceries, pharmacies, and local markets.',
     websiteUrl: 'https://chowdeck.com/',
     sourceUrl: 'https://chowdeck.com/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/chowdeck-food-groceries/id1530676376',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.chowdeck.com',
+    location: '7B Oba Dosumu Street, Ikeja GRA, Lagos, Nigeria',
+    city: 'Ikeja',
+    state: 'Lagos',
   },
   {
     name: 'Rovingheights',
@@ -227,6 +304,11 @@ export const curatedBusinesses = [
       'Event ticketing platform where organisers can publish events and audiences can purchase tickets.',
     websiteUrl: 'https://tix.africa/',
     sourceUrl: 'https://tix.africa/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/tix-africa-orbit/id6755313741',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=africa.tix.orbit',
+    location: '36 Turnbull Road, Ikoyi, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'Interswitch',
@@ -236,6 +318,9 @@ export const curatedBusinesses = [
       'Payments technology company providing transaction infrastructure and digital payment products for businesses and consumers.',
     websiteUrl: 'https://interswitchgroup.com/',
     sourceUrl: 'https://interswitchgroup.com/',
+    location: '1648C Oko-Awo Street, Victoria Island, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'PalmPay',
@@ -245,6 +330,8 @@ export const curatedBusinesses = [
       'Digital financial service offering transfers, bill payments, savings, and business payment tools.',
     websiteUrl: 'https://www.palmpay.com/',
     sourceUrl: 'https://www.palmpay.com/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/palmpay-transfers-bills/id1479656820',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.transsnet.palmpay',
   },
   {
     name: 'Konga',
@@ -254,6 +341,11 @@ export const curatedBusinesses = [
       'Online shopping marketplace for electronics, home goods, fashion, and other consumer products.',
     websiteUrl: 'https://www.konga.com/',
     sourceUrl: 'https://www.konga.com/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/konga/id880918394',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.konga.androida',
+    location: '5 Redemption Crescent, Industrial Layout, Gbagada, Lagos, Nigeria',
+    city: 'Lagos',
+    state: 'Lagos',
   },
   {
     name: 'SeamlessHR',
@@ -263,6 +355,11 @@ export const curatedBusinesses = [
       'Human resources software for employee records, payroll, recruitment, performance, and related workflows.',
     websiteUrl: 'https://seamlesshr.com/ng/',
     sourceUrl: 'https://seamlesshr.com/ng/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/breeze-by-seamlesstech/id1549679995',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.seamless_hrms',
+    location: '8B Metalbox Road, Ikeja, Lagos, Nigeria',
+    city: 'Ikeja',
+    state: 'Lagos',
   },
   {
     name: 'Air Peace',
@@ -272,6 +369,11 @@ export const curatedBusinesses = [
       'Airline offering flight booking and travel services across domestic and international routes.',
     websiteUrl: 'https://flyairpeace.com/',
     sourceUrl: 'https://flyairpeace.com/',
+    appStoreUrl: 'https://apps.apple.com/ng/app/air-peace/id1491685731',
+    playStoreUrl: 'https://play.google.com/store/apps/details?id=com.flyairpeace.app.airpeace',
+    location: '25 Sobo Arobiodu Street, GRA Ikeja, Lagos, Nigeria',
+    city: 'Ikeja',
+    state: 'Lagos',
   },
   {
     name: 'Termii',

@@ -2,7 +2,10 @@
 import { apiErrorMessage } from '@/utils/apiError'
 import { reportReasons } from '~~/shared/reports'
 
-const props = defineProps<{ businessId: string; reviewId?: string; label: string }>()
+const props = withDefaults(
+  defineProps<{ businessId: string; reviewId?: string; label: string; iconOnly?: boolean }>(),
+  { iconOnly: false },
+)
 const formId = useId()
 const open = ref(false)
 const reason = ref<(typeof reportReasons)[number]['value']>('misleading')
@@ -42,20 +45,33 @@ async function sendReport() {
 </script>
 
 <template>
+  <UTooltip v-if="iconOnly" :text="sent ? 'Report sent' : label">
+    <UButton
+      :disabled="sent"
+      :aria-label="sent ? 'Report sent' : label"
+      color="neutral"
+      variant="ghost"
+      icon="i-lucide-flag"
+      class="!size-9 !justify-center !rounded-lg !p-0 !text-[#68796b] hover:!bg-[#f1f5ee] hover:!text-[#143e32]"
+      @click="open = true"
+    />
+  </UTooltip>
+  <UButton
+    v-else
+    :disabled="sent"
+    color="neutral"
+    variant="link"
+    icon="i-lucide-flag"
+    class="!px-0 !text-[#68796b] hover:!text-[#143e32]"
+    @click="open = true"
+    >{{ sent ? 'Report sent' : label }}</UButton
+  >
   <UModal
     v-model:open="open"
     :title="`Report ${reviewId ? 'this review' : 'this business'}`"
     description="Tell us what seems wrong. Reports are private and do not automatically remove content."
     :ui="{ content: 'max-w-lg rounded-2xl' }"
   >
-    <UButton
-      :disabled="sent"
-      color="neutral"
-      variant="link"
-      icon="i-lucide-flag"
-      class="!px-0 !text-[#68796b] hover:!text-[#143e32]"
-      >{{ sent ? 'Report sent' : label }}</UButton
-    >
     <template #body>
       <form :id="formId" class="space-y-5" @submit.prevent="sendReport">
         <UFormField label="What is the issue?" required>
