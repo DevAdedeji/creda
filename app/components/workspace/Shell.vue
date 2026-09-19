@@ -9,7 +9,7 @@ const { data: viewer } = await useFetch<{ user: { isAdmin: boolean } }>('/api/me
 const isAdmin = computed(() => viewer.value?.user.isAdmin === true)
 const mobileOpen = ref(false)
 const signingOut = ref(false)
-const toast = useToast()
+const appToast = useAppToast()
 
 const links = [
   { label: 'Overview', icon: 'i-lucide-layout-dashboard', to: '/account' },
@@ -45,7 +45,7 @@ async function signOut() {
     mobileOpen.value = false
     await navigateTo('/')
   } catch {
-    toast.add({ title: 'Could not sign out', description: 'Please try again.', color: 'error' })
+    appToast.error('Could not sign out', 'Please try again.')
   } finally {
     signingOut.value = false
   }

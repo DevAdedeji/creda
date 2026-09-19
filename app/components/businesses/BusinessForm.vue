@@ -756,9 +756,7 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
         </p>
       </div>
     </div>
-    <p v-if="error" role="alert" class="rounded-xl bg-red-50 p-4 text-sm text-red-800">
-      {{ error }}
-    </p>
+    <UiFeedbackAlert v-if="error" tone="error" :message="error" />
     <div class="flex flex-wrap items-center gap-4">
       <UButton
         type="submit"

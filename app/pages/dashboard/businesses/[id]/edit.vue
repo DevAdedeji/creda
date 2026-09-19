@@ -50,7 +50,7 @@ const currentSlug = ref('')
 const slugDraft = ref('')
 const savingSlug = ref(false)
 const slugError = ref('')
-const slugSuccess = ref('')
+const appToast = useAppToast()
 const proposedSlug = computed(() => slugDraft.value.trim().toLowerCase())
 watch(
   () => business.value?.slug,
@@ -66,7 +66,6 @@ async function saveSlug() {
   if (savingSlug.value || !isAvailableBusinessSlugFormat(proposedSlug.value)) return
   savingSlug.value = true
   slugError.value = ''
-  slugSuccess.value = ''
   try {
     const updated = await $fetch<ManagedBusiness>(
       '/api/my/businesses/' + encodeURIComponent(id) + '/slug',
@@ -74,7 +73,7 @@ async function saveSlug() {
     )
     currentSlug.value = updated.slug
     slugDraft.value = updated.slug
-    slugSuccess.value = 'Your new link is live. Older links will still work.'
+    appToast.success('Business link updated', 'Your old links will continue to work.')
   } catch (error) {
     slugError.value = apiErrorMessage(error, 'We could not update this link. Please try again.')
   } finally {
@@ -198,10 +197,7 @@ async function submit(draft: BusinessDraft) {
             Use 3–48 letters, numbers, or hyphens. Your directory link will be
             creda.ng/businesses/{{ proposedSlug || currentSlug }}.
           </p>
-          <p v-if="slugError" class="mt-3 text-sm text-red-700" role="alert">{{ slugError }}</p>
-          <p v-if="slugSuccess" class="mt-3 text-sm text-[#2c6d41]" role="status">
-            {{ slugSuccess }}
-          </p>
+          <UiFeedbackAlert v-if="slugError" tone="error" :message="slugError" class="mt-3" />
         </section>
         <BusinessForm
           v-if="business.status !== 'suspended'"

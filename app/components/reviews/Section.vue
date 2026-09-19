@@ -19,7 +19,10 @@ const experienceMonth = ref(new Date().toISOString().slice(0, 7))
 const replyId = ref<string | null>(null)
 const replyBody = ref('')
 const replySaving = ref(false)
-const toast = useToast()
+const deleteOpen = ref(false)
+const deleting = ref(false)
+const formId = useId()
+const appToast = useAppToast()
 
 function startReview() {
   const mine = data.value?.myReview
@@ -57,11 +60,10 @@ async function saveReview() {
     formOpen.value = false
     page.value = 1
     await refresh()
-    toast.add({
-      title: isEditing.value ? 'Review updated' : 'Review published',
-      description: isEditing.value ? 'Your changes are now live.' : 'Your review is now live.',
-      color: 'success',
-    })
+    appToast.success(
+      isEditing.value ? 'Review updated' : 'Review published',
+      isEditing.value ? 'Your changes are now live.' : 'Your review is now live.',
+    )
   } catch (error) {
     formError.value = apiErrorMessage(error, 'Your review could not be saved. Please try again.')
   } finally {
@@ -71,15 +73,19 @@ async function saveReview() {
 
 async function removeReview() {
   const mine = data.value?.myReview
-  if (!mine || !window.confirm('Delete your review?')) return
+  if (!mine || deleting.value) return
+  deleting.value = true
   formError.value = ''
   try {
     await $fetch(`/api/reviews/${mine.id}`, { method: 'DELETE' })
     formOpen.value = false
+    deleteOpen.value = false
     await refresh()
-    toast.add({ title: 'Review deleted', color: 'success' })
+    appToast.success('Review deleted')
   } catch (error) {
-    formError.value = apiErrorMessage(error, 'Your review could not be deleted. Please try again.')
+    appToast.error('Review could not be deleted', apiErrorMessage(error, 'Please try again.'))
+  } finally {
+    deleting.value = false
   }
 }
 
@@ -100,6 +106,7 @@ async function saveReply() {
     })
     replyId.value = null
     await refresh()
+    appToast.success('Response saved', 'Your response is now visible below the review.')
   } catch (error) {
     formError.value = apiErrorMessage(error, 'Your reply could not be saved. Please try again.')
   } finally {
@@ -146,13 +153,7 @@ function monthLabel(month: string): string {
       >
     </div>
 
-    <p
-      v-if="formError && !formOpen"
-      role="alert"
-      class="mt-5 rounded-xl bg-red-50 p-3 text-sm text-red-700"
-    >
-      {{ formError }}
-    </p>
+    <UiFeedbackAlert v-if="formError && !formOpen" tone="error" :message="formError" class="mt-5" />
     <p v-if="data?.reviewBlocked" class="mt-5 text-sm text-[#657069]">
       Your review of this business was removed by Creda and cannot be reposted.
     </p>
@@ -164,7 +165,7 @@ function monthLabel(month: string): string {
       :ui="{ content: 'max-w-xl rounded-2xl', body: 'max-h-[70vh] overflow-y-auto' }"
     >
       <template #body>
-        <form id="business-review-form" method="post" @submit.prevent="saveReview">
+        <form :id="formId" method="post" @submit.prevent="saveReview">
           <fieldset>
             <legend class="text-sm font-semibold text-[#143e32]">Your rating</legend>
             <div class="mt-2 flex gap-1">
@@ -210,20 +211,17 @@ function monthLabel(month: string): string {
             placeholder="What was your experience like? Share details that would help someone else decide."
             class="mt-2 w-full resize-y rounded-xl border border-[#cad9c8] bg-white px-4 py-3 text-[#143e32] outline-none focus:border-[#376c47]"
           />
-          <p v-if="formError" role="alert" class="mt-3 text-sm text-red-700">{{ formError }}</p>
-          <div class="mt-5 flex flex-wrap justify-end gap-2">
-            <UButton type="button" variant="outline" class="!rounded-xl" @click="formOpen = false"
-              >Cancel</UButton
-            >
-            <UButton
-              type="submit"
-              :loading="saving"
-              :disabled="saving"
-              class="!rounded-xl !bg-[#173e32] !text-white"
-              >{{ isEditing ? 'Save review' : 'Submit review' }}</UButton
-            >
-          </div>
+          <UiFeedbackAlert v-if="formError" tone="error" :message="formError" class="mt-4" />
         </form>
+      </template>
+      <template #footer>
+        <UiModalActions
+          :form="formId"
+          :primary-label="isEditing ? 'Save review' : 'Submit review'"
+          :loading="saving"
+          :disabled="saving"
+          @cancel="formOpen = false"
+        />
       </template>
     </UModal>
 
@@ -289,15 +287,21 @@ function monthLabel(month: string): string {
               rows="3"
               class="mt-2 w-full rounded-xl border border-[#cad9c8] px-4 py-3 text-sm outline-none focus:border-[#376c47]"
             />
-            <div class="mt-2 flex gap-2">
+            <div class="mt-3 flex items-center justify-between gap-3">
+              <UButton
+                type="button"
+                color="neutral"
+                variant="soft"
+                class="!rounded-xl !bg-[#edf1ea]"
+                @click="replyId = null"
+                >Cancel</UButton
+              >
               <UButton
                 type="submit"
                 :loading="replySaving"
                 :disabled="replySaving"
                 class="!rounded-xl !bg-[#173e32] !text-white"
                 >Save response</UButton
-              ><UButton type="button" variant="outline" class="!rounded-xl" @click="replyId = null"
-                >Cancel</UButton
               >
             </div>
           </form>
@@ -326,7 +330,7 @@ function monthLabel(month: string): string {
                 size="xs"
                 icon="i-lucide-trash-2"
                 class="!size-6 !justify-center !rounded-md !p-0 hover:!bg-red-50"
-                @click="removeReview"
+                @click="deleteOpen = true"
               />
             </UTooltip>
             <ReportsDialog
@@ -340,6 +344,15 @@ function monthLabel(month: string): string {
         </div>
       </article>
     </div>
+    <UiConfirmDialog
+      v-model:open="deleteOpen"
+      title="Delete your review?"
+      description="Your review will be removed from this business and cannot be recovered."
+      confirm-label="Delete review"
+      :loading="deleting"
+      danger
+      @confirm="removeReview"
+    />
     <div
       v-if="data && data.totalPages > 1"
       class="mt-5 flex items-center justify-between border-t border-[#e9eee5] pt-5 text-sm text-[#5e6d62]"

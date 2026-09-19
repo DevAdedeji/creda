@@ -48,7 +48,14 @@ async function resetPassword() {
     <p class="mt-5 text-base leading-7 text-[#657069]">
       Use at least 8 characters for your new Creda password.
     </p>
-    <form v-if="token" method="post" class="mt-9 space-y-4" @submit.prevent="resetPassword">
+    <UiFeedbackAlert v-if="errorMessage" tone="error" :message="errorMessage" class="mt-6" />
+    <form
+      v-if="token"
+      method="post"
+      class="space-y-4"
+      :class="errorMessage ? 'mt-5' : 'mt-9'"
+      @submit.prevent="resetPassword"
+    >
       <UFormField label="New password" name="password" required
         ><PasswordInput
           v-model="password"
@@ -79,12 +86,12 @@ async function resetPassword() {
         >Save new password <UIcon name="i-lucide-arrow-right"
       /></UButton>
     </form>
-    <p v-else class="mt-7 rounded-lg bg-amber-50 p-4 text-sm text-amber-900">
-      This reset link is missing a token. Request a new link to continue.
-    </p>
-    <p v-if="errorMessage" role="alert" class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">
-      {{ errorMessage }}
-    </p>
+    <UiFeedbackAlert
+      v-else
+      tone="warning"
+      message="This reset link is missing a token. Request a new link to continue."
+      class="mt-7"
+    />
     <NuxtLink
       to="/forgot-password"
       class="mt-9 inline-flex items-center gap-2 text-sm font-semibold text-[#143e32] hover:underline"

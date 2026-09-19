@@ -17,6 +17,7 @@ const selected = ref<{ id: string; action: 'dismiss' | 'remove' | 'restore' } | 
 const note = ref('')
 const actionError = ref('')
 const busy = ref(false)
+const appToast = useAppToast()
 const tabs: { value: ReportStatus; label: string }[] = [
   { value: 'open', label: 'Needs review' },
   { value: 'actioned', label: 'Removed' },
@@ -52,9 +53,17 @@ async function decide(item: AdminReport) {
       method: 'POST',
       body: { action: selected.value.action, reason: note.value },
     })
+    const completedAction = selected.value.action
     selected.value = null
     note.value = ''
     await refresh()
+    appToast.success(
+      completedAction === 'remove'
+        ? 'Content removed'
+        : completedAction === 'restore'
+          ? 'Content restored'
+          : 'Report dismissed',
+    )
   } catch (error) {
     actionError.value = apiErrorMessage(
       error,
@@ -247,8 +256,16 @@ async function decide(item: AdminReport) {
                 class="w-full"
                 placeholder="Record the evidence and decision for the audit history."
               />
-              <p v-if="actionError" role="alert" class="text-sm text-red-700">{{ actionError }}</p>
-              <div class="flex flex-wrap gap-2">
+              <UiFeedbackAlert v-if="actionError" tone="error" :message="actionError" />
+              <div class="flex flex-wrap items-center justify-between gap-3">
+                <UButton
+                  type="button"
+                  color="neutral"
+                  variant="soft"
+                  class="!rounded-xl !bg-[#edf1ea]"
+                  @click="selected = null"
+                  >Cancel</UButton
+                >
                 <UButton
                   type="submit"
                   :loading="busy"
@@ -256,8 +273,6 @@ async function decide(item: AdminReport) {
                   :color="selected.action === 'remove' ? 'error' : 'primary'"
                   class="!rounded-xl"
                   >Confirm {{ selected.action }}</UButton
-                ><UButton type="button" color="neutral" variant="ghost" @click="selected = null"
-                  >Cancel</UButton
                 >
               </div>
             </form>

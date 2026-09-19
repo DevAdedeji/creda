@@ -17,20 +17,18 @@ const { data, status, error, refresh } = await useFetch<{
   immediate: Boolean(session.value?.user.emailVerified),
 })
 const removingId = ref<string | null>(null)
-const removeError = ref('')
-const toast = useToast()
+const appToast = useAppToast()
 
 async function remove(id: string) {
   if (removingId.value) return
   removingId.value = id
-  removeError.value = ''
   try {
     await $fetch<{ saved: boolean }>(`/api/my/saved-businesses/${id}`, { method: 'DELETE' })
     if (data.value?.items.length === 1 && page.value > 1) page.value--
     else await refresh()
-    toast.add({ title: 'Business removed from saved', color: 'success' })
+    appToast.success('Business removed from saved')
   } catch (error) {
-    removeError.value = apiErrorMessage(error, 'Could not remove this business. Please try again.')
+    appToast.error('Could not remove this business', apiErrorMessage(error, 'Please try again.'))
   } finally {
     removingId.value = null
   }
@@ -59,9 +57,6 @@ async function remove(id: string) {
           >Explore more</UButton
         >
       </div>
-      <p v-if="removeError" role="alert" class="mt-7 rounded-xl bg-red-50 p-4 text-sm text-red-700">
-        {{ removeError }}
-      </p>
       <div
         v-if="!session?.user.emailVerified"
         class="mt-10 rounded-2xl border border-[#dfe6dc] bg-white p-8"

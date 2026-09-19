@@ -32,7 +32,8 @@ const { data: saved, status: savedStatus } = await useFetch<{ saved: boolean }>(
   { immediate: Boolean(session.value?.user.emailVerified && business.value) },
 )
 const savePending = ref(false)
-const toast = useToast()
+const appToast = useAppToast()
+const { copyText, isCopied } = useCopyFeedback()
 
 async function toggleSaved() {
   if (!business.value || savePending.value) return
@@ -41,7 +42,7 @@ async function toggleSaved() {
     return
   }
   if (!session.value.user.emailVerified) {
-    toast.add({ title: 'Verify your email to save businesses', color: 'warning' })
+    appToast.warning('Verify your email to save businesses')
     return
   }
   savePending.value = true
@@ -51,32 +52,16 @@ async function toggleSaved() {
       { method: saved.value?.saved ? 'DELETE' : 'PUT' },
     )
     saved.value = result
-    toast.add({
-      title: result.saved ? 'Saved to your businesses' : 'Removed from saved businesses',
-      color: 'success',
-    })
+    appToast.success(result.saved ? 'Business saved' : 'Business removed from saved')
   } catch {
-    toast.add({
-      title: 'Could not update saved businesses',
-      description: 'Please try again.',
-      color: 'error',
-    })
+    appToast.error('Could not update saved businesses', 'Please try again.')
   } finally {
     savePending.value = false
   }
 }
 
 async function copyLink() {
-  try {
-    await navigator.clipboard.writeText(canonicalUrl)
-    toast.add({ title: 'Profile link copied', color: 'success' })
-  } catch {
-    toast.add({
-      title: 'Could not copy the link',
-      description: 'Please try again.',
-      color: 'error',
-    })
-  }
+  await copyText(canonicalUrl)
 }
 
 const seoLocation = computed(() => {
@@ -302,11 +287,12 @@ const destinations = computed(() => {
               >
               <UButton
                 color="neutral"
-                variant="outline"
-                icon="i-lucide-link"
+                :variant="isCopied() ? 'soft' : 'outline'"
+                :icon="isCopied() ? 'i-lucide-check' : 'i-lucide-link'"
                 class="!rounded-xl !border-[#d4e0d0] !text-[#234d37]"
+                :class="isCopied() ? '!bg-[#e8f4da]' : ''"
                 @click="copyLink()"
-                >Copy profile link</UButton
+                >{{ isCopied() ? 'Copied' : 'Copy profile link' }}</UButton
               >
             </div>
             <p class="mt-4 max-w-3xl text-base leading-8 text-[#5c6e60]">
@@ -323,12 +309,7 @@ const destinations = computed(() => {
               />
               <p class="text-sm leading-6 text-[#526a58]">
                 Created by Creda from public information.
-                <NuxtLink
-                  :to="`/businesses/${encodeURIComponent(business.slug)}/claim`"
-                  class="ml-1 font-semibold text-[#24563a] underline decoration-[#98ad97] underline-offset-4 hover:text-[#143e32]"
-                >
-                  Claim this business
-                </NuxtLink>
+                <BusinessesClaimDialog :slug="business.slug" :business-name="business.name" />
               </p>
             </div>
             <div class="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#607162]">

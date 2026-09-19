@@ -4,7 +4,7 @@ import { authClient } from '~~/lib/auth-client'
 const { data: session } = await authClient.useSession(useFetch)
 const menuOpen = ref(false)
 const signingOut = ref(false)
-const toast = useToast()
+const appToast = useAppToast()
 const links = [{ label: 'Explore businesses', href: '/explore' }]
 
 async function signOut() {
@@ -16,7 +16,7 @@ async function signOut() {
     menuOpen.value = false
     await navigateTo('/')
   } catch {
-    toast.add({ title: 'Could not sign out', description: 'Please try again.', color: 'error' })
+    appToast.error('Could not sign out', 'Please try again.')
   } finally {
     signingOut.value = false
   }

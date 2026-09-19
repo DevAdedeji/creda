@@ -20,6 +20,7 @@ const method = ref<OwnershipMethod>('official_email')
 const evidenceNote = ref('')
 const submitting = ref(false)
 const submitError = ref('')
+const appToast = useAppToast()
 
 async function submit() {
   if (submitting.value || !data.value) return
@@ -32,6 +33,7 @@ async function submit() {
     })
     evidenceNote.value = ''
     await refresh()
+    appToast.success('Verification request sent', 'We’ll review the official channel you provided.')
   } catch (error) {
     submitError.value = apiErrorMessage(error, 'We could not submit your request. Try again.')
   } finally {
@@ -140,7 +142,7 @@ async function submit() {
               <p class="text-xs text-[#657069]">
                 These details are visible only to you and Creda administrators.
               </p>
-              <p v-if="submitError" role="alert" class="text-sm text-red-700">{{ submitError }}</p>
+              <UiFeedbackAlert v-if="submitError" tone="error" :message="submitError" />
               <UButton
                 type="submit"
                 size="lg"

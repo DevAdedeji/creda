@@ -26,10 +26,17 @@ const route = useRoute()
 const email = ref('')
 const needsVerification = ref(false)
 const resending = ref(false)
-const notice = ref('')
 const password = ref('')
 const pending = ref(false)
 const errorMessage = ref('')
+const appToast = useAppToast()
+
+onMounted(() => {
+  if (route.query.reset !== '1') return
+  appToast.success('Password changed', 'Log in with your new password.')
+  const { reset: _reset, ...query } = route.query
+  void navigateTo({ path: route.path, query }, { replace: true })
+})
 
 async function logIn() {
   if (pending.value) return
@@ -58,17 +65,15 @@ async function logIn() {
 async function resendVerification() {
   if (resending.value || !email.value) return
   resending.value = true
-  notice.value = ''
   try {
     const result = await authClient.sendVerificationEmail({
       email: email.value.trim().toLowerCase(),
       callbackURL: '/account',
     })
-    notice.value = result.error
-      ? 'We could not send another link right now. Please try again.'
-      : 'If an account exists for that address, a new link is on its way.'
+    if (result.error) appToast.error('Could not send another link', 'Please try again.')
+    else appToast.success('Verification link sent', 'Check your inbox for the new link.')
   } catch {
-    notice.value = 'We could not send another link right now. Please try again.'
+    appToast.error('Could not send another link', 'Please try again.')
   } finally {
     resending.value = false
   }
@@ -110,15 +115,6 @@ async function continueWithGoogle() {
       </p>
     </div>
 
-    <p
-      v-if="route.query.reset === '1'"
-      role="status"
-      class="mb-5 flex items-start gap-2 rounded-xl bg-[#eff5e7] p-3.5 text-sm text-[#325b3d]"
-    >
-      <UIcon name="i-lucide-circle-check" class="mt-0.5 shrink-0" /> Your password has been changed.
-      Log in with your new password.
-    </p>
-
     <UButton
       size="xl"
       block
@@ -142,6 +138,17 @@ async function continueWithGoogle() {
       <span class="h-px flex-1 bg-[#dfe6dc]" /> or with email
       <span class="h-px flex-1 bg-[#dfe6dc]" />
     </div>
+
+    <UiFeedbackAlert v-if="errorMessage" tone="error" :message="errorMessage" class="mb-5" />
+    <UButton
+      v-if="needsVerification"
+      color="neutral"
+      variant="soft"
+      class="mb-5 !rounded-xl !bg-[#edf1ea]"
+      :loading="resending"
+      @click="resendVerification"
+      >Send another verification link</UButton
+    >
 
     <form method="post" class="space-y-5" @submit.prevent="logIn">
       <UFormField
@@ -199,23 +206,5 @@ async function continueWithGoogle() {
         >
       </p>
     </form>
-
-    <p
-      v-if="errorMessage"
-      role="alert"
-      class="mt-5 rounded-xl bg-red-50 p-3.5 text-sm text-red-800"
-    >
-      {{ errorMessage }}
-    </p>
-    <UButton
-      v-if="needsVerification"
-      color="neutral"
-      variant="outline"
-      class="mt-3 !rounded-xl"
-      :loading="resending"
-      @click="resendVerification"
-      >Send another verification link</UButton
-    >
-    <p v-if="notice" role="status" class="mt-3 text-sm text-[#406a4a]">{{ notice }}</p>
   </AuthShell>
 </template>

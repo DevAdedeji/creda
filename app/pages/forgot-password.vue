@@ -49,7 +49,14 @@ async function requestReset() {
           : 'Enter your email and we’ll send you a link to set a new password.'
       }}
     </p>
-    <form v-if="!submitted" method="post" class="mt-9 space-y-5" @submit.prevent="requestReset">
+    <UiFeedbackAlert v-if="errorMessage" tone="error" :message="errorMessage" class="mt-6" />
+    <form
+      v-if="!submitted"
+      method="post"
+      class="space-y-5"
+      :class="errorMessage ? 'mt-5' : 'mt-9'"
+      @submit.prevent="requestReset"
+    >
       <UFormField label="Email address" name="email" required
         ><UInput
           v-model="email"
@@ -72,9 +79,6 @@ async function requestReset() {
         >Send reset link <UIcon name="i-lucide-arrow-right"
       /></UButton>
     </form>
-    <p v-if="errorMessage" role="alert" class="mt-4 rounded-lg bg-red-50 p-3 text-sm text-red-800">
-      {{ errorMessage }}
-    </p>
     <NuxtLink
       to="/login"
       class="mt-9 inline-flex items-center gap-2 text-sm font-semibold text-[#143e32] hover:underline"

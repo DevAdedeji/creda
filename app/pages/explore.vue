@@ -108,7 +108,7 @@ const {
 })
 const savedIds = computed(() => new Set(savedStatus.value?.ids ?? []))
 const savingId = ref<string | null>(null)
-const toast = useToast()
+const appToast = useAppToast()
 
 async function toggleSaved(item: BusinessListResponse['items'][number]) {
   if (savingId.value || (session.value?.user.emailVerified && savedLoadStatus.value !== 'success'))
@@ -118,7 +118,7 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
     return
   }
   if (!session.value.user.emailVerified) {
-    toast.add({ title: 'Verify your email to save businesses', color: 'warning' })
+    appToast.warning('Verify your email to save businesses')
     return
   }
   savingId.value = item.id
@@ -131,16 +131,9 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
     if (result.saved) next.add(item.id)
     else next.delete(item.id)
     savedStatus.value = { ids: [...next] }
-    toast.add({
-      title: result.saved ? 'Saved to your businesses' : 'Removed from saved businesses',
-      color: 'success',
-    })
+    appToast.success(result.saved ? 'Business saved' : 'Business removed from saved')
   } catch {
-    toast.add({
-      title: 'Could not update saved businesses',
-      description: 'Please try again.',
-      color: 'error',
-    })
+    appToast.error('Could not update saved businesses', 'Please try again.')
   } finally {
     savingId.value = null
   }
@@ -252,8 +245,8 @@ function applySort() {
 
         <section aria-live="polite">
           <h2 class="sr-only">Business listings</h2>
-          <div class="mb-6 flex flex-wrap items-center justify-between gap-4">
-            <div class="flex items-center gap-3">
+          <div class="flex md:flex-row flex-col sm:items-center justify-between">
+            <div class="flex mb-2 items-center justify-between gap-3">
               <UButton
                 color="neutral"
                 variant="outline"
@@ -263,21 +256,23 @@ function applySort() {
                 class="!rounded-xl !border-[#d5dfd2] !bg-white !text-[#143e32] lg:!hidden"
                 @click="filtersOpen = true"
               />
-              <label for="directory-sort" class="text-sm font-semibold text-[#345341]"
-                >Sort by</label
-              >
-              <USelect
-                id="directory-sort"
-                v-model="sort"
-                :items="[...sortOptions]"
-                class="min-w-40"
-                :ui="{ base: '!rounded-lg !border-[#d9e2d8] !ring-0 focus:!ring-0' }"
-                @update:model-value="applySort"
-              />
+              <div>
+                <label for="directory-sort" class="text-sm font-semibold text-[#345341]"
+                  >Sort by</label
+                >
+                <USelect
+                  id="directory-sort"
+                  v-model="sort"
+                  :items="[...sortOptions]"
+                  class="min-w-40"
+                  :ui="{ base: '!rounded-lg !border-[#d9e2d8] !ring-0 focus:!ring-0' }"
+                  @update:model-value="applySort"
+                />
+              </div>
             </div>
             <NuxtLink
               to="/businesses/new"
-              class="inline-flex items-center gap-2 text-sm font-semibold text-[#315c3c] hover:underline"
+              class="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-[#315c3c] hover:underline"
               >List your business <UIcon name="i-lucide-arrow-up-right"
             /></NuxtLink>
           </div>

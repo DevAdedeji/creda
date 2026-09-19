@@ -13,7 +13,7 @@ const details = ref('')
 const submitting = ref(false)
 const sent = ref(false)
 const errorMessage = ref('')
-const toast = useToast()
+const appToast = useAppToast()
 
 async function sendReport() {
   if (submitting.value) return
@@ -31,11 +31,7 @@ async function sendReport() {
     })
     sent.value = true
     open.value = false
-    toast.add({
-      title: 'Report received',
-      description: 'Thank you. Our team will review it.',
-      color: 'success',
-    })
+    appToast.success('Report received', 'Thank you. Our team will review it.')
   } catch (error) {
     errorMessage.value = apiErrorMessage(error, 'Your report could not be sent. Please try again.')
   } finally {
@@ -104,31 +100,24 @@ async function sendReport() {
             }"
           />
         </UFormField>
-        <p v-if="errorMessage" role="alert" class="rounded-xl bg-red-50 p-3 text-sm text-red-700">
-          {{ errorMessage }}
+        <UiFeedbackAlert v-if="errorMessage" tone="error" :message="errorMessage">
           <NuxtLink
             v-if="errorMessage.toLowerCase().includes('sign in')"
             to="/login"
-            class="font-semibold underline"
+            class="mt-1 inline-flex font-semibold underline"
             >Log in</NuxtLink
           >
-        </p>
+        </UiFeedbackAlert>
       </form>
     </template>
     <template #footer>
-      <div class="flex w-full justify-end gap-2">
-        <UButton color="neutral" variant="ghost" class="!rounded-xl" @click="open = false"
-          >Cancel</UButton
-        >
-        <UButton
-          type="submit"
-          :form="formId"
-          :loading="submitting"
-          :disabled="submitting || (reason === 'other' && details.trim().length < 10)"
-          class="!rounded-xl !bg-[#143e32] !text-white"
-          >Send report</UButton
-        >
-      </div>
+      <UiModalActions
+        :form="formId"
+        primary-label="Send report"
+        :loading="submitting"
+        :disabled="submitting || (reason === 'other' && details.trim().length < 10)"
+        @cancel="open = false"
+      />
     </template>
   </UModal>
 </template>

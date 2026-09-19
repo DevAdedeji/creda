@@ -4,7 +4,8 @@ import type { ManagedBusinessListResponse } from '~~/shared/businesses'
 
 useSeoMeta({ title: 'Your businesses — Creda', robots: 'noindex, nofollow' })
 const route = useRoute()
-const toast = useToast()
+const appToast = useAppToast()
+const { copyText, isCopied } = useCopyFeedback()
 const siteOrigin = new URL(useCanonicalUrl('/')).origin
 const { data: session } = await authClient.useSession(useFetch)
 if (!session.value) await navigateTo('/login')
@@ -34,13 +35,15 @@ function bioLink(slug: string) {
 }
 
 async function copyBioLink(slug: string) {
-  try {
-    await navigator.clipboard.writeText(bioLink(slug).toString())
-    toast.add({ title: 'Business page link copied', color: 'success' })
-  } catch {
-    toast.add({ title: 'Could not copy the link', color: 'error' })
-  }
+  await copyText(bioLink(slug).toString(), slug)
 }
+
+onMounted(() => {
+  if (route.query.submitted !== '1') return
+  appToast.success('Business saved', 'Your business is live and ready to share.')
+  const { submitted: _submitted, ...query } = route.query
+  void navigateTo({ path: route.path, query }, { replace: true })
+})
 
 watch(
   () => data.value?.page,
@@ -79,13 +82,6 @@ watch(
         >
       </div>
 
-      <p
-        v-if="route.query.submitted === '1'"
-        role="status"
-        class="mt-8 rounded-xl bg-[#e8f4da] p-4 text-sm font-medium text-[#315b3a]"
-      >
-        Your business is live in the directory. You can update its details anytime.
-      </p>
       <div
         v-if="status === 'pending'"
         class="mt-10 grid gap-5 sm:grid-cols-2 xl:grid-cols-3"
@@ -194,11 +190,24 @@ watch(
               </div>
               <button
                 type="button"
-                :aria-label="`Copy ${item.name} business page link`"
-                class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border border-[#d2e1cf] bg-white px-2.5 text-xs font-semibold text-[#315b3a] transition hover:bg-[#e9f4e4] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#315b3a]"
+                :aria-label="
+                  isCopied(item.slug)
+                    ? `${item.name} business page link copied`
+                    : `Copy ${item.name} business page link`
+                "
+                class="inline-flex h-9 shrink-0 items-center gap-1.5 rounded-lg border px-2.5 text-xs font-semibold transition focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#315b3a]"
+                :class="
+                  isCopied(item.slug)
+                    ? 'border-[#b9d8ac] bg-[#e8f4da] text-[#285c37]'
+                    : 'border-[#d2e1cf] bg-white text-[#315b3a] hover:bg-[#e9f4e4]'
+                "
                 @click="copyBioLink(item.slug)"
               >
-                <UIcon name="i-lucide-copy" class="text-base" /> Copy
+                <UIcon
+                  :name="isCopied(item.slug) ? 'i-lucide-check' : 'i-lucide-copy'"
+                  class="text-base"
+                />
+                {{ isCopied(item.slug) ? 'Copied' : 'Copy' }}
               </button>
             </div>
           </div>

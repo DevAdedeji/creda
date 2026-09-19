@@ -56,14 +56,9 @@ const mapUrl = computed(() => {
   url.searchParams.set('q', `place_id:${placeId}`)
   return url.toString()
 })
-const toast = useToast()
+const { copyText, isCopied } = useCopyFeedback()
 async function copyLink() {
-  try {
-    await navigator.clipboard.writeText(canonicalUrl)
-    toast.add({ title: 'Page link copied', color: 'success' })
-  } catch {
-    toast.add({ title: 'Could not copy the link', color: 'error' })
-  }
+  await copyText(canonicalUrl)
 }
 function hoursLabel(day: number): string {
   const row = business.value?.weeklyHours.find((item) => item.day === day)
@@ -214,10 +209,16 @@ useHead(() =>
             /></a>
             <button
               type="button"
-              class="inline-flex min-h-12 items-center gap-2 rounded-xl border border-[#d8e3d6] px-5 text-sm font-semibold text-[#315840] transition hover:bg-[#f4f9ef]"
+              class="inline-flex min-h-12 items-center gap-2 rounded-xl border px-5 text-sm font-semibold transition"
+              :class="
+                isCopied()
+                  ? 'border-[#b9d8ac] bg-[#e8f4da] text-[#285c37]'
+                  : 'border-[#d8e3d6] text-[#315840] hover:bg-[#f4f9ef]'
+              "
               @click="copyLink"
             >
-              <UIcon name="i-lucide-link" /> Copy page link
+              <UIcon :name="isCopied() ? 'i-lucide-check' : 'i-lucide-link'" />
+              {{ isCopied() ? 'Copied' : 'Copy page link' }}
             </button>
           </div>
           <div

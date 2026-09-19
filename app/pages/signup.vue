@@ -21,7 +21,7 @@ const pending = ref(false)
 const sendingVerification = ref(false)
 const registered = ref(false)
 const errorMessage = ref('')
-const notice = ref('')
+const appToast = useAppToast()
 
 async function createAccount() {
   if (pending.value) return
@@ -57,17 +57,15 @@ async function createAccount() {
 async function resendVerification() {
   if (sendingVerification.value) return
   sendingVerification.value = true
-  notice.value = ''
   try {
     const result = await authClient.sendVerificationEmail({
       email: email.value.trim().toLowerCase(),
       callbackURL: '/account',
     })
-    notice.value = result.error
-      ? 'We could not send another link right now. Please try again.'
-      : 'If an account exists for that address, a new verification link is on its way.'
+    if (result.error) appToast.error('Could not send another link', 'Please try again.')
+    else appToast.success('Verification link sent', 'Check your inbox for the new link.')
   } catch {
-    notice.value = 'We could not send another link right now. Please try again.'
+    appToast.error('Could not send another link', 'Please try again.')
   } finally {
     sendingVerification.value = false
   }
@@ -121,7 +119,6 @@ async function continueWithGoogle() {
         @click="resendVerification"
         >Send another link</UButton
       >
-      <p v-if="notice" role="status" class="mt-4 text-sm text-[#406a4a]">{{ notice }}</p>
       <p class="mt-7 text-sm text-[#657069]">
         Already verified?
         <NuxtLink to="/login" class="font-semibold text-[#143e32] hover:underline">Log in</NuxtLink>
@@ -166,6 +163,8 @@ async function continueWithGoogle() {
         <span class="h-px flex-1 bg-[#dfe6dc]" /> or with email
         <span class="h-px flex-1 bg-[#dfe6dc]" />
       </div>
+
+      <UiFeedbackAlert v-if="errorMessage" tone="error" :message="errorMessage" class="mb-5" />
 
       <form method="post" class="space-y-4" @submit.prevent="createAccount">
         <UFormField
@@ -248,13 +247,6 @@ async function continueWithGoogle() {
           >
         </p>
       </form>
-      <p
-        v-if="errorMessage"
-        role="alert"
-        class="mt-5 rounded-xl bg-red-50 p-3.5 text-sm text-red-800"
-      >
-        {{ errorMessage }}
-      </p>
     </template>
   </AuthShell>
 </template>

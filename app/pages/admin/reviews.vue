@@ -16,6 +16,7 @@ const reason = ref('')
 const actionError = ref('')
 const actionErrorReviewId = ref<string | null>(null)
 const actingId = ref<string | null>(null)
+const appToast = useAppToast()
 
 watch(statusFilter, () => {
   page.value = 1
@@ -36,6 +37,7 @@ async function removeReview(id: string) {
     decisionReviewId.value = null
     reason.value = ''
     await refresh()
+    appToast.success('Review removed', 'The review is no longer visible on the business page.')
   } catch (error) {
     actionError.value = apiErrorMessage(
       error,
@@ -174,7 +176,15 @@ function openDecision(id: string) {
               class="mt-2 w-full rounded-xl border border-[#cad9c8] bg-white px-4 py-3 text-sm outline-none focus:border-[#376c47]"
             />
             <p class="mt-1 text-xs text-[#657069]">Recorded in the moderation history.</p>
-            <div class="mt-3 flex gap-2">
+            <div class="mt-3 flex items-center justify-between gap-3">
+              <UButton
+                type="button"
+                color="neutral"
+                variant="soft"
+                class="!rounded-xl !bg-[#edf1ea]"
+                @click="decisionReviewId = null"
+                >Cancel</UButton
+              >
               <UButton
                 type="submit"
                 :loading="actingId === review.id"
@@ -182,22 +192,15 @@ function openDecision(id: string) {
                 color="error"
                 class="!rounded-xl"
                 >Confirm removal</UButton
-              ><UButton
-                type="button"
-                variant="outline"
-                class="!rounded-xl"
-                @click="decisionReviewId = null"
-                >Cancel</UButton
               >
             </div>
           </form>
-          <p
+          <UiFeedbackAlert
             v-if="actionError && actionErrorReviewId === review.id"
-            role="alert"
-            class="mt-3 text-sm text-red-700"
-          >
-            {{ actionError }}
-          </p>
+            tone="error"
+            :message="actionError"
+            class="mt-3"
+          />
         </article>
       </div>
       <div

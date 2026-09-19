@@ -17,12 +17,12 @@ const approved = computed(
 const notes = reactive<Record<string, string>>({})
 const busyId = ref<string | null>(null)
 const actionError = ref('')
+const revokeTarget = ref<AdminVerificationItem | null>(null)
+const revokeOpen = ref(false)
+const appToast = useAppToast()
 
 async function decide(item: AdminVerificationItem, decision: 'approve' | 'decline' | 'revoke') {
   if (busyId.value) return
-  if (decision === 'revoke' && !window.confirm('Remove the ownership badge from this business?')) {
-    return
-  }
   const reason = notes[item.id]?.trim() || ''
   if (decision !== 'approve' && reason.length < 10) {
     actionError.value = 'Add a reason of at least 10 characters before declining or revoking.'
@@ -37,11 +37,31 @@ async function decide(item: AdminVerificationItem, decision: 'approve' | 'declin
     })
     delete notes[item.id]
     await refresh()
+    revokeOpen.value = false
+    revokeTarget.value = null
+    appToast.success(
+      decision === 'approve'
+        ? 'Ownership approved'
+        : decision === 'decline'
+          ? 'Claim declined'
+          : 'Verification revoked',
+    )
   } catch (error) {
     actionError.value = apiErrorMessage(error, 'We could not save this decision. Try again.')
   } finally {
     busyId.value = null
   }
+}
+
+function confirmRevoke(item: AdminVerificationItem) {
+  actionError.value = ''
+  const reason = notes[item.id]?.trim() || ''
+  if (reason.length < 10) {
+    actionError.value = 'Add a reason of at least 10 characters before revoking.'
+    return
+  }
+  revokeTarget.value = item
+  revokeOpen.value = true
 }
 </script>
 
@@ -71,13 +91,7 @@ async function decide(item: AdminVerificationItem, decision: 'approve' | 'declin
         Verification requests could not be loaded. Check your administrator access and try again.
       </div>
       <template v-else>
-        <p
-          v-if="actionError"
-          role="alert"
-          class="mt-7 rounded-xl bg-red-50 p-4 text-sm text-red-800"
-        >
-          {{ actionError }}
-        </p>
+        <UiFeedbackAlert v-if="actionError" tone="error" :message="actionError" class="mt-7" />
 
         <section class="mt-10">
           <h2 class="text-2xl font-semibold text-[#143e32]">Awaiting a check</h2>
@@ -204,7 +218,7 @@ async function decide(item: AdminVerificationItem, decision: 'approve' | 'declin
                 class="mt-4"
                 :loading="busyId === item.id"
                 :disabled="Boolean(busyId)"
-                @click="decide(item, 'revoke')"
+                @click="confirmRevoke(item)"
               >
                 Revoke verification
               </UButton>
@@ -213,5 +227,18 @@ async function decide(item: AdminVerificationItem, decision: 'approve' | 'declin
         </section>
       </template>
     </main>
+    <UiConfirmDialog
+      v-model:open="revokeOpen"
+      title="Revoke ownership verification?"
+      :description="
+        revokeTarget
+          ? `${revokeTarget.businessName} will lose its ownership badge. The recorded reason will remain in the review history.`
+          : ''
+      "
+      confirm-label="Revoke verification"
+      :loading="Boolean(revokeTarget && busyId === revokeTarget.id)"
+      danger
+      @confirm="revokeTarget && decide(revokeTarget, 'revoke')"
+    />
   </WorkspaceShell>
 </template>
