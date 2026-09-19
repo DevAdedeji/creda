@@ -12,7 +12,18 @@ const route = useRoute()
 onMounted(() => {
   if (!session.value || route.query.signup !== 'google') return
   trackAnalyticsEvent('signup_completed', { method: 'google' })
-  const { signup: _signup, ...query } = route.query
+  const returnTo = route.query.returnTo
+  if (
+    typeof returnTo === 'string' &&
+    returnTo.startsWith('/') &&
+    !returnTo.startsWith('//') &&
+    !returnTo.includes('://') &&
+    returnTo !== '/account'
+  ) {
+    void navigateTo(returnTo, { replace: true })
+    return
+  }
+  const { signup: _signup, returnTo: _returnTo, ...query } = route.query
   void navigateTo({ path: route.path, query }, { replace: true })
 })
 

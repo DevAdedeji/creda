@@ -312,9 +312,25 @@ const destinations = computed(() => {
             <p class="mt-4 max-w-3xl text-base leading-8 text-[#5c6e60]">
               {{ business.description }}
             </p>
-            <p v-if="business.listingSource === 'curated'" class="mt-3 text-xs text-[#718174]">
-              Added by Creda from public information. This profile is not managed by the business.
-            </p>
+            <div
+              v-if="business.listingSource === 'curated'"
+              class="mt-5 flex items-start gap-3 rounded-xl border border-[#dbe6d4] bg-[#f3f8ef] px-4 py-2"
+            >
+              <UIcon
+                name="i-lucide-info"
+                class="mt-0.5 size-4 shrink-0 text-[#4e7356]"
+                aria-hidden="true"
+              />
+              <p class="text-sm leading-6 text-[#526a58]">
+                Created by Creda from public information.
+                <NuxtLink
+                  :to="`/businesses/${encodeURIComponent(business.slug)}/claim`"
+                  class="ml-1 font-semibold text-[#24563a] underline decoration-[#98ad97] underline-offset-4 hover:text-[#143e32]"
+                >
+                  Claim this business
+                </NuxtLink>
+              </p>
+            </div>
             <div class="mt-7 flex flex-wrap gap-x-6 gap-y-2 text-sm text-[#607162]">
               <span v-if="locationSummary" class="inline-flex items-center gap-2"
                 ><UIcon

@@ -1,0 +1,2 @@
+DROP INDEX "ownership_request_one_pending_per_business";--> statement-breakpoint
+CREATE UNIQUE INDEX "ownership_request_one_pending_per_requester" ON "ownership_request" USING btree ("business_id","requester_user_id") WHERE status = 'pending';

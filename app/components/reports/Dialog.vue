@@ -79,7 +79,9 @@ async function sendReport() {
             v-model="reason"
             :items="[...reportReasons]"
             class="w-full"
-            :ui="{ base: '!rounded-xl !ring-0 focus:!ring-0' }"
+            :ui="{
+              base: '!rounded-xl !border !border-[#cad9c8] !bg-white !shadow-none !ring-0 focus:!border-[#376c47] focus:!ring-0',
+            }"
           />
         </UFormField>
         <UFormField
@@ -96,7 +98,9 @@ async function sendReport() {
             :maxlength="1000"
             placeholder="What should we look at?"
             class="w-full"
-            :ui="{ base: '!rounded-xl !ring-0 focus:!ring-0' }"
+            :ui="{
+              base: '!rounded-xl !border !border-[#cad9c8] !bg-white !shadow-none !ring-0 focus:!border-[#376c47] focus:!ring-0',
+            }"
           />
         </UFormField>
         <p v-if="errorMessage" role="alert" class="rounded-xl bg-red-50 p-3 text-sm text-red-700">

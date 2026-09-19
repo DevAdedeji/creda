@@ -304,7 +304,7 @@ function monthLabel(month: string): string {
         </div>
         <div class="mt-3 flex items-center justify-end">
           <div
-            class="inline-flex items-center gap-0.5 rounded-xl border border-[#e2e8df] bg-[#fafbf8] p-1"
+            class="inline-flex items-center gap-2 rounded-xl border border-[#e2e8df] bg-[#fafbf8] p-2"
             aria-label="Review actions"
           >
             <UTooltip v-if="data.myReview?.id === review.id" text="Edit review">

@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { and, asc, desc, eq, inArray, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
 import { db } from '~~/lib/db'
 import { business, ownershipDecision, ownershipRequest, user } from '~~/lib/db/schema'
 import type {
@@ -51,7 +51,12 @@ export async function getOwnerVerification(
   const [latest] = await db
     .select()
     .from(ownershipRequest)
-    .where(eq(ownershipRequest.businessId, businessId))
+    .where(
+      and(
+        eq(ownershipRequest.businessId, businessId),
+        eq(ownershipRequest.requesterUserId, ownerUserId),
+      ),
+    )
     .orderBy(desc(ownershipRequest.createdAt), desc(ownershipRequest.id))
     .limit(1)
 
@@ -61,6 +66,96 @@ export async function getOwnerVerification(
     ownershipStatus: owned.ownershipStatus,
     request: latest ? toRequestView(latest) : null,
   }
+}
+
+export async function getBusinessClaim(
+  businessSlug: string,
+  requesterUserId: string,
+): Promise<OwnerVerificationView> {
+  const [claimable] = await db
+    .select({
+      id: business.id,
+      name: business.name,
+      listingSource: business.listingSource,
+      ownerUserId: business.ownerUserId,
+      ownershipStatus: business.ownershipStatus,
+    })
+    .from(business)
+    .where(and(eq(business.slug, businessSlug), eq(business.status, 'approved')))
+    .limit(1)
+  if (!claimable) throw new OwnershipDomainError('not_found', 'Business not found.')
+  if (claimable.listingSource !== 'curated' || claimable.ownerUserId !== null) {
+    if (claimable.ownerUserId === requesterUserId) {
+      return getOwnerVerification(claimable.id, requesterUserId)
+    }
+    throw new OwnershipDomainError('conflict', 'This business has already been claimed.')
+  }
+
+  const [latest] = await db
+    .select()
+    .from(ownershipRequest)
+    .where(
+      and(
+        eq(ownershipRequest.businessId, claimable.id),
+        eq(ownershipRequest.requesterUserId, requesterUserId),
+      ),
+    )
+    .orderBy(desc(ownershipRequest.createdAt), desc(ownershipRequest.id))
+    .limit(1)
+
+  return {
+    businessId: claimable.id,
+    businessName: claimable.name,
+    ownershipStatus: claimable.ownershipStatus,
+    request: latest ? toRequestView(latest) : null,
+  }
+}
+
+export async function requestBusinessClaim(
+  businessSlug: string,
+  requesterUserId: string,
+  input: OwnershipRequestInput,
+): Promise<OwnerVerificationView> {
+  await db.transaction(async (tx) => {
+    const [claimable] = await tx
+      .select({
+        id: business.id,
+        listingSource: business.listingSource,
+        ownerUserId: business.ownerUserId,
+      })
+      .from(business)
+      .where(and(eq(business.slug, businessSlug), eq(business.status, 'approved')))
+      .limit(1)
+      .for('update')
+    if (!claimable) throw new OwnershipDomainError('not_found', 'Business not found.')
+    if (claimable.listingSource !== 'curated' || claimable.ownerUserId !== null) {
+      throw new OwnershipDomainError('conflict', 'This business has already been claimed.')
+    }
+
+    const [pending] = await tx
+      .select({ id: ownershipRequest.id })
+      .from(ownershipRequest)
+      .where(
+        and(
+          eq(ownershipRequest.businessId, claimable.id),
+          eq(ownershipRequest.requesterUserId, requesterUserId),
+          eq(ownershipRequest.status, 'pending'),
+        ),
+      )
+      .limit(1)
+    if (pending) return
+
+    await tx.insert(ownershipRequest).values({
+      id: randomUUID(),
+      businessId: claimable.id,
+      requesterUserId,
+      method: input.method,
+      evidenceNote: input.evidenceNote,
+      status: 'pending',
+    })
+  })
+
+  return getBusinessClaim(businessSlug, requesterUserId)
 }
 
 export async function requestOwnershipVerification(
@@ -118,7 +213,7 @@ export async function listAdminVerification(): Promise<AdminVerificationItem[]> 
     })
     .from(ownershipRequest)
     .innerJoin(business, eq(ownershipRequest.businessId, business.id))
-    .innerJoin(user, eq(business.ownerUserId, user.id))
+    .innerJoin(user, eq(ownershipRequest.requesterUserId, user.id))
     .where(inArray(ownershipRequest.status, ['pending', 'approved']))
     .orderBy(
       sql`CASE WHEN ${ownershipRequest.status} = 'pending' THEN 0 ELSE 1 END`,
@@ -151,7 +246,12 @@ export async function decideOwnershipVerification(
 
     // Lock the business first, matching the owner-request lock order.
     const [owned] = await tx
-      .select({ id: business.id, ownershipStatus: business.ownershipStatus })
+      .select({
+        id: business.id,
+        listingSource: business.listingSource,
+        ownerUserId: business.ownerUserId,
+        ownershipStatus: business.ownershipStatus,
+      })
       .from(business)
       .where(eq(business.id, lookup.businessId))
       .limit(1)
@@ -177,8 +277,14 @@ export async function decideOwnershipVerification(
     if (request.status !== expectedStatus) {
       throw new OwnershipDomainError('conflict', 'This verification request has already changed.')
     }
+    const curatedClaim = owned.listingSource === 'curated' && owned.ownerUserId === null
+    const pendingStateChanged =
+      expectedStatus === 'pending' &&
+      (curatedClaim
+        ? owned.ownershipStatus !== 'unverified'
+        : owned.ownershipStatus !== 'pending' || owned.ownerUserId !== request.requesterUserId)
     if (
-      (expectedStatus === 'pending' && owned.ownershipStatus !== 'pending') ||
+      pendingStateChanged ||
       (expectedStatus === 'approved' && owned.ownershipStatus !== 'verified')
     ) {
       throw new OwnershipDomainError('conflict', 'The business verification state has changed.')
@@ -195,18 +301,66 @@ export async function decideOwnershipVerification(
         updatedAt: sql`now()`,
       })
       .where(eq(ownershipRequest.id, requestId))
-    await tx
-      .update(business)
-      .set({
-        ownershipStatus:
-          nextStatus === 'approved'
-            ? 'verified'
-            : nextStatus === 'declined'
-              ? 'unverified'
-              : 'revoked',
-        updatedAt: sql`now()`,
-      })
-      .where(eq(business.id, request.businessId))
+    if (nextStatus === 'approved' && curatedClaim) {
+      const competingClaims = await tx
+        .select({ id: ownershipRequest.id })
+        .from(ownershipRequest)
+        .where(
+          and(
+            eq(ownershipRequest.businessId, request.businessId),
+            eq(ownershipRequest.status, 'pending'),
+            ne(ownershipRequest.id, request.id),
+          ),
+        )
+        .for('update')
+      if (competingClaims.length) {
+        const competingIds = competingClaims.map((claim) => claim.id)
+        const competingReason = 'Another ownership claim was approved.'
+        await tx
+          .update(ownershipRequest)
+          .set({
+            status: 'declined',
+            reviewNote: competingReason,
+            reviewedByUserId: actorUserId,
+            reviewedAt: sql`now()`,
+            updatedAt: sql`now()`,
+          })
+          .where(inArray(ownershipRequest.id, competingIds))
+        await tx.insert(ownershipDecision).values(
+          competingIds.map((competingRequestId) => ({
+            id: randomUUID(),
+            requestId: competingRequestId,
+            businessId: request.businessId,
+            actorUserId,
+            fromStatus: 'pending' as const,
+            toStatus: 'declined' as const,
+            reason: competingReason,
+          })),
+        )
+      }
+      await tx
+        .update(business)
+        .set({
+          listingSource: 'member',
+          ownerUserId: request.requesterUserId,
+          ownershipStatus: 'verified',
+          updatedAt: sql`now()`,
+        })
+        .where(eq(business.id, request.businessId))
+    } else {
+      await tx
+        .update(business)
+        .set({
+          ownershipStatus:
+            nextStatus === 'approved'
+              ? 'verified'
+              : nextStatus === 'declined'
+                ? 'unverified'
+                : 'revoked',
+          updatedAt: sql`now()`,
+        })
+        .where(eq(business.id, request.businessId))
+    }
     await tx.insert(ownershipDecision).values({
       id: randomUUID(),
       requestId,

@@ -19,6 +19,7 @@ const returnTo =
   !returnToQuery.includes('://')
     ? returnToQuery
     : '/account'
+const googleNewUserCallback = `/account?signup=google&returnTo=${encodeURIComponent(returnTo)}`
 if (session.value) await navigateTo(returnTo)
 
 const route = useRoute()
@@ -80,8 +81,8 @@ async function continueWithGoogle() {
   try {
     const result = await authClient.signIn.social({
       provider: 'google',
-      callbackURL: '/account',
-      newUserCallbackURL: '/account?signup=google',
+      callbackURL: returnTo,
+      newUserCallbackURL: googleNewUserCallback,
     })
     if (result.error) errorMessage.value = 'Google sign-in could not start. Please try again.'
   } catch {

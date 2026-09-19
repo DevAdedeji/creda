@@ -429,8 +429,8 @@ export const ownershipRequest = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
-    uniqueIndex('ownership_request_one_pending_per_business')
-      .on(table.businessId)
+    uniqueIndex('ownership_request_one_pending_per_requester')
+      .on(table.businessId, table.requesterUserId)
       .where(sql`status = 'pending'`),
     index('ownership_request_business_created_idx').on(table.businessId, table.createdAt),
     index('ownership_request_status_created_idx').on(table.status, table.createdAt),
