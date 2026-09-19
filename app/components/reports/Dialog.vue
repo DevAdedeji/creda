@@ -51,8 +51,9 @@ async function sendReport() {
       :aria-label="sent ? 'Report sent' : label"
       color="neutral"
       variant="ghost"
+      size="xs"
       icon="i-lucide-flag"
-      class="!size-9 !justify-center !rounded-lg !p-0 !text-[#68796b] hover:!bg-[#f1f5ee] hover:!text-[#143e32]"
+      class="!size-6 !justify-center !rounded-md !p-0 !text-[#68796b] hover:!bg-[#f1f5ee] hover:!text-[#143e32]"
       @click="open = true"
     />
   </UTooltip>

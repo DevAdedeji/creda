@@ -304,7 +304,7 @@ function monthLabel(month: string): string {
         </div>
         <div class="mt-3 flex items-center justify-end">
           <div
-            class="inline-flex items-center gap-2 rounded-xl border border-[#e2e8df] bg-[#fafbf8] p-2"
+            class="inline-flex items-center gap-0.5 rounded-xl border border-[#e2e8df] bg-[#fafbf8] p-1"
             aria-label="Review actions"
           >
             <UTooltip v-if="data.myReview?.id === review.id" text="Edit review">
@@ -312,8 +312,9 @@ function monthLabel(month: string): string {
                 aria-label="Edit review"
                 color="neutral"
                 variant="ghost"
+                size="xs"
                 icon="i-lucide-square-pen"
-                class="!size-9 !justify-center !rounded-lg !p-0 !text-[#4f6657] hover:!bg-[#edf4e9] hover:!text-[#143e32]"
+                class="!size-6 !justify-center !rounded-md !p-0 !text-[#4f6657] hover:!bg-[#edf4e9] hover:!text-[#143e32]"
                 @click="startReview"
               />
             </UTooltip>
@@ -322,8 +323,9 @@ function monthLabel(month: string): string {
                 aria-label="Delete review"
                 color="error"
                 variant="ghost"
+                size="xs"
                 icon="i-lucide-trash-2"
-                class="!size-9 !justify-center !rounded-lg !p-0 hover:!bg-red-50"
+                class="!size-6 !justify-center !rounded-md !p-0 hover:!bg-red-50"
                 @click="removeReview"
               />
             </UTooltip>
