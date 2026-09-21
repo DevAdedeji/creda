@@ -3,14 +3,8 @@ import BusinessCard from '@/components/businesses/BusinessCard.vue'
 import FilterFields from '@/components/businesses/FilterFields.vue'
 import { serializeJsonLd } from '@/utils/jsonLd'
 import { authClient } from '~~/lib/auth-client'
-import {
-  businessCategories,
-  operationModes,
-  type BusinessListResponse,
-  type BusinessCategory,
-  type OperationMode,
-} from '~~/shared/businesses'
-import { otherStateFilterValue } from '~~/shared/nigeriaStates'
+import type { BusinessListResponse } from '~~/shared/businesses'
+import { useBusinessDiscovery } from '@/composables/discovery/useBusinessDiscovery'
 
 const canonicalUrl = useCanonicalUrl('/explore')
 const socialImage = useCanonicalUrl('/og-image.png')
@@ -53,46 +47,37 @@ useHead({
 })
 
 const route = useRoute()
-const filtersOpen = ref(false)
-const search = ref(String(route.query.q ?? ''))
-function selectedValues<T extends string>(value: unknown, options: readonly { value: T }[]): T[] {
-  const values = Array.isArray(value) ? value : typeof value === 'string' ? [value] : []
-  return [
-    ...new Set(values.filter((item): item is T => options.some((option) => option.value === item))),
-  ]
-}
-const category = ref<BusinessCategory[]>(selectedValues(route.query.category, businessCategories))
-const city = ref(String(route.query.city ?? ''))
-const state = ref(String(route.query.state ?? ''))
-const operationMode = ref<OperationMode[]>(
-  selectedValues(route.query.operationMode, operationModes),
-)
-const sortOptions = [
-  { label: 'Best match', value: 'relevance' },
-  { label: 'Top rated', value: 'top_rated' },
-  { label: 'Most reviewed', value: 'most_reviewed' },
-  { label: 'Newest', value: 'newest' },
-] as const
-type DirectorySort = (typeof sortOptions)[number]['value']
-const sort = ref<DirectorySort>(
-  sortOptions.some((item) => item.value === route.query.sort)
-    ? (route.query.sort as DirectorySort)
-    : 'relevance',
-)
-const apiQuery = computed(() => ({
-  q: typeof route.query.q === 'string' ? route.query.q : undefined,
-  category: route.query.category ?? undefined,
-  location: typeof route.query.location === 'string' ? route.query.location : undefined,
-  city: typeof route.query.city === 'string' ? route.query.city : undefined,
-  state: typeof route.query.state === 'string' ? route.query.state : undefined,
-  operationMode: route.query.operationMode ?? undefined,
-  sort: typeof route.query.sort === 'string' ? route.query.sort : undefined,
-  page: typeof route.query.page === 'string' ? route.query.page : undefined,
-}))
-const { data, status, error, refresh } = await useFetch<BusinessListResponse>('/api/businesses', {
-  query: apiQuery,
-})
 const { data: session } = await authClient.useSession(useFetch)
+const {
+  request,
+  data,
+  error,
+  refresh,
+  search,
+  aiSearch,
+  searchNormally,
+  category,
+  city,
+  state,
+  operationMode,
+  sort,
+  sortOptions,
+  filtersOpen,
+  interpreting,
+  searchPending,
+  searchNotice,
+  extraCriteria,
+  applyFilters,
+  clearFilters,
+  applySort,
+  pageLink,
+  removeExtraCriterion,
+} = useBusinessDiscovery(computed(() => session.value?.user))
+await request
+const searchLoginLink = computed(() => ({
+  path: '/login',
+  query: { returnTo: `/explore?${new URLSearchParams({ q: search.value, mode: 'ai' })}` },
+}))
 const visibleIds = computed(() =>
   session.value?.user.emailVerified
     ? (data.value?.items.map((item) => item.id).join(',') ?? '')
@@ -138,64 +123,6 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
     savingId.value = null
   }
 }
-
-watch(
-  () => route.query,
-  () => {
-    search.value = String(route.query.q ?? '')
-    category.value = selectedValues(route.query.category, businessCategories)
-    city.value = String(route.query.city ?? '')
-    state.value = String(route.query.state ?? '')
-    operationMode.value = selectedValues(route.query.operationMode, operationModes)
-    sort.value = sortOptions.some((item) => item.value === route.query.sort)
-      ? (route.query.sort as DirectorySort)
-      : 'relevance'
-  },
-)
-
-function applyFilters() {
-  filtersOpen.value = false
-  navigateTo({
-    path: '/explore',
-    query: {
-      q: search.value.trim() || undefined,
-      category: category.value.length ? category.value : undefined,
-      city: city.value.trim() || undefined,
-      state: state.value === otherStateFilterValue ? undefined : state.value.trim() || undefined,
-      operationMode: operationMode.value.length ? operationMode.value : undefined,
-      sort: sort.value === 'relevance' ? undefined : sort.value,
-    },
-  })
-}
-
-function clearFilters() {
-  search.value = ''
-  category.value = []
-  city.value = ''
-  state.value = ''
-  operationMode.value = []
-  sort.value = 'relevance'
-  filtersOpen.value = false
-  navigateTo('/explore')
-}
-
-function pageLink(page: number) {
-  const query = { ...route.query }
-  if (page === 1) delete query.page
-  else query.page = String(page)
-  return { path: '/explore', query }
-}
-
-function applySort() {
-  navigateTo({
-    path: '/explore',
-    query: {
-      ...route.query,
-      sort: sort.value === 'relevance' ? undefined : sort.value,
-      page: undefined,
-    },
-  })
-}
 </script>
 
 <template>
@@ -209,6 +136,16 @@ function applySort() {
         <p class="mt-2 max-w-xl text-sm leading-6 text-[#657069] sm:text-base">
           Browse business profiles and find the details you need before you visit, contact, or buy.
         </p>
+      </div>
+      <div
+        v-if="session?.user.emailVerified && savedLoadStatus === 'error'"
+        role="alert"
+        class="mt-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+      >
+        <span>We couldn’t load your saved businesses.</span>
+        <UButton color="neutral" variant="link" size="sm" @click="refreshSaved()"
+          >Try again</UButton
+        >
       </div>
       <div class="grid gap-9 py-8 lg:grid-cols-[245px_minmax(0,1fr)] lg:py-10">
         <aside class="hidden lg:block">
@@ -224,13 +161,20 @@ function applySort() {
             <div class="mt-6">
               <FilterFields
                 v-model:search="search"
+                v-model:ai-search="aiSearch"
                 v-model:category="category"
                 v-model:city="city"
                 v-model:state="state"
                 v-model:operation-mode="operationMode"
+                :disabled="interpreting"
               />
             </div>
-            <UButton type="submit" block class="mt-7 !rounded-lg !bg-[#143e32] !text-white"
+            <UButton
+              type="submit"
+              :loading="interpreting"
+              :disabled="searchPending"
+              block
+              class="mt-7 !rounded-lg !bg-[#143e32] !text-white"
               >Show businesses</UButton
             >
             <button
@@ -263,6 +207,7 @@ function applySort() {
                 <USelect
                   id="directory-sort"
                   v-model="sort"
+                  :disabled="searchPending || Boolean(searchNotice)"
                   :items="[...sortOptions]"
                   class="min-w-40"
                   :ui="{ base: '!rounded-lg !border-[#d9e2d8] !ring-0 focus:!ring-0' }"
@@ -277,103 +222,142 @@ function applySort() {
             /></NuxtLink>
           </div>
           <div
-            v-if="session?.user.emailVerified && savedLoadStatus === 'error'"
-            role="alert"
-            class="mb-6 flex flex-wrap items-center justify-between gap-3 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm text-amber-900"
+            v-if="searchNotice"
+            role="status"
+            class="mb-5 rounded-xl border border-amber-200 bg-amber-50 px-4 py-3 text-sm leading-6 text-amber-900"
           >
-            <span>We couldn’t load your saved businesses.</span>
-            <UButton color="neutral" variant="link" size="sm" @click="refreshSaved()"
-              >Try again</UButton
+            <p>{{ searchNotice }}</p>
+            <div class="mt-2 flex flex-wrap items-center gap-3">
+              <UButton color="neutral" variant="soft" size="sm" @click="searchNormally">
+                Search normally
+              </UButton>
+              <UButton color="neutral" variant="link" size="sm" @click="applyFilters"
+                >Try again</UButton
+              >
+              <NuxtLink
+                v-if="!session?.user"
+                :to="searchLoginLink"
+                class="ml-1 font-semibold underline"
+                >Log in</NuxtLink
+              >
+            </div>
+          </div>
+          <template v-if="!searchNotice">
+            <div
+              v-if="extraCriteria.length && !searchPending"
+              class="mb-5 flex flex-wrap gap-2"
+              aria-label="Additional search filters"
             >
-          </div>
-          <div
-            v-if="status === 'pending'"
-            class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
-            aria-label="Loading businesses"
-          >
-            <div v-for="n in 6" :key="n" class="h-72 animate-pulse rounded-2xl bg-[#e8eee4]" />
-          </div>
-          <div v-else-if="error" class="rounded-2xl border border-red-200 bg-white p-8">
-            <h3 class="text-lg font-semibold text-red-800">We couldn’t load the directory.</h3>
-            <p class="mt-2 text-sm text-[#657069]">Please try again in a moment.</p>
-            <UButton color="neutral" variant="outline" class="mt-5" @click="refresh()"
-              >Try again</UButton
-            >
-          </div>
-          <div
-            v-else-if="!data?.items.length"
-            class="rounded-2xl border border-[#dfe6dc] bg-white p-9 sm:p-12"
-          >
-            <span
-              class="grid size-14 place-items-center rounded-xl bg-[#e8f4da] text-2xl text-[#315b3a]"
-              ><UIcon name="i-lucide-search-x"
-            /></span>
-            <h3 class="mt-5 text-2xl font-semibold tracking-tight text-[#143e32]">
-              No businesses found.
-            </h3>
-            <p class="mt-2 max-w-lg text-sm leading-6 text-[#657069]">
-              Try another search or a broader filter. New businesses appear as soon as they are
-              listed.
+              <button
+                v-for="filter in extraCriteria"
+                :key="filter.key"
+                type="button"
+                :aria-label="`Remove ${filter.label} filter`"
+                class="inline-flex items-center gap-2 rounded-lg border border-[#d4e1cb] bg-[#edf4e7] px-3 py-2 text-xs font-medium text-[#315b3a] hover:bg-[#e3eedb]"
+                @click="removeExtraCriterion(filter.key)"
+              >
+                {{ filter.label }}<UIcon name="i-lucide-x" />
+              </button>
+            </div>
+            <p v-if="interpreting" role="status" class="mb-4 text-sm text-[#657069]">
+              Finding businesses that match your search…
             </p>
-            <NuxtLink
-              to="/explore"
-              class="mt-5 inline-flex text-sm font-semibold text-[#315b3a] hover:underline"
-              >Browse all businesses</NuxtLink
+            <div
+              v-if="searchPending"
+              class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+              aria-label="Loading businesses"
             >
-          </div>
-          <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
-            <BusinessCard
-              v-for="item in data.items"
-              :key="item.id"
-              :business="item"
-              show-save
-              :saved="savedIds.has(item.id)"
-              :save-pending="
-                Boolean(savingId) ||
-                (Boolean(session?.user.emailVerified) && savedLoadStatus !== 'success')
-              "
-              @toggle-save="toggleSaved(item)"
-            />
-          </div>
-          <div v-if="data && data.total > data.pageSize" class="mt-9">
-            <nav
-              aria-label="Business pages"
-              class="flex flex-wrap items-center justify-between gap-3"
-            >
-              <UButton
-                :to="data.page > 1 ? pageLink(data.page - 1) : undefined"
-                :disabled="data.page <= 1"
-                size="sm"
-                color="neutral"
-                variant="outline"
-                class="!rounded-lg"
-                icon="i-lucide-arrow-left"
-                >Previous</UButton
+              <div v-for="n in 6" :key="n" class="h-72 animate-pulse rounded-2xl bg-[#e8eee4]" />
+            </div>
+            <div v-else-if="error" class="rounded-2xl border border-red-200 bg-white p-8">
+              <h3 class="text-lg font-semibold text-red-800">We couldn’t load the directory.</h3>
+              <p class="mt-2 text-sm text-[#657069]">Please try again in a moment.</p>
+              <UButton color="neutral" variant="outline" class="mt-5" @click="refresh()"
+                >Try again</UButton
               >
-              <UPagination
-                :page="data.page"
-                :total="data.total"
-                :items-per-page="data.pageSize"
-                :sibling-count="1"
-                :show-controls="false"
-                :to="pageLink"
-                class="hidden sm:flex"
+            </div>
+            <div
+              v-else-if="!data?.items.length"
+              class="rounded-2xl border border-[#dfe6dc] bg-white p-9 sm:p-12"
+            >
+              <span
+                class="grid size-14 place-items-center rounded-xl bg-[#e8f4da] text-2xl text-[#315b3a]"
+                ><UIcon name="i-lucide-search-x"
+              /></span>
+              <h3 class="mt-5 text-2xl font-semibold tracking-tight text-[#143e32]">
+                {{
+                  data?.discovery?.searchable === false
+                    ? 'Let’s narrow that down.'
+                    : 'No businesses found.'
+                }}
+              </h3>
+              <p class="mt-2 max-w-lg text-sm leading-6 text-[#657069]">
+                {{
+                  (data?.discovery?.searchable === false ? data.discovery.clarification : null) ||
+                  'Try another search or a broader filter. New businesses appear as soon as they are listed.'
+                }}
+              </p>
+              <NuxtLink
+                to="/explore"
+                class="mt-5 inline-flex text-sm font-semibold text-[#315b3a] hover:underline"
+                >Browse all businesses</NuxtLink
+              >
+            </div>
+            <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+              <BusinessCard
+                v-for="item in data.items"
+                :key="item.id"
+                :business="item"
+                :match-reasons="data.reasons?.[item.id]"
+                show-save
+                :saved="savedIds.has(item.id)"
+                :save-pending="
+                  Boolean(savingId) ||
+                  (Boolean(session?.user.emailVerified) && savedLoadStatus !== 'success')
+                "
+                @toggle-save="toggleSaved(item)"
               />
-              <span class="text-sm text-[#657069] sm:hidden">
-                Page {{ data.page }} of {{ Math.ceil(data.total / data.pageSize) }}
-              </span>
-              <UButton
-                :to="data.page * data.pageSize < data.total ? pageLink(data.page + 1) : undefined"
-                :disabled="data.page * data.pageSize >= data.total"
-                size="sm"
-                color="neutral"
-                variant="outline"
-                class="!rounded-lg"
-                trailing-icon="i-lucide-arrow-right"
-                >Next</UButton
+            </div>
+            <div v-if="data && data.total > data.pageSize && !searchPending" class="mt-9">
+              <nav
+                aria-label="Business pages"
+                class="flex flex-wrap items-center justify-between gap-3"
               >
-            </nav>
-          </div>
+                <UButton
+                  :to="data.page > 1 ? pageLink(data.page - 1) : undefined"
+                  :disabled="data.page <= 1"
+                  size="sm"
+                  color="neutral"
+                  variant="outline"
+                  class="!rounded-lg"
+                  icon="i-lucide-arrow-left"
+                  >Previous</UButton
+                >
+                <UPagination
+                  :page="data.page"
+                  :total="data.total"
+                  :items-per-page="data.pageSize"
+                  :sibling-count="1"
+                  :show-controls="false"
+                  :to="pageLink"
+                  class="hidden sm:flex"
+                />
+                <span class="text-sm text-[#657069] sm:hidden">
+                  Page {{ data.page }} of {{ Math.ceil(data.total / data.pageSize) }}
+                </span>
+                <UButton
+                  :to="data.page * data.pageSize < data.total ? pageLink(data.page + 1) : undefined"
+                  :disabled="data.page * data.pageSize >= data.total"
+                  size="sm"
+                  color="neutral"
+                  variant="outline"
+                  class="!rounded-lg"
+                  trailing-icon="i-lucide-arrow-right"
+                  >Next</UButton
+                >
+              </nav>
+            </div>
+          </template>
         </section>
       </div>
     </main>
@@ -394,10 +378,12 @@ function applySort() {
         <form id="mobile-business-filters" @submit.prevent="applyFilters">
           <FilterFields
             v-model:search="search"
+            v-model:ai-search="aiSearch"
             v-model:category="category"
             v-model:city="city"
             v-model:state="state"
             v-model:operation-mode="operationMode"
+            :disabled="interpreting"
           />
         </form>
       </template>
@@ -405,6 +391,8 @@ function applySort() {
         <UButton
           type="submit"
           form="mobile-business-filters"
+          :loading="interpreting"
+          :disabled="searchPending"
           block
           class="!rounded-lg !bg-[#143e32] !text-white"
           >Show businesses</UButton

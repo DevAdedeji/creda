@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SearchMode from '@/components/discovery/SearchMode.vue'
 import { authInputUi } from '@/utils/authInputUi'
 import {
   businessCategories,
@@ -8,6 +9,10 @@ import {
 } from '~~/shared/businesses'
 import { matchingNigeriaState, nigeriaStates, otherStateFilterValue } from '~~/shared/nigeriaStates'
 
+defineProps<{ disabled?: boolean }>()
+
+const searchInputId = useId()
+const aiSearch = defineModel<boolean>('aiSearch', { required: true })
 const search = defineModel<string>('search', { required: true })
 const category = defineModel<BusinessCategory[]>('category', { required: true })
 const city = defineModel<string>('city', { required: true })
@@ -55,21 +60,29 @@ const modeSummary = computed(() =>
 
 <template>
   <div class="space-y-5">
-    <UFormField label="Search" name="q">
+    <div>
+      <div class="mb-2 flex items-center justify-between gap-3">
+        <label :for="searchInputId" class="text-sm font-medium">Search</label>
+        <SearchMode v-model="aiSearch" :disabled="disabled" />
+      </div>
       <UInput
+        :id="searchInputId"
         v-model="search"
         name="q"
-        placeholder="Name or keyword"
+        :placeholder="aiSearch ? 'Describe what you need' : 'Name or keyword'"
+        :maxlength="500"
+        :disabled="disabled"
         leading-icon="i-lucide-search"
         class="w-full"
         :ui="authInputUi"
       />
-    </UFormField>
+    </div>
     <UFormField label="Category" name="category">
       <USelectMenu
         v-model="category"
         :items="categoryItems"
         multiple
+        :disabled="disabled"
         value-key="value"
         placeholder="All categories"
         aria-label="Select categories"
@@ -85,6 +98,7 @@ const modeSummary = computed(() =>
         v-model="operationMode"
         :items="modeItems"
         multiple
+        :disabled="disabled"
         value-key="value"
         placeholder="Online or in person"
         aria-label="Select how it operates"
@@ -96,7 +110,14 @@ const modeSummary = computed(() =>
       </USelectMenu>
     </UFormField>
     <UFormField label="City" name="city">
-      <UInput v-model="city" name="city" placeholder="Any city" class="w-full" :ui="authInputUi" />
+      <UInput
+        v-model="city"
+        :disabled="disabled"
+        name="city"
+        placeholder="Any city"
+        class="w-full"
+        :ui="authInputUi"
+      />
     </UFormField>
     <UFormField label="State" name="state">
       <USelectMenu
@@ -105,12 +126,14 @@ const modeSummary = computed(() =>
         value-key="value"
         :search-input="{ placeholder: 'Find a state' }"
         name="state"
+        :disabled="disabled"
         class="w-full"
         :ui="authInputUi"
       />
       <UInput
         v-if="selectedState === otherStateFilterValue"
         v-model="customState"
+        :disabled="disabled"
         name="customState"
         placeholder="Enter a state or region"
         class="mt-2 w-full"

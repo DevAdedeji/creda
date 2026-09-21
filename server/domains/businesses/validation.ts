@@ -170,7 +170,7 @@ export const businessSubmissionSchema = z
   })
 
 export const businessListQuerySchema = z.object({
-  q: z.string().trim().max(80).default(''),
+  q: z.string().trim().max(500).default(''),
   category: z
     .preprocess(
       (value) => (typeof value === 'string' ? [value] : value),

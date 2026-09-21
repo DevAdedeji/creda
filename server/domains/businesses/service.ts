@@ -523,8 +523,9 @@ export async function updateBusinessSlug(
 
 export async function listPublicBusinesses(
   query: BusinessListQuery,
+  additionalConditions: SQL[] = [],
 ): Promise<BusinessListResponse> {
-  const conditions: SQL[] = [eq(business.status, 'approved')]
+  const conditions: SQL[] = [eq(business.status, 'approved'), ...additionalConditions]
   if (query.q) {
     const term = '%' + query.q.replace(/[\\%_]/g, '\\$&') + '%'
     conditions.push(or(ilike(business.name, term), ilike(business.description, term))!)
@@ -560,9 +561,19 @@ export async function listPublicBusinesses(
   const averageRating = sql<number>`(select avg(r.rating) from business_review r where r.business_id = ${business.id} and r.status = 'published')`
   const ordering =
     query.sort === 'top_rated'
-      ? [desc(averageRating), desc(reviewCount), asc(business.name), asc(business.id)]
+      ? [
+          sql`${averageRating} desc nulls last`,
+          desc(reviewCount),
+          asc(business.name),
+          asc(business.id),
+        ]
       : query.sort === 'most_reviewed'
-        ? [desc(reviewCount), desc(averageRating), asc(business.name), asc(business.id)]
+        ? [
+            desc(reviewCount),
+            sql`${averageRating} desc nulls last`,
+            asc(business.name),
+            asc(business.id),
+          ]
         : query.sort === 'newest'
           ? [desc(business.publishedAt), desc(business.createdAt), asc(business.id)]
           : [...(rank ? [rank] : []), asc(business.name), asc(business.id)]

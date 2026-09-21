@@ -494,3 +494,16 @@ export const ownershipDecision = pgTable(
     index('ownership_decision_business_created_idx').on(table.businessId, table.createdAt),
   ],
 )
+
+export const discoveryUsage = pgTable(
+  'discovery_usage',
+  {
+    key: text('key').primaryKey(),
+    count: integer('count').notNull(),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    index('discovery_usage_expires_at_idx').on(table.expiresAt),
+    check('discovery_usage_count_positive', sql`${table.count} > 0`),
+  ],
+)

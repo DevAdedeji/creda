@@ -6,6 +6,7 @@ defineProps<{
   showSave?: boolean
   saved?: boolean
   savePending?: boolean
+  matchReasons?: string[]
 }>()
 defineEmits<{ toggleSave: [] }>()
 const categoryLabel = (value: BusinessListItem['category']) =>
@@ -68,6 +69,14 @@ const modeLabel = (value: BusinessListItem['operationMode']) =>
       <p class="mt-2 line-clamp-3 flex-1 text-sm leading-6 text-[#657069]">
         {{ business.description }}
       </p>
+      <div v-if="matchReasons?.length" class="mt-4 rounded-xl bg-[#f1f6ec] p-3">
+        <p class="text-xs font-semibold text-[#345341]">Why it matches</p>
+        <ul class="mt-2 space-y-1.5 text-xs leading-5 text-[#5c7157]">
+          <li v-for="reason in matchReasons" :key="reason" class="flex items-start gap-1.5">
+            <UIcon name="i-lucide-check" class="mt-1 shrink-0" />{{ reason }}
+          </li>
+        </ul>
+      </div>
       <div
         class="mt-6 flex items-center gap-1.5 border-t border-[#edf0e9] pt-4 text-xs font-medium text-[#6b796e]"
       >

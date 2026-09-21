@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import SearchMode from '@/components/discovery/SearchMode.vue'
 import { serializeJsonLd } from '@/utils/jsonLd'
 
 const canonicalUrl = useCanonicalUrl('/')
@@ -63,6 +64,7 @@ const categories = [
 ]
 
 const query = ref('')
+const aiSearch = ref(false)
 const {
   data: directory,
   status: directoryStatus,
@@ -73,7 +75,10 @@ const featuredBusiness = computed(() => directory.value?.items[0] ?? null)
 const visibleBusinesses = computed(() => directory.value?.items.slice(0, 6) ?? [])
 
 function searchBusinesses() {
-  navigateTo({ path: '/explore', query: query.value.trim() ? { q: query.value.trim() } : {} })
+  navigateTo({
+    path: '/explore',
+    query: { q: query.value.trim() || undefined, mode: aiSearch.value ? 'ai' : undefined },
+  })
 }
 </script>
 
@@ -115,6 +120,12 @@ function searchBusinesses() {
             Your next great find is out there. Discover businesses, get the full picture, and hear
             from the people who’ve been there.
           </p>
+          <div class="mb-2.5 flex max-w-[555px] items-center justify-between gap-3">
+            <label for="business-search" class="text-sm font-medium text-[#345341]"
+              >Search businesses</label
+            >
+            <SearchMode v-model="aiSearch" />
+          </div>
           <form
             class="flex max-w-[555px] items-center gap-3 rounded-xl border border-[#cfd8cb] bg-white py-[7px] pl-[18px] pr-[7px] shadow-[0_4px_0_#eef1e8] transition-colors focus-within:border-[#587748]"
             role="search"
@@ -125,14 +136,14 @@ function searchBusinesses() {
               class="shrink-0 text-xl text-[#627465]"
               aria-hidden="true"
             />
-            <label class="sr-only" for="business-search"
-              >Search businesses by name or keyword</label
-            >
             <input
               id="business-search"
               v-model="query"
               type="search"
-              placeholder="A business, a service, a great find…"
+              :placeholder="
+                aiSearch ? 'Describe what you need…' : 'A business, a service, a great find…'
+              "
+              :maxlength="500"
               autocomplete="off"
               class="h-12 min-w-0 w-full flex-1 bg-transparent text-sm text-[#172f27] outline-none placeholder:text-[#737c73]"
             />
