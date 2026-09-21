@@ -1,9 +1,17 @@
 import { randomUUID } from 'node:crypto'
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 import { db } from '~~/lib/db'
-import { business, businessReview, reviewModeration, reviewReply, user } from '~~/lib/db/schema'
+import {
+  business,
+  businessReview,
+  reviewModeration,
+  reviewReply,
+  reviewVote,
+  user,
+} from '~~/lib/db/schema'
 import type { AdminReview, MyReview, ReviewListResponse } from '~~/shared/reviews'
 import type { EditReviewInput, ModerateReviewInput, SubmitReviewInput } from './validation'
+import { listReviewVotes } from '@server/domains/reviews/votes'
 import { syncReviewPhotos } from '@server/domains/reviews/photo-storage'
 
 const PAGE_SIZE = 5
@@ -78,6 +86,11 @@ export async function listReviews(
     .limit(PAGE_SIZE)
     .offset((safePage - 1) * PAGE_SIZE)
 
+  const votes = await listReviewVotes(
+    rows.map((row) => row.id),
+    viewerUserId,
+  )
+
   let myReview: MyReview | null = null
   let reviewBlocked = false
   if (viewerUserId) {
@@ -122,6 +135,7 @@ export async function listReviews(
     reviewCount,
     reviews: rows.map((row) => ({
       id: row.id,
+      votes: votes.get(row.id) ?? { usefulCount: 0, notUsefulCount: 0, myVote: null },
       authorName: row.authorName,
       isAnonymous: row.isAnonymous,
       rating: row.rating,
@@ -217,6 +231,7 @@ export async function submitReview(
     const { mediaProofs, ...details } = input
     await syncReviewPhotos(tx, authorUserId, input.photoUrls, mediaProofs, existing?.photoUrls)
     if (existing) {
+      await tx.delete(reviewVote).where(eq(reviewVote.reviewId, existing.id))
       await tx.delete(reviewReply).where(eq(reviewReply.reviewId, existing.id))
       const [row] = await tx
         .update(businessReview)
@@ -250,15 +265,15 @@ export async function editReview(
     const photoUrls = input.photoUrls ?? current.photoUrls
     const isAnonymous = input.isAnonymous ?? current.isAnonymous
     const details = { ...fields, photoUrls, isAnonymous }
-    if (
-      current.isAnonymous === isAnonymous &&
-      current.rating === input.rating &&
-      current.body === input.body &&
-      current.experienceMonth === input.experienceMonth &&
-      JSON.stringify(current.photoUrls) === JSON.stringify(photoUrls)
-    ) {
+    const contentChanged =
+      current.rating !== input.rating ||
+      current.body !== input.body ||
+      current.experienceMonth !== input.experienceMonth ||
+      JSON.stringify(current.photoUrls) !== JSON.stringify(photoUrls)
+    if (current.isAnonymous === isAnonymous && !contentChanged) {
       return toMine(current)
     }
+    if (contentChanged) await tx.delete(reviewVote).where(eq(reviewVote.reviewId, id))
     await syncReviewPhotos(tx, authorUserId, photoUrls, mediaProofs, current.photoUrls)
     await tx.delete(reviewReply).where(eq(reviewReply.reviewId, id))
     const [updated] = await tx
@@ -279,6 +294,7 @@ export async function deleteReview(id: string, authorUserId: string): Promise<vo
       .for('update')
     if (!current || current.status === 'removed')
       throw new ReviewDomainError(404, 'Review not found.')
+    await tx.delete(reviewVote).where(eq(reviewVote.reviewId, id))
     await syncReviewPhotos(tx, authorUserId, [], [], current.photoUrls)
     await tx
       .update(businessReview)

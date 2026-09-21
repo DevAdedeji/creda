@@ -313,6 +313,27 @@ export const businessReview = pgTable(
   ],
 )
 
+export const reviewVote = pgTable(
+  'review_vote',
+  {
+    id: text('id').primaryKey(),
+    reviewId: text('review_id')
+      .notNull()
+      .references(() => businessReview.id, { onDelete: 'cascade' }),
+    voterUserId: text('voter_user_id')
+      .notNull()
+      .references(() => user.id, { onDelete: 'cascade' }),
+    value: text('value').$type<'useful' | 'not_useful'>().notNull(),
+    createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
+  },
+  (table) => [
+    uniqueIndex('review_vote_review_voter_unique').on(table.reviewId, table.voterUserId),
+    index('review_vote_voter_idx').on(table.voterUserId),
+    check('review_vote_value_valid', sql.raw("value IN ('useful', 'not_useful')")),
+  ],
+)
+
 export const reviewModeration = pgTable(
   'review_moderation',
   {

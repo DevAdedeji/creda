@@ -1,7 +1,7 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
 import { apiErrorMessage } from '@/utils/apiError'
-import type { ReviewListResponse, ReviewPhotoDraft } from '~~/shared/reviews'
+import type { ReviewListResponse, ReviewPhotoDraft, ReviewVoteSummary } from '~~/shared/reviews'
 
 const props = defineProps<{ businessId: string; slug: string; businessName: string }>()
 const page = ref(1)
@@ -32,6 +32,14 @@ const deleting = ref(false)
 const formId = useId()
 const appToast = useAppToast()
 const expandedReviews = ref<string[]>([])
+
+function updateVotes(id: string, votes: ReviewVoteSummary) {
+  if (!data.value) return
+  data.value = {
+    ...data.value,
+    reviews: data.value.reviews.map((review) => (review.id === id ? { ...review, votes } : review)),
+  }
+}
 
 function toggleReview(id: string) {
   expandedReviews.value = expandedReviews.value.includes(id)
@@ -273,6 +281,9 @@ function monthLabel(month: string): string {
             placeholder="What was your experience like? Share details that would help someone else decide."
             class="mt-2 w-full resize-y rounded-xl border border-[#cad9c8] bg-white px-4 py-3 text-[#143e32] outline-none focus:border-[#376c47]"
           />
+          <p v-if="isEditing" class="mt-2 text-xs leading-5 text-[#657069]">
+            Changing your review's content resets its usefulness votes.
+          </p>
           <ReviewsPhotoUpload
             :key="photoSession"
             v-model="photos"
@@ -375,6 +386,13 @@ function monthLabel(month: string): string {
           compact
           unoptimized
           class="mt-3"
+        />
+        <ReviewsVoteControls
+          :review-id="review.id"
+          :votes="review.votes"
+          :own-review="data.myReview?.id === review.id"
+          class="mt-3"
+          @updated="updateVotes(review.id, $event)"
         />
         <div v-if="review.reply" class="mt-4 rounded-xl bg-[#f3f7ef] p-4">
           <p class="text-xs font-bold uppercase tracking-wide text-[#51705a]">

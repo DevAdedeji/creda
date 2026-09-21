@@ -8,7 +8,16 @@ export interface ReviewPhotoDraft {
 
 export type ReviewStatus = 'pending' | 'published' | 'rejected' | 'removed'
 
+export type ReviewVoteValue = 'useful' | 'not_useful'
+
+export interface ReviewVoteSummary {
+  usefulCount: number
+  notUsefulCount: number
+  myVote: ReviewVoteValue | null
+}
+
 export interface PublicReview {
+  votes: ReviewVoteSummary
   id: string
   authorName: string
   isAnonymous: boolean

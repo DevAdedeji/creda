@@ -49,6 +49,8 @@ export const editReviewSchema = submitReviewSchema.omit({ businessId: true }).ex
   photoUrls: photoUrls.optional(),
   isAnonymous: z.boolean().optional(),
 })
+export const reviewVoteSchema = z.object({ vote: z.enum(['useful', 'not_useful']).nullable() })
+
 export const replySchema = z.object({ body: normalizedText(2, 1000) })
 export const moderateReviewSchema = z.object({
   decision: z.literal('remove'),
