@@ -140,6 +140,13 @@ function openDecision(id: string) {
             <ReviewsStars :rating="review.rating" />
           </div>
           <p class="mt-4 whitespace-pre-line text-sm leading-7 text-[#485d4d]">{{ review.body }}</p>
+          <BusinessesGallery
+            v-if="review.photoUrls?.length"
+            :images="review.photoUrls"
+            :business-name="`${review.businessName} review`"
+            compact
+            class="mt-4"
+          />
           <NuxtLink
             :to="`/businesses/${review.businessSlug}`"
             target="_blank"

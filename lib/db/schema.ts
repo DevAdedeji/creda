@@ -286,6 +286,10 @@ export const businessReview = pgTable(
       .references(() => user.id),
     rating: integer('rating').notNull(),
     body: text('body').notNull(),
+    photoUrls: text('photo_urls')
+      .array()
+      .notNull()
+      .default(sql`ARRAY[]::text[]`),
     experienceMonth: text('experience_month').notNull(),
     status: reviewStatus('status').notNull().default('published'),
     createdAt: timestamp('created_at', { withTimezone: true }).defaultNow().notNull(),
@@ -298,6 +302,7 @@ export const businessReview = pgTable(
       table.status,
       table.createdAt,
     ),
+    check('business_review_photo_limit', sql.raw('cardinality(photo_urls) <= 2')),
     check('business_review_rating_range', sql.raw('rating BETWEEN 1 AND 5')),
     check('business_review_body_length', sql.raw('length(trim(body)) BETWEEN 30 AND 2000')),
     check(

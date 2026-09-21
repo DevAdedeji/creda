@@ -16,6 +16,7 @@ export interface AdminReport {
   businessStatus: 'pending' | 'approved' | 'rejected' | 'suspended'
   businessSlug: string
   reviewId: string | null
+  reviewPhotoUrls: string[] | null
   reviewBody: string | null
   reporterName: string
   reason: string

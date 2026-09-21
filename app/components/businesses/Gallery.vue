@@ -1,7 +1,9 @@
 <script setup lang="ts">
+defineOptions({ inheritAttrs: false })
 const props = defineProps<{
   images: string[]
   businessName: string
+  compact?: boolean
 }>()
 
 const open = ref(false)
@@ -57,7 +59,14 @@ function restoreFocus() {
 </script>
 
 <template>
-  <div class="grid grid-cols-2 gap-3 sm:grid-cols-3">
+  <div
+    v-bind="$attrs"
+    :class="
+      compact
+        ? 'grid grid-cols-[repeat(2,minmax(0,72px))] gap-3'
+        : 'grid grid-cols-2 gap-3 sm:grid-cols-3'
+    "
+  >
     <button
       v-for="(url, index) in images"
       :key="`${url}-${index}`"
@@ -85,7 +94,8 @@ function restoreFocus() {
     :description="`Photo ${activeIndex + 1} of ${images.length}. Use the arrow keys to browse.`"
     :ui="{
       overlay: '!bg-[#081811]/80 backdrop-blur-sm',
-      content: '!w-[calc(100vw-2rem)] !max-w-[90%] !bg-transparent !text-white !shadow-none !ring-0',
+      content:
+        '!w-[calc(100vw-2rem)] !max-w-[90%] !bg-transparent !text-white !shadow-none !ring-0',
     }"
     @after:leave="restoreFocus"
   >

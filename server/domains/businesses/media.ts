@@ -55,9 +55,24 @@ export function validateBusinessMedia(
   const selected = [input.logoUrl, input.coverUrl, ...input.galleryUrls].filter(
     (url): url is string => Boolean(url),
   )
+  validateMediaUrls(
+    userId,
+    selected,
+    input.mediaProofs,
+    [...previous].filter((url): url is string => Boolean(url)),
+  )
+}
+
+export function validateMediaUrls(
+  userId: string,
+  selected: string[],
+  proofs: string[],
+  existing: string[] = [],
+): void {
+  const previous = new Set(existing)
   for (const url of selected) {
     if (previous.has(url)) continue
-    if (!input.mediaProofs.some((proof) => proofMatches(proof, userId, url))) {
+    if (!proofs.some((proof) => proofMatches(proof, userId, url))) {
       throw createError({ statusCode: 400, statusMessage: 'Upload the selected image again.' })
     }
   }

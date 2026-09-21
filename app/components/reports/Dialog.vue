@@ -15,6 +15,10 @@ const sent = ref(false)
 const errorMessage = ref('')
 const appToast = useAppToast()
 
+function openReport() {
+  if (!sent.value) open.value = true
+}
+
 async function sendReport() {
   if (submitting.value) return
   errorMessage.value = ''
@@ -41,28 +45,30 @@ async function sendReport() {
 </script>
 
 <template>
-  <UTooltip v-if="iconOnly" :text="sent ? 'Report sent' : label">
+  <slot name="trigger" :open-report="openReport" :sent="sent">
+    <UTooltip v-if="iconOnly" :text="sent ? 'Report sent' : label">
+      <UButton
+        :disabled="sent"
+        :aria-label="sent ? 'Report sent' : label"
+        color="neutral"
+        variant="ghost"
+        size="xs"
+        icon="i-lucide-flag"
+        class="!size-6 !justify-center !rounded-md !p-0 !text-[#68796b] hover:!bg-[#f1f5ee] hover:!text-[#143e32]"
+        @click="open = true"
+      />
+    </UTooltip>
     <UButton
+      v-else
       :disabled="sent"
-      :aria-label="sent ? 'Report sent' : label"
       color="neutral"
-      variant="ghost"
-      size="xs"
+      variant="link"
       icon="i-lucide-flag"
-      class="!size-6 !justify-center !rounded-md !p-0 !text-[#68796b] hover:!bg-[#f1f5ee] hover:!text-[#143e32]"
+      class="!px-0 !text-[#68796b] hover:!text-[#143e32]"
       @click="open = true"
-    />
-  </UTooltip>
-  <UButton
-    v-else
-    :disabled="sent"
-    color="neutral"
-    variant="link"
-    icon="i-lucide-flag"
-    class="!px-0 !text-[#68796b] hover:!text-[#143e32]"
-    @click="open = true"
-    >{{ sent ? 'Report sent' : label }}</UButton
-  >
+      >{{ sent ? 'Report sent' : label }}</UButton
+    >
+  </slot>
   <UModal
     v-model:open="open"
     :title="`Report ${reviewId ? 'this review' : 'this business'}`"

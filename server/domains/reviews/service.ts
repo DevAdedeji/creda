@@ -4,6 +4,7 @@ import { db } from '~~/lib/db'
 import { business, businessReview, reviewModeration, reviewReply, user } from '~~/lib/db/schema'
 import type { AdminReview, MyReview, ReviewListResponse } from '~~/shared/reviews'
 import type { EditReviewInput, ModerateReviewInput, SubmitReviewInput } from './validation'
+import { syncReviewPhotos } from '@server/domains/reviews/photo-storage'
 
 const PAGE_SIZE = 5
 const DAILY_REVIEW_LIMIT = 10
@@ -22,6 +23,7 @@ function toMine(row: typeof businessReview.$inferSelect): MyReview {
     id: row.id,
     rating: row.rating,
     body: row.body,
+    photoUrls: row.photoUrls,
     experienceMonth: row.experienceMonth,
     status: row.status,
     moderationReason: null,
@@ -59,6 +61,7 @@ export async function listReviews(
       authorName: user.name,
       rating: businessReview.rating,
       body: businessReview.body,
+      photoUrls: businessReview.photoUrls,
       experienceMonth: businessReview.experienceMonth,
       createdAt: businessReview.createdAt,
       updatedAt: businessReview.updatedAt,
@@ -120,6 +123,7 @@ export async function listReviews(
       authorName: row.authorName,
       rating: row.rating,
       body: row.body,
+      photoUrls: row.photoUrls,
       experienceMonth: row.experienceMonth,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
@@ -205,18 +209,20 @@ export async function submitReview(
       throw new ReviewDomainError(429, 'Please wait a minute before submitting this review again.')
     }
 
+    const { mediaProofs, ...details } = input
+    await syncReviewPhotos(tx, authorUserId, input.photoUrls, mediaProofs, existing?.photoUrls)
     if (existing) {
       await tx.delete(reviewReply).where(eq(reviewReply.reviewId, existing.id))
       const [row] = await tx
         .update(businessReview)
-        .set({ ...input, status: 'published', updatedAt: sql`now()` })
+        .set({ ...details, status: 'published', updatedAt: sql`now()` })
         .where(eq(businessReview.id, existing.id))
         .returning()
       return toMine(row!)
     }
     const [row] = await tx
       .insert(businessReview)
-      .values({ id: randomUUID(), ...input, authorUserId, status: 'published' })
+      .values({ id: randomUUID(), ...details, authorUserId, status: 'published' })
       .returning()
     return toMine(row!)
   })
@@ -235,17 +241,22 @@ export async function editReview(
       .for('update')
     if (!current || current.status === 'removed')
       throw new ReviewDomainError(404, 'Review not found.')
+    const { mediaProofs, ...fields } = input
+    const photoUrls = input.photoUrls ?? current.photoUrls
+    const details = { ...fields, photoUrls }
     if (
       current.rating === input.rating &&
       current.body === input.body &&
-      current.experienceMonth === input.experienceMonth
+      current.experienceMonth === input.experienceMonth &&
+      JSON.stringify(current.photoUrls) === JSON.stringify(photoUrls)
     ) {
       return toMine(current)
     }
+    await syncReviewPhotos(tx, authorUserId, photoUrls, mediaProofs, current.photoUrls)
     await tx.delete(reviewReply).where(eq(reviewReply.reviewId, id))
     const [updated] = await tx
       .update(businessReview)
-      .set({ ...input, status: 'published', updatedAt: sql`now()` })
+      .set({ ...details, status: 'published', updatedAt: sql`now()` })
       .where(eq(businessReview.id, id))
       .returning()
     return toMine(updated!)
@@ -261,9 +272,10 @@ export async function deleteReview(id: string, authorUserId: string): Promise<vo
       .for('update')
     if (!current || current.status === 'removed')
       throw new ReviewDomainError(404, 'Review not found.')
+    await syncReviewPhotos(tx, authorUserId, [], [], current.photoUrls)
     await tx
       .update(businessReview)
-      .set({ status: 'removed', updatedAt: sql`now()` })
+      .set({ status: 'removed', photoUrls: [], updatedAt: sql`now()` })
       .where(eq(businessReview.id, id))
     await tx.insert(reviewModeration).values({
       id: randomUUID(),
@@ -331,6 +343,7 @@ export async function listAdminReviews(
       authorName: user.name,
       rating: businessReview.rating,
       body: businessReview.body,
+      photoUrls: businessReview.photoUrls,
       experienceMonth: businessReview.experienceMonth,
       status: businessReview.status,
       createdAt: businessReview.createdAt,

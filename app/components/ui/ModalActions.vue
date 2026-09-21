@@ -4,6 +4,7 @@ withDefaults(
     form?: string
     primaryLabel: string
     cancelLabel?: string
+    cancelDisabled?: boolean
     loading?: boolean
     disabled?: boolean
     danger?: boolean
@@ -11,6 +12,7 @@ withDefaults(
   {
     form: undefined,
     cancelLabel: 'Cancel',
+    cancelDisabled: false,
     loading: false,
     disabled: false,
     danger: false,
@@ -26,6 +28,7 @@ defineEmits<{ cancel: []; primary: [] }>()
       type="button"
       color="neutral"
       variant="soft"
+      :disabled="cancelDisabled"
       class="!rounded-xl !bg-[#edf1ea] !px-4 !text-[#385344] hover:!bg-[#e2e9df]"
       @click="$emit('cancel')"
     >

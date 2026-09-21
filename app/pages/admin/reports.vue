@@ -188,6 +188,13 @@ async function decide(item: AdminReport) {
               <span class="font-semibold text-[#143e32]">Reported review:</span>
               {{ item.reviewBody }}
             </p>
+            <BusinessesGallery
+              v-if="item.reviewPhotoUrls?.length"
+              :images="item.reviewPhotoUrls"
+              :business-name="`${item.businessName} review`"
+              compact
+              class="mt-4"
+            />
             <div class="mt-4 flex flex-wrap items-center gap-4 text-xs text-[#758377]">
               <span>Reported by {{ item.reporterName }}</span
               ><NuxtLink

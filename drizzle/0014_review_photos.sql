@@ -1,0 +1,2 @@
+ALTER TABLE "business_review" ADD COLUMN "photo_urls" text[] DEFAULT ARRAY[]::text[] NOT NULL;--> statement-breakpoint
+ALTER TABLE "business_review" ADD CONSTRAINT "business_review_photo_limit" CHECK (cardinality(photo_urls) <= 2);

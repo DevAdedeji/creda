@@ -1,6 +1,7 @@
 <script setup lang="ts">
+import type { DropdownMenuItem } from '@nuxt/ui'
 import { apiErrorMessage } from '@/utils/apiError'
-import type { ReviewListResponse } from '~~/shared/reviews'
+import type { ReviewListResponse, ReviewPhotoDraft } from '~~/shared/reviews'
 
 const props = defineProps<{ businessId: string; slug: string; businessName: string }>()
 const page = ref(1)
@@ -15,6 +16,12 @@ const saving = ref(false)
 const formError = ref('')
 const rating = ref(0)
 const body = ref('')
+const photos = ref<ReviewPhotoDraft[]>([])
+const uploadingPhotos = ref(false)
+const photoSession = ref(0)
+watch(formOpen, (open) => {
+  if (!open) photoSession.value++
+})
 const experienceMonth = ref(new Date().toISOString().slice(0, 7))
 const replyId = ref<string | null>(null)
 const replyBody = ref('')
@@ -23,18 +30,51 @@ const deleteOpen = ref(false)
 const deleting = ref(false)
 const formId = useId()
 const appToast = useAppToast()
+const expandedReviews = ref<string[]>([])
+
+function toggleReview(id: string) {
+  expandedReviews.value = expandedReviews.value.includes(id)
+    ? expandedReviews.value.filter((reviewId) => reviewId !== id)
+    : [...expandedReviews.value, id]
+}
+
+function reviewActions(id: string, report: () => void, reported: boolean): DropdownMenuItem[] {
+  if (data.value?.myReview?.id === id) {
+    return [
+      { label: 'Edit review', icon: 'i-lucide-square-pen', onSelect: startReview },
+      {
+        label: 'Delete review',
+        icon: 'i-lucide-trash-2',
+        color: 'error',
+        onSelect: () => {
+          deleteOpen.value = true
+        },
+      },
+    ]
+  }
+  return [
+    {
+      label: reported ? 'Report sent' : 'Report review',
+      icon: 'i-lucide-flag',
+      disabled: reported,
+      onSelect: report,
+    },
+  ]
+}
 
 function startReview() {
   const mine = data.value?.myReview
   isEditing.value = Boolean(mine)
   rating.value = mine?.rating ?? 0
   body.value = mine?.body ?? ''
+  photos.value = (mine?.photoUrls ?? []).map((url) => ({ url }))
   experienceMonth.value = mine?.experienceMonth ?? new Date().toISOString().slice(0, 7)
   formError.value = ''
   formOpen.value = true
 }
 
 async function saveReview() {
+  if (saving.value || uploadingPhotos.value) return
   formError.value = ''
   if (rating.value < 1 || rating.value > 5) {
     formError.value = 'Choose a star rating.'
@@ -55,6 +95,8 @@ async function saveReview() {
         rating: rating.value,
         body: body.value,
         experienceMonth: experienceMonth.value,
+        photoUrls: photos.value.map((photo) => photo.url),
+        mediaProofs: photos.value.flatMap((photo) => (photo.proof ? [photo.proof] : [])),
       },
     })
     formOpen.value = false
@@ -124,7 +166,7 @@ function monthLabel(month: string): string {
 <template>
   <section
     id="reviews"
-    class="rounded-2xl border border-[#dfe6dc] bg-white p-7 sm:p-9"
+    class="rounded-2xl border border-[#dfe6dc] bg-white p-5 sm:p-6"
     aria-labelledby="reviews-heading"
   >
     <div class="flex flex-wrap items-start justify-between gap-4">
@@ -160,6 +202,8 @@ function monthLabel(month: string): string {
 
     <UModal
       v-model:open="formOpen"
+      :dismissible="!saving"
+      :close="!saving"
       :title="isEditing ? 'Edit your review' : `Review ${businessName}`"
       description="Share an honest experience to help others decide. Your review appears right away."
       :ui="{ content: 'max-w-xl rounded-2xl', body: 'max-h-[70vh] overflow-y-auto' }"
@@ -211,6 +255,13 @@ function monthLabel(month: string): string {
             placeholder="What was your experience like? Share details that would help someone else decide."
             class="mt-2 w-full resize-y rounded-xl border border-[#cad9c8] bg-white px-4 py-3 text-[#143e32] outline-none focus:border-[#376c47]"
           />
+          <ReviewsPhotoUpload
+            :key="photoSession"
+            v-model="photos"
+            :disabled="saving || !formOpen"
+            class="mt-5"
+            @uploading="uploadingPhotos = $event"
+          />
           <UiFeedbackAlert v-if="formError" tone="error" :message="formError" class="mt-4" />
         </form>
       </template>
@@ -219,8 +270,9 @@ function monthLabel(month: string): string {
           :form="formId"
           :primary-label="isEditing ? 'Save review' : 'Submit review'"
           :loading="saving"
-          :disabled="saving"
-          @cancel="formOpen = false"
+          :disabled="saving || uploadingPhotos"
+          :cancel-disabled="saving"
+          @cancel="!saving && (formOpen = false)"
         />
       </template>
     </UModal>
@@ -240,23 +292,71 @@ function monthLabel(month: string): string {
       <h3 class="mt-3 text-lg font-semibold text-[#143e32]">No reviews yet</h3>
       <p class="mt-2 text-sm text-[#657069]">Be the first to share an experience.</p>
     </div>
-    <div v-else class="mt-7 divide-y divide-[#e9eee5] border-t border-[#e9eee5]">
+    <div v-else class="mt-5 divide-y divide-[#e9eee5] border-t border-[#e9eee5]">
       <article
         v-for="review in data.reviews"
         :id="`review-${review.id}`"
         :key="review.id"
-        class="py-6 scroll-mt-28"
+        class="py-4 scroll-mt-28 last:pb-0"
       >
-        <div class="flex flex-wrap items-start justify-between gap-2">
-          <div>
-            <strong class="text-[#143e32]">{{ review.authorName }}</strong>
+        <div class="flex items-start justify-between gap-3">
+          <div class="min-w-0">
+            <strong class="break-words text-sm text-[#143e32]">{{ review.authorName }}</strong>
             <p class="mt-1 text-xs text-[#708073]">
               Experienced in {{ monthLabel(review.experienceMonth) }}
             </p>
           </div>
-          <ReviewsStars :rating="review.rating" />
+          <div class="flex shrink-0 items-center gap-2">
+            <ReviewsStars :rating="review.rating" />
+            <ReportsDialog :business-id="businessId" :review-id="review.id" label="Report review">
+              <template #trigger="{ openReport, sent }">
+                <UDropdownMenu
+                  :items="reviewActions(review.id, openReport, sent)"
+                  :content="{ align: 'end', sideOffset: 6 }"
+                  :ui="{ content: 'w-44', item: 'py-2' }"
+                  :modal="false"
+                >
+                  <UButton
+                    type="button"
+                    :aria-label="`Actions for ${review.authorName}'s review`"
+                    icon="i-lucide-ellipsis"
+                    color="neutral"
+                    variant="ghost"
+                    size="xs"
+                    class="!size-8 !justify-center !rounded-lg !p-0 !text-[#657069] hover:!bg-[#edf4e9]"
+                  />
+                </UDropdownMenu>
+              </template>
+            </ReportsDialog>
+          </div>
         </div>
-        <p class="mt-3 whitespace-pre-line text-sm leading-7 text-[#465a4c]">{{ review.body }}</p>
+        <p
+          :id="`review-body-${review.id}`"
+          class="mt-2 whitespace-pre-line break-words text-sm leading-6 text-[#465a4c]"
+        >
+          {{
+            review.body.length > 320 && !expandedReviews.includes(review.id)
+              ? `${review.body.slice(0, 320).trimEnd()}…`
+              : review.body
+          }}
+        </p>
+        <button
+          v-if="review.body.length > 320"
+          type="button"
+          :aria-expanded="expandedReviews.includes(review.id)"
+          :aria-controls="`review-body-${review.id}`"
+          class="mt-1 text-xs font-semibold text-[#2e6541] hover:underline"
+          @click="toggleReview(review.id)"
+        >
+          {{ expandedReviews.includes(review.id) ? 'Show less' : 'Read more' }}
+        </button>
+        <BusinessesGallery
+          v-if="review.photoUrls?.length"
+          :images="review.photoUrls"
+          :business-name="`${businessName} review`"
+          compact
+          class="mt-3"
+        />
         <div v-if="review.reply" class="mt-4 rounded-xl bg-[#f3f7ef] p-4">
           <p class="text-xs font-bold uppercase tracking-wide text-[#51705a]">
             Response from the business
@@ -306,42 +406,6 @@ function monthLabel(month: string): string {
             </div>
           </form>
         </div>
-        <div class="mt-3 flex items-center justify-end">
-          <div
-            class="inline-flex items-center gap-0.5 rounded-xl border border-[#e2e8df] bg-[#fafbf8] p-1"
-            aria-label="Review actions"
-          >
-            <UTooltip v-if="data.myReview?.id === review.id" text="Edit review">
-              <UButton
-                aria-label="Edit review"
-                color="neutral"
-                variant="ghost"
-                size="xs"
-                icon="i-lucide-square-pen"
-                class="!size-6 !justify-center !rounded-md !p-0 !text-[#4f6657] hover:!bg-[#edf4e9] hover:!text-[#143e32]"
-                @click="startReview"
-              />
-            </UTooltip>
-            <UTooltip v-if="data.myReview?.id === review.id" text="Delete review">
-              <UButton
-                aria-label="Delete review"
-                color="error"
-                variant="ghost"
-                size="xs"
-                icon="i-lucide-trash-2"
-                class="!size-6 !justify-center !rounded-md !p-0 hover:!bg-red-50"
-                @click="deleteOpen = true"
-              />
-            </UTooltip>
-            <ReportsDialog
-              v-else
-              :business-id="businessId"
-              :review-id="review.id"
-              label="Report review"
-              icon-only
-            />
-          </div>
-        </div>
       </article>
     </div>
     <UiConfirmDialog
@@ -357,9 +421,19 @@ function monthLabel(month: string): string {
       v-if="data && data.totalPages > 1"
       class="mt-5 flex items-center justify-between border-t border-[#e9eee5] pt-5 text-sm text-[#5e6d62]"
     >
-      <UButton variant="outline" :disabled="page <= 1" @click="page--">Previous</UButton>
+      <UButton
+        variant="outline"
+        :disabled="status === 'pending' || data.page <= 1"
+        @click="page = data.page - 1"
+        >Previous</UButton
+      >
       <span>Page {{ data.page }} of {{ data.totalPages }}</span>
-      <UButton variant="outline" :disabled="page >= data.totalPages" @click="page++">Next</UButton>
+      <UButton
+        variant="outline"
+        :disabled="status === 'pending' || data.page >= data.totalPages"
+        @click="page = data.page + 1"
+        >Next</UButton
+      >
     </div>
     <p
       v-if="

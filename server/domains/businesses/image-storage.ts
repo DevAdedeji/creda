@@ -2,7 +2,7 @@ import { randomUUID } from 'node:crypto'
 import { and, eq, inArray, lte, or, sql } from 'drizzle-orm'
 import { createError } from 'h3'
 import { db } from '~~/lib/db'
-import { business, businessImageUpload, user } from '~~/lib/db/schema'
+import { business, businessImageUpload, businessReview, user } from '~~/lib/db/schema'
 
 const DAILY_UPLOAD_LIMIT = 30
 const DAY_MS = 24 * 60 * 60 * 1000
@@ -76,7 +76,13 @@ async function deleteImage(urlOrPath: { url?: string; path?: string }) {
         .from(business)
         .where(mediaReference(image.url))
         .limit(1)
-      if (reference) {
+      const [reviewReference] = await tx
+        .select({ id: businessReview.id })
+        .from(businessReview)
+        .where(sql`${image.url} = ANY(${businessReview.photoUrls})`)
+        .limit(1)
+      // Moderated reviews retain their photos so an administrator can review or restore them.
+      if (reference || reviewReference) {
         await tx
           .update(businessImageUpload)
           .set({ status: 'ready', deleteAfter: null })

@@ -1,3 +1,11 @@
+export const MAX_REVIEW_PHOTOS = 2
+export const MAX_REVIEW_PHOTO_BYTES = 5 * 1024 * 1024
+
+export interface ReviewPhotoDraft {
+  url: string
+  proof?: string
+}
+
 export type ReviewStatus = 'pending' | 'published' | 'rejected' | 'removed'
 
 export interface PublicReview {
@@ -5,6 +13,7 @@ export interface PublicReview {
   authorName: string
   rating: number
   body: string
+  photoUrls: string[]
   experienceMonth: string
   createdAt: string
   updatedAt: string
@@ -15,6 +24,7 @@ export interface MyReview {
   id: string
   rating: number
   body: string
+  photoUrls: string[]
   experienceMonth: string
   status: ReviewStatus
   moderationReason: string | null
@@ -42,6 +52,7 @@ export interface AdminReview {
   authorName: string
   rating: number
   body: string
+  photoUrls: string[]
   experienceMonth: string
   status: ReviewStatus
   createdAt: string
