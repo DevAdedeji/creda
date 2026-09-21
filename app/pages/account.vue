@@ -138,15 +138,12 @@ const recentBusinesses = computed(() => owned.value?.items.slice(0, 2) ?? [])
                 >{{ item.name.charAt(0).toUpperCase() }}</span
               >
               <div class="min-w-0 flex-1">
-                <p class="truncate font-semibold text-[#143e32]">{{ item.name }}</p>
+                <div class="flex items-center gap-1">
+                  <p class="truncate font-semibold text-[#143e32]">{{ item.name }}</p>
+                  <BusinessesVerifiedMark v-if="item.ownershipStatus === 'verified'" in-link />
+                </div>
                 <p class="mt-0.5 text-sm text-[#708071]">{{ item.location || 'Online' }}</p>
               </div>
-              <UIcon
-                v-if="item.ownershipStatus === 'verified'"
-                name="i-lucide-badge-check"
-                class="text-lg text-[#4b8b56]"
-                aria-label="Ownership verified"
-              />
               <UIcon
                 name="i-lucide-arrow-up-right"
                 class="text-lg text-[#829483] transition group-hover:-translate-y-0.5 group-hover:translate-x-0.5"

@@ -44,16 +44,14 @@ const categoryLabel = (category: PublicBusiness['category']) =>
             class="grid size-[53px] place-items-center rounded-[13px] bg-[#f6b789] text-xl font-bold text-[#703622]"
             >{{ business.name.charAt(0).toUpperCase() }}</span
           >
-          <span
-            v-if="business.ownershipStatus === 'verified'"
-            class="inline-flex items-center gap-1 text-[9px] tracking-[.16em] text-[#727967]"
-            ><UIcon name="i-lucide-badge-check" /> VERIFIED</span
-          >
         </div>
         <h2
           class="mt-[18px] flex items-center justify-between gap-2 text-[27px] font-bold tracking-[-.05em] text-[#143e32]"
         >
-          {{ business.name }}<span class="text-2xl font-normal">↗</span>
+          <span
+            >{{ business.name }}
+            <BusinessesVerifiedMark v-if="business.ownershipStatus === 'verified'" /></span
+          ><span class="text-2xl font-normal">↗</span>
         </h2>
         <p class="mt-1 line-clamp-2 text-[13px] leading-5 text-[#667064]">
           {{ business.description }}

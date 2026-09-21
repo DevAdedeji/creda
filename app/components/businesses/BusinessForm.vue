@@ -752,7 +752,7 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
         <UIcon name="i-lucide-info" class="mt-0.5 shrink-0 text-lg" />
         <p>
           Your business will appear in public search right away. Ownership verification is a
-          separate check, and only verified businesses get a badge.
+          separate check, and verified businesses get an ownership check mark.
         </p>
       </div>
     </div>

@@ -181,11 +181,6 @@ useHead(() =>
               class="grid size-20 place-items-center rounded-2xl bg-[#d8f36a] text-4xl font-bold text-[#173b32] sm:size-24"
               >{{ business.name.charAt(0).toUpperCase() }}</span
             >
-            <span
-              v-if="business.ownershipStatus === 'verified'"
-              class="inline-flex items-center gap-1.5 rounded-full bg-[#e9f4e4] px-3 py-2 text-xs font-semibold text-[#276344]"
-              ><UIcon name="i-lucide-badge-check" /> Ownership verified</span
-            >
           </div>
           <p class="mt-7 text-xs font-bold uppercase tracking-[.17em] text-[#5d8060]">
             {{ categoryLabel }}
@@ -194,6 +189,10 @@ useHead(() =>
             class="mt-2 max-w-4xl text-4xl font-semibold leading-tight tracking-[-.055em] sm:text-6xl"
           >
             {{ business.name }}<span class="text-[#a5c92e]">.</span>
+            <BusinessesVerifiedMark
+              v-if="business.ownershipStatus === 'verified'"
+              class="!size-7 sm:!size-9"
+            />
           </h1>
           <p class="mt-5 max-w-3xl text-base leading-8 text-[#5f7065] sm:text-lg">
             {{ business.description }}

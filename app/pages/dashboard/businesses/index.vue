@@ -136,15 +136,10 @@ watch(
                 class="grid size-14 place-items-center rounded-xl bg-[#e4f2d8] text-xl font-bold text-[#315b3a]"
                 >{{ item.name.charAt(0).toUpperCase() }}</span
               >
-              <UIcon
-                v-if="item.ownershipStatus === 'verified'"
-                name="i-lucide-badge-check"
-                class="text-xl text-[#4b8b56]"
-                aria-label="Ownership verified"
-              />
             </div>
             <h2 class="mt-5 line-clamp-2 text-xl font-semibold text-[#143e32]">
               {{ item.name }}
+              <BusinessesVerifiedMark v-if="item.ownershipStatus === 'verified'" />
             </h2>
             <p class="mt-2 line-clamp-2 min-h-12 text-sm leading-6 text-[#657069]">
               {{ item.description }}

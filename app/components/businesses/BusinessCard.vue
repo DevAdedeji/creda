@@ -51,14 +51,10 @@ const modeLabel = (value: BusinessListItem['operationMode']) =>
         <span class="rounded-full bg-[#f2f5f1] px-2.5 py-1 text-xs font-semibold text-[#536c59]">{{
           modeLabel(business.operationMode)
         }}</span>
-        <span
-          v-if="business.ownershipStatus === 'verified'"
-          class="inline-flex items-center gap-1 rounded-full bg-[#e4f2db] px-2.5 py-1 text-xs font-semibold text-[#2f6241]"
-          ><UIcon name="i-lucide-badge-check" /> Ownership verified</span
-        >
       </div>
       <h2 class="mt-4 text-[22px] font-semibold tracking-[-.04em] text-[#143e32]">
         {{ business.name }}
+        <BusinessesVerifiedMark v-if="business.ownershipStatus === 'verified'" in-link />
       </h2>
       <div
         v-if="business.reviewCount"

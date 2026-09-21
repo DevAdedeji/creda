@@ -260,17 +260,16 @@ const destinations = computed(() => {
                 class="grid size-20 place-items-center rounded-2xl border-4 border-white bg-[#d8f36a] text-3xl font-bold text-[#143e32] shadow-sm"
                 >{{ business.name.charAt(0).toUpperCase() }}</span
               >
-              <span
-                v-if="business.ownershipStatus === 'verified'"
-                class="inline-flex items-center gap-1.5 rounded-full bg-[#e5f3da] px-3 py-2 text-xs font-semibold text-[#2e6541]"
-                ><UIcon name="i-lucide-badge-check" /> Ownership verified</span
-              >
             </div>
             <p class="mt-6 text-xs font-bold uppercase tracking-[.15em] text-[#5d7b61]">
               {{ categoryLabel }}
             </p>
             <h1 class="mt-2 text-4xl font-semibold tracking-[-.06em] text-[#143e32] sm:text-5xl">
               {{ business.name }}
+              <BusinessesVerifiedMark
+                v-if="business.ownershipStatus === 'verified'"
+                class="!size-7 sm:!size-8"
+              />
             </h1>
             <div class="mt-5 flex flex-wrap gap-2">
               <UButton
