@@ -21,6 +21,7 @@ export class ReviewDomainError extends Error {
 function toMine(row: typeof businessReview.$inferSelect): MyReview {
   return {
     id: row.id,
+    isAnonymous: row.isAnonymous,
     rating: row.rating,
     body: row.body,
     photoUrls: row.photoUrls,
@@ -58,7 +59,8 @@ export async function listReviews(
   const rows = await db
     .select({
       id: businessReview.id,
-      authorName: user.name,
+      authorName: sql<string>`CASE WHEN ${businessReview.isAnonymous} THEN 'Anonymous' ELSE ${user.name} END`,
+      isAnonymous: businessReview.isAnonymous,
       rating: businessReview.rating,
       body: businessReview.body,
       photoUrls: businessReview.photoUrls,
@@ -121,9 +123,12 @@ export async function listReviews(
     reviews: rows.map((row) => ({
       id: row.id,
       authorName: row.authorName,
+      isAnonymous: row.isAnonymous,
       rating: row.rating,
       body: row.body,
-      photoUrls: row.photoUrls,
+      photoUrls: row.photoUrls.map(
+        (_, index) => `/api/reviews/${row.id}/photos/${index}?v=${row.updatedAt.getTime()}`,
+      ),
       experienceMonth: row.experienceMonth,
       createdAt: row.createdAt.toISOString(),
       updatedAt: row.updatedAt.toISOString(),
@@ -243,8 +248,10 @@ export async function editReview(
       throw new ReviewDomainError(404, 'Review not found.')
     const { mediaProofs, ...fields } = input
     const photoUrls = input.photoUrls ?? current.photoUrls
-    const details = { ...fields, photoUrls }
+    const isAnonymous = input.isAnonymous ?? current.isAnonymous
+    const details = { ...fields, photoUrls, isAnonymous }
     if (
+      current.isAnonymous === isAnonymous &&
       current.rating === input.rating &&
       current.body === input.body &&
       current.experienceMonth === input.experienceMonth &&
@@ -341,6 +348,7 @@ export async function listAdminReviews(
       businessName: business.name,
       businessSlug: business.slug,
       authorName: user.name,
+      isAnonymous: businessReview.isAnonymous,
       rating: businessReview.rating,
       body: businessReview.body,
       photoUrls: businessReview.photoUrls,

@@ -11,6 +11,7 @@ export type ReviewStatus = 'pending' | 'published' | 'rejected' | 'removed'
 export interface PublicReview {
   id: string
   authorName: string
+  isAnonymous: boolean
   rating: number
   body: string
   photoUrls: string[]
@@ -22,6 +23,7 @@ export interface PublicReview {
 
 export interface MyReview {
   id: string
+  isAnonymous: boolean
   rating: number
   body: string
   photoUrls: string[]
@@ -50,6 +52,7 @@ export interface AdminReview {
   businessName: string
   businessSlug: string
   authorName: string
+  isAnonymous: boolean
   rating: number
   body: string
   photoUrls: string[]

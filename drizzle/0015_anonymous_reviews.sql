@@ -1,0 +1,1 @@
+ALTER TABLE "business_review" ADD COLUMN "is_anonymous" boolean DEFAULT false NOT NULL;

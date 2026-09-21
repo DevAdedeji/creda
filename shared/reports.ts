@@ -18,6 +18,7 @@ export interface AdminReport {
   reviewId: string | null
   reviewPhotoUrls: string[] | null
   reviewBody: string | null
+  reviewIsAnonymous: boolean | null
   reporterName: string
   reason: string
   details: string | null

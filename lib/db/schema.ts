@@ -284,6 +284,7 @@ export const businessReview = pgTable(
     authorUserId: text('author_user_id')
       .notNull()
       .references(() => user.id),
+    isAnonymous: boolean('is_anonymous').notNull().default(false),
     rating: integer('rating').notNull(),
     body: text('body').notNull(),
     photoUrls: text('photo_urls')

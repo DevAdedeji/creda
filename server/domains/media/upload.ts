@@ -79,7 +79,8 @@ export async function uploadImage(event: H3Event, folder: 'businesses' | 'review
     throw createError({ statusCode: 415, statusMessage: 'Use a PNG, JPEG, or WebP image.' })
   }
 
-  const path = `${folder}/${user.id}/${randomUUID()}.${format.extension}`
+  const prefix = folder === 'reviews' ? 'reviews' : `businesses/${user.id}`
+  const path = `${prefix}/${randomUUID()}.${format.extension}`
   const endpoint = apiBase + path
   await reserveBusinessImageUpload(user.id, path)
   try {

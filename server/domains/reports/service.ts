@@ -102,6 +102,7 @@ export async function listAdminReports(
         businessSlug: business.slug,
         reviewId: contentReport.reviewId,
         reviewBody: businessReview.body,
+        reviewIsAnonymous: businessReview.isAnonymous,
         reviewPhotoUrls: businessReview.photoUrls,
         reporterName: user.name,
         reason: contentReport.reason,

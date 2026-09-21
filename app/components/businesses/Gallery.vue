@@ -4,6 +4,7 @@ const props = defineProps<{
   images: string[]
   businessName: string
   compact?: boolean
+  unoptimized?: boolean
 }>()
 
 const open = ref(false)
@@ -75,7 +76,17 @@ function restoreFocus() {
       class="group aspect-square w-full overflow-hidden rounded-xl bg-[#edf3e7] text-left focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#315b3a]"
       @click="openPhoto(index, $event)"
     >
+      <img
+        v-if="unoptimized"
+        :src="url"
+        :alt="`${businessName} gallery photo ${index + 1}`"
+        loading="lazy"
+        width="256"
+        height="256"
+        class="size-full object-cover transition duration-300 group-hover:scale-105"
+      />
       <NuxtImg
+        v-else
         :src="url"
         :alt="`${businessName} gallery photo ${index + 1}`"
         loading="lazy"
@@ -125,8 +136,15 @@ function restoreFocus() {
           @touchstart.passive="onTouchStart"
           @touchend.passive="onTouchEnd"
         >
+          <img
+            v-if="activeImage && unoptimized"
+            :key="activeImage"
+            :src="activeImage"
+            :alt="`${businessName} gallery photo ${activeIndex + 1}`"
+            class="max-h-full max-w-full rounded-lg object-contain shadow-2xl"
+          />
           <NuxtImg
-            v-if="activeImage"
+            v-else-if="activeImage"
             :key="activeImage"
             :src="activeImage"
             :alt="`${businessName} gallery photo ${activeIndex + 1}`"

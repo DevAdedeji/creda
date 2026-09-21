@@ -132,6 +132,13 @@ function openDecision(id: string) {
                 {{ review.businessName }}
               </p>
               <h2 class="mt-2 text-lg font-semibold">{{ review.authorName }}</h2>
+              <p
+                v-if="review.isAnonymous"
+                class="mt-1 inline-flex items-center gap-1.5 rounded-md bg-[#edf1ea] px-2 py-1 text-xs text-[#385344]"
+              >
+                <UIcon name="i-lucide-eye-off" class="size-3.5" />
+                Anonymous publicly · identity visible to admins
+              </p>
               <p class="mt-1 text-xs text-[#718073]">
                 Experience: {{ review.experienceMonth }} · Submitted
                 {{ new Date(review.createdAt).toLocaleDateString() }}

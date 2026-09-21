@@ -37,6 +37,7 @@ const photoUrls = z
 
 export const submitReviewSchema = z.object({
   businessId: z.uuid(),
+  isAnonymous: z.boolean().default(false),
   rating: z.number().int().min(1).max(5),
   body: normalizedText(30, 2000),
   experienceMonth,
@@ -46,6 +47,7 @@ export const submitReviewSchema = z.object({
 
 export const editReviewSchema = submitReviewSchema.omit({ businessId: true }).extend({
   photoUrls: photoUrls.optional(),
+  isAnonymous: z.boolean().optional(),
 })
 export const replySchema = z.object({ body: normalizedText(2, 1000) })
 export const moderateReviewSchema = z.object({

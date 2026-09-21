@@ -185,7 +185,9 @@ async function decide(item: AdminReport) {
               v-if="item.reviewBody"
               class="mt-3 border-l-2 border-[#c9dcbc] pl-4 text-sm leading-6 text-[#536656]"
             >
-              <span class="font-semibold text-[#143e32]">Reported review:</span>
+              <span class="font-semibold text-[#143e32]"
+                >Reported review{{ item.reviewIsAnonymous ? ' (posted anonymously)' : '' }}:</span
+              >
               {{ item.reviewBody }}
             </p>
             <BusinessesGallery

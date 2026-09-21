@@ -15,6 +15,7 @@ const isEditing = ref(false)
 const saving = ref(false)
 const formError = ref('')
 const rating = ref(0)
+const isAnonymous = ref(false)
 const body = ref('')
 const photos = ref<ReviewPhotoDraft[]>([])
 const uploadingPhotos = ref(false)
@@ -66,6 +67,7 @@ function startReview() {
   const mine = data.value?.myReview
   isEditing.value = Boolean(mine)
   rating.value = mine?.rating ?? 0
+  isAnonymous.value = mine?.isAnonymous ?? false
   body.value = mine?.body ?? ''
   photos.value = (mine?.photoUrls ?? []).map((url) => ({ url }))
   experienceMonth.value = mine?.experienceMonth ?? new Date().toISOString().slice(0, 7)
@@ -93,6 +95,7 @@ async function saveReview() {
       body: {
         ...(mine ? {} : { businessId: props.businessId }),
         rating: rating.value,
+        isAnonymous: isAnonymous.value,
         body: body.value,
         experienceMonth: experienceMonth.value,
         photoUrls: photos.value.map((photo) => photo.url),
@@ -210,6 +213,21 @@ function monthLabel(month: string): string {
     >
       <template #body>
         <form :id="formId" method="post" @submit.prevent="saveReview">
+          <div class="mb-5 rounded-xl border border-[#dfe6dc] bg-[#f7faf3] p-4">
+            <USwitch
+              v-model="isAnonymous"
+              label="Post anonymously"
+              description="Hide your name from the public and the business. Creda admins can still see who posted it."
+              :disabled="saving"
+              :ui="{
+                label: 'font-semibold text-[#143e32]',
+                description: 'text-xs leading-5 text-[#657069]',
+              }"
+            />
+            <p v-if="isAnonymous" class="mt-2 text-xs leading-5 text-[#657069]">
+              Your review will appear as Anonymous. Text and photos you share remain public.
+            </p>
+          </div>
           <fieldset>
             <legend class="text-sm font-semibold text-[#143e32]">Your rating</legend>
             <div class="mt-2 flex gap-1">
@@ -355,6 +373,7 @@ function monthLabel(month: string): string {
           :images="review.photoUrls"
           :business-name="`${businessName} review`"
           compact
+          unoptimized
           class="mt-3"
         />
         <div v-if="review.reply" class="mt-4 rounded-xl bg-[#f3f7ef] p-4">
