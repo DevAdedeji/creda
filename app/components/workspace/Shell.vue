@@ -3,10 +3,15 @@ import { authClient } from '~~/lib/auth-client'
 
 const route = useRoute()
 const { data: session } = await authClient.useSession(useFetch)
-const { data: viewer } = await useFetch<{ user: { isAdmin: boolean } }>('/api/me', {
+const { data: viewer } = await useFetch<{ user: { id: string; isAdmin: boolean } }>('/api/me', {
   immediate: Boolean(session.value),
 })
-const isAdmin = computed(() => viewer.value?.user.isAdmin === true)
+const isAdmin = computed(
+  () =>
+    session.value?.user.emailVerified === true &&
+    viewer.value?.user.id === session.value.user.id &&
+    viewer.value?.user.isAdmin === true,
+)
 const mobileOpen = ref(false)
 const signingOut = ref(false)
 const appToast = useAppToast()
@@ -18,6 +23,7 @@ const links = [
   { label: 'My account', icon: 'i-lucide-user-round', to: '/profile' },
 ] as const
 const adminLinks = [
+  { label: 'Admin overview', icon: 'i-lucide-chart-no-axes-combined', to: '/admin' },
   { label: 'Ownership checks', icon: 'i-lucide-badge-check', to: '/admin/verification' },
   { label: 'Manage reviews', icon: 'i-lucide-message-square', to: '/admin/reviews' },
   { label: 'Content reports', icon: 'i-lucide-flag', to: '/admin/reports' },
