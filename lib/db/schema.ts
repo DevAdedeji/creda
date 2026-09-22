@@ -1,7 +1,9 @@
+import type { InsightMetric } from '~~/shared/insights'
 import { relations, sql } from 'drizzle-orm'
 import {
   boolean,
   check,
+  date,
   index,
   integer,
   jsonb,
@@ -251,6 +253,7 @@ export const savedBusiness = pgTable(
   (table) => [
     uniqueIndex('saved_business_user_business_unique').on(table.userId, table.businessId),
     index('saved_business_user_created_idx').on(table.userId, table.createdAt),
+    index('saved_business_business_idx').on(table.businessId),
   ],
 )
 
@@ -505,5 +508,40 @@ export const discoveryUsage = pgTable(
   (table) => [
     index('discovery_usage_expires_at_idx').on(table.expiresAt),
     check('discovery_usage_count_positive', sql`${table.count} > 0`),
+  ],
+)
+
+// Anonymous daily totals are retained; request deduplication keys expire separately.
+export const businessInsightDaily = pgTable(
+  'business_insight_daily',
+  {
+    id: text('id').primaryKey(),
+    businessId: text('business_id')
+      .notNull()
+      .references(() => business.id, { onDelete: 'cascade' }),
+    day: date('day').notNull(),
+    metric: text('metric').notNull().$type<InsightMetric>(),
+    count: integer('count').notNull().default(1),
+  },
+  (table) => [
+    uniqueIndex('business_insight_daily_unique').on(table.businessId, table.day, table.metric),
+    check(
+      'business_insight_daily_metric',
+      sql`metric IN ('profile_view', 'bio_view', 'website', 'whatsapp', 'phone', 'app_store', 'play_store', 'social', 'email', 'contact')`,
+    ),
+    check('business_insight_daily_positive', sql`count > 0`),
+  ],
+)
+
+export const businessInsightGuard = pgTable(
+  'business_insight_guard',
+  {
+    key: text('key').primaryKey(),
+    count: integer('count').notNull().default(1),
+    expiresAt: timestamp('expires_at', { withTimezone: true }).notNull(),
+  },
+  (table) => [
+    index('business_insight_guard_expiry_idx').on(table.expiresAt),
+    check('business_insight_guard_positive', sql`count > 0`),
   ],
 )

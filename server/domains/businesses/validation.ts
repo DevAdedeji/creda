@@ -2,6 +2,8 @@ import { z } from 'zod'
 import {
   businessCategoryValues,
   businessLinkError,
+  businessContactLinkMessage,
+  isBusinessContactLink,
   operationModeValues,
 } from '~~/shared/businesses'
 import { isAvailableBusinessSlugFormat } from '~~/shared/business-slugs'
@@ -105,7 +107,18 @@ export const businessSubmissionSchema = z
     appStoreUrl: destinationUrl,
     playStoreUrl: destinationUrl,
     socialUrl: destinationUrl,
-    contactUrl: destinationUrl,
+    contactUrl: z
+      .string()
+      .trim()
+      .max(500)
+      .refine(isBusinessContactLink, businessContactLinkMessage)
+      .transform((value) => {
+        if (!value) return null
+        if (value.startsWith('tel:')) return value
+        const url = new URL(value)
+        url.hash = ''
+        return url.toString().replace(/\/$/, '')
+      }),
     logoUrl: destinationUrl,
     coverUrl: destinationUrl,
     galleryUrls: z
