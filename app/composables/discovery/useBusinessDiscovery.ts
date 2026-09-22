@@ -85,7 +85,7 @@ export function useBusinessDiscovery() {
     state: typeof route.query.state === 'string' ? route.query.state : undefined,
     operationMode: route.query.operationMode ?? undefined,
     sort: typeof route.query.sort === 'string' ? route.query.sort : undefined,
-    page: typeof route.query.page === 'string' ? route.query.page : undefined,
+    page: route.query.page ?? undefined,
   }))
   const request = useFetch<DirectorySearchResponse>('/api/businesses', { query: apiQuery })
   const { data, status, error, refresh } = request

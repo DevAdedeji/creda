@@ -51,7 +51,7 @@ export default defineEventHandler(async (event): Promise<AskDiscoveryResponse> =
       retryable: failure.retryable,
       durationMs: Math.round(performance.now() - startedAt),
     })
-    if (failure.code === 'user_minute_limit') setHeader(event, 'Retry-After', '60')
+    if (failure.code === 'user_minute_limit') setHeader(event, 'Retry-After', 60)
     throw createError({
       statusCode: failure.statusCode,
       statusMessage:

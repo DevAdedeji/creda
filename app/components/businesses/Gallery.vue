@@ -81,8 +81,9 @@ function restoreFocus() {
         :src="url"
         :alt="`${businessName} gallery photo ${index + 1}`"
         loading="lazy"
-        width="256"
-        height="256"
+        :width="compact ? 72 : 256"
+        :height="compact ? 72 : 256"
+        decoding="async"
         class="size-full object-cover transition duration-300 group-hover:scale-105"
       />
       <NuxtImg
@@ -90,8 +91,9 @@ function restoreFocus() {
         :src="url"
         :alt="`${businessName} gallery photo ${index + 1}`"
         loading="lazy"
-        width="256"
-        height="256"
+        :width="compact ? 72 : 256"
+        :height="compact ? 72 : 256"
+        decoding="async"
         format="webp"
         class="size-full object-cover transition duration-300 group-hover:scale-105"
       />
@@ -149,6 +151,7 @@ function restoreFocus() {
             :src="activeImage"
             :alt="`${businessName} gallery photo ${activeIndex + 1}`"
             width="1600"
+            sizes="320:90vw sm:90vw md:90vw lg:90vw xl:90vw 2xl:1600px"
             densities="x1"
             format="webp"
             class="max-h-full max-w-full rounded-lg object-contain shadow-2xl"

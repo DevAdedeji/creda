@@ -1,3 +1,4 @@
+import { directoryPageLimit } from '~~/shared/seo/explore'
 import { z } from 'zod'
 import {
   businessCategoryValues,
@@ -200,7 +201,7 @@ export const businessListQuerySchema = z.object({
     )
     .transform((values) => [...new Set(values)]),
   sort: z.enum(['relevance', 'top_rated', 'most_reviewed', 'newest']).default('relevance'),
-  page: z.coerce.number().int().min(1).max(10000).default(1),
+  page: z.coerce.number().int().min(1).max(directoryPageLimit).default(1),
 })
 
 export const businessSlugSchema = z.object({

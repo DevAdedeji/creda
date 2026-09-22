@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { categoryPath } from '~~/shared/seo/categories'
 import {
   businessCategories,
   businessDays,
@@ -7,6 +8,13 @@ import {
 } from '~~/shared/businesses'
 import { authClient } from '~~/lib/auth-client'
 import { serializeJsonLd } from '@/utils/jsonLd'
+import {
+  businessPageTitle,
+  businessPageDescription,
+  businessStructuredData,
+  businessSchemaType,
+} from '@/utils/seo/business'
+import { businessLocationPath } from '~~/shared/seo/locations'
 import { useBusinessInsightsTracking } from '@/composables/insights/useBusinessInsightsTracking'
 import type { InsightDestinationKey } from '~~/shared/insights'
 
@@ -34,6 +42,9 @@ const { data: saved, status: savedStatus } = await useFetch<{ saved: boolean }>(
   { immediate: Boolean(session.value?.user.emailVerified && business.value) },
 )
 const savePending = ref(false)
+const localBusinessesPath = computed(() =>
+  business.value ? businessLocationPath(business.value) : null,
+)
 const appToast = useAppToast()
 const { copyText, isCopied } = useCopyFeedback()
 
@@ -66,25 +77,14 @@ async function copyLink() {
   await copyText(canonicalUrl)
 }
 
-const seoLocation = computed(() => {
-  const item = business.value
-  return item && item.operationMode !== 'online'
-    ? [item.city, item.state].filter(Boolean).join(', ')
-    : ''
-})
-const seoTitle = computed(() => {
-  const item = business.value
-  return item
-    ? `${item.name}${seoLocation.value ? ` in ${seoLocation.value}` : ''} — Creda`
-    : 'Business — Creda'
-})
-const seoDescription = computed(() => {
-  const item = business.value
-  if (!item) return 'Explore this business on Creda.'
-  const introduction = seoLocation.value ? `${item.name} in ${seoLocation.value}. ` : ''
-  const description = `${introduction}${item.description}`.replace(/\s+/g, ' ').trim()
-  return description.length > 160 ? `${description.slice(0, 157).trimEnd()}…` : description
-})
+const seoTitle = computed(() =>
+  business.value ? businessPageTitle(business.value) : 'Business — Creda',
+)
+const seoDescription = computed(() =>
+  business.value
+    ? businessPageDescription(business.value)
+    : 'Explore business details and customer reviews on Creda.',
+)
 
 useSeoMeta({
   title: seoTitle,
@@ -128,19 +128,7 @@ useHead(() => {
               mainEntity: { '@id': `${canonicalUrl}#business` },
               ...(images[0] ? { primaryImageOfPage: images[0] } : {}),
             },
-            {
-              '@type': 'Organization',
-              '@id': `${canonicalUrl}#business`,
-              name: item.name,
-              description: item.description,
-              ...(item.websiteUrl ? { url: item.websiteUrl } : {}),
-              ...(item.logoUrl ? { logo: item.logoUrl } : {}),
-              ...(images.length ? { image: images } : {}),
-              ...(seoLocation.value ? { areaServed: seoLocation.value } : {}),
-              ...(item.ownershipStatus === 'verified' && item.socialUrl
-                ? { sameAs: [item.socialUrl] }
-                : {}),
-            },
+            businessStructuredData(item, canonicalUrl),
             {
               '@type': 'BreadcrumbList',
               itemListElement: [
@@ -275,6 +263,8 @@ const destinations = computed(() => {
               :src="business.coverUrl"
               :alt="`${business.name} cover image`"
               width="1920"
+              sizes="320:100vw sm:100vw md:100vw lg:100vw xl:90vw 2xl:1728px"
+              fetchpriority="high"
               height="384"
               densities="x1"
               format="webp"
@@ -299,7 +289,9 @@ const destinations = computed(() => {
               >
             </div>
             <p class="mt-6 text-xs font-bold uppercase tracking-[.15em] text-[#5d7b61]">
-              {{ categoryLabel }}
+              <NuxtLink :to="categoryPath(business.category)" class="hover:underline">{{
+                categoryLabel
+              }}</NuxtLink>
             </p>
             <h1 class="mt-2 text-4xl font-semibold tracking-[-.06em] text-[#143e32] sm:text-5xl">
               {{ business.name }}
@@ -421,6 +413,12 @@ const destinations = computed(() => {
                   Address
                 </h2>
                 <p class="mt-2 text-sm text-[#657069]">{{ business.location }}</p>
+                <NuxtLink
+                  v-if="localBusinessesPath"
+                  :to="localBusinessesPath"
+                  class="mt-4 inline-flex items-center gap-2 text-sm font-semibold text-[#315b3a] hover:underline"
+                  >Explore businesses in this area <UIcon name="i-lucide-arrow-right"
+                /></NuxtLink>
               </div>
               <iframe
                 v-if="mapUrl"
@@ -433,6 +431,7 @@ const destinations = computed(() => {
               />
             </section>
             <ReviewsSection
+              :schema-type="businessSchemaType(business)"
               :business-id="business.id"
               :slug="business.slug"
               :business-name="business.name"
@@ -491,13 +490,18 @@ const destinations = computed(() => {
             >
               Ownership verified means we checked who manages this profile. It is not a guarantee of
               service quality.
+              <NuxtLink to="/help/ownership" class="font-semibold underline underline-offset-2"
+                >How verification works</NuxtLink
+              >
             </p>
             <div class="mt-5 border-t border-[#edf0e9] pt-4">
               <ReportsDialog :business-id="business.id" label="Report this business" />
             </div>
           </aside>
         </div>
+        <BusinessesRelated :slug="business.slug" />
       </template>
     </main>
+    <LandingFooter />
   </div>
 </template>

@@ -30,6 +30,8 @@ function scrollFormFromAnywhere(event: WheelEvent) {
           width="1536"
           height="1024"
           sizes="lg:50vw xl:800px"
+          loading="lazy"
+          decoding="async"
           format="webp"
         />
         <div

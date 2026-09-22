@@ -1,4 +1,6 @@
 <script setup lang="ts">
+import { categoryPath } from '~~/shared/seo/categories'
+import type { BusinessCategory } from '~~/shared/businesses'
 import SearchMode from '@/components/discovery/SearchMode.vue'
 import { serializeJsonLd } from '@/utils/jsonLd'
 
@@ -7,15 +9,15 @@ const socialImage = useCanonicalUrl('/og-image.png')
 const siteOrigin = new URL(canonicalUrl).origin
 
 useSeoMeta({
-  title: 'Creda — Find businesses worth knowing',
+  title: 'Creda — Discover Nigerian Businesses & Customer Reviews',
   description:
-    'Discover businesses in Nigeria, understand who manages their profiles, and explore customer experiences. Meet your next great find on Creda.',
-  ogTitle: 'Creda — Find businesses worth knowing',
+    'Discover online and local businesses in Nigeria. Read customer reviews, explore services and photos, and find the right business for you.',
+  ogTitle: 'Creda — Discover Nigerian Businesses & Customer Reviews',
   ogDescription:
-    'A little context. A lot more confidence. Discover businesses and customer experiences on Creda.',
+    'Discover online and local businesses in Nigeria. Explore business details, photos and customer reviews.',
   ogUrl: canonicalUrl,
   ogImage: socialImage,
-  ogImageAlt: 'Creda — Find businesses worth knowing',
+  ogImageAlt: 'Creda — Discover Nigerian Businesses & Customer Reviews',
   ogImageWidth: 1200,
   ogImageHeight: 630,
   ogType: 'website',
@@ -54,7 +56,7 @@ useHead({
 import BusinessCard from '@/components/businesses/BusinessCard.vue'
 import type { HomepageBusinesses } from '~~/shared/homepage'
 
-const categories = [
+const categories: { label: string; value: BusinessCategory | ''; icon: string }[] = [
   { label: 'All businesses', value: '', icon: 'i-lucide-grid-2x2' },
   { label: 'Software & apps', value: 'software', icon: 'i-lucide-command' },
   { label: 'Creative & design', value: 'creative', icon: 'i-lucide-palette' },
@@ -117,8 +119,8 @@ function searchBusinesses() {
             >
           </h1>
           <p class="mb-7 max-w-[460px] text-base leading-[1.75] text-[#657069] lg:text-lg">
-            Your next great find is out there. Discover businesses, get the full picture, and hear
-            from the people who’ve been there.
+            Discover online and local businesses across Nigeria. Explore what they offer, see their
+            photos, and read customer reviews.
           </p>
           <div class="mb-2.5 flex max-w-[555px] items-center justify-between gap-3">
             <label for="business-search" class="text-sm font-medium text-[#345341]"
@@ -216,11 +218,7 @@ function searchBusinesses() {
           <NuxtLink
             v-for="category in categories"
             :key="category.label"
-            :to="
-              category.value
-                ? { path: '/explore', query: { category: category.value } }
-                : '/explore'
-            "
+            :to="category.value ? categoryPath(category.value) : '/explore'"
             class="shrink-0 flex items-center gap-2 rounded-full border border-[#d8ded4] bg-white px-4 py-2.5 text-sm font-semibold text-[#3f5146] transition-all hover:-translate-y-0.5 hover:border-[#143e32]"
             ><UIcon :name="category.icon" />{{ category.label }}</NuxtLink
           >
@@ -475,18 +473,6 @@ function searchBusinesses() {
         >
       </section>
     </main>
-    <footer
-      class="mx-auto flex w-full max-w-[1920px] flex-wrap items-center justify-between gap-5 px-5 py-12 text-sm text-[#657069] sm:px-8 xl:w-[90%] xl:px-0"
-    >
-      <LandingLogo compact />
-      <p>Good businesses deserve to be known.</p>
-      <span>Starting in Nigeria. Built for discovery.</span
-      ><a
-        href="#"
-        aria-label="Back to top"
-        class="grid size-[35px] place-items-center rounded-full border border-[#e0e5dd] text-[#143e32]"
-        ><UIcon name="i-lucide-arrow-up"
-      /></a>
-    </footer>
+    <LandingFooter />
   </div>
 </template>

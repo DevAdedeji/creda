@@ -2,10 +2,14 @@ import { createError, getQuery } from 'h3'
 import { businessListQuerySchema } from '@server/domains/businesses/validation'
 import { listPublicBusinesses } from '@server/domains/businesses/service'
 import { discoveryInterpretationSchema } from '~~/shared/discovery'
+import { directoryPage } from '~~/shared/seo/explore'
 import { searchDiscovery } from '@server/domains/discovery/search'
 
 export default defineEventHandler(async (event) => {
   const query = getQuery(event)
+  if (directoryPage(query.page) === null) {
+    throw createError({ statusCode: 404, message: 'Business page not found.' })
+  }
   const parsed = businessListQuerySchema.safeParse(query)
   if (!parsed.success) {
     throw createError({ statusCode: 400, statusMessage: 'Invalid search filters.' })

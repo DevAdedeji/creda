@@ -1,14 +1,43 @@
 <script setup lang="ts">
 import type { DropdownMenuItem } from '@nuxt/ui'
+import { businessReviewStructuredData, type BusinessSchemaType } from '@/utils/seo/business'
+import { serializeJsonLd } from '@/utils/jsonLd'
 import { apiErrorMessage } from '@/utils/apiError'
 import type { ReviewListResponse, ReviewPhotoDraft, ReviewVoteSummary } from '~~/shared/reviews'
 
-const props = defineProps<{ businessId: string; slug: string; businessName: string }>()
+const props = defineProps<{
+  businessId: string
+  slug: string
+  businessName: string
+  schemaType: BusinessSchemaType
+}>()
 const page = ref(1)
 const { data, status, error, refresh } = await useFetch<ReviewListResponse>(
   () => `/api/businesses/${encodeURIComponent(props.slug)}/reviews`,
   { query: { page } },
 )
+
+const canonicalUrl = useCanonicalUrl('/businesses/' + encodeURIComponent(props.slug))
+useHead(() => {
+  const schema =
+    data.value && status.value === 'success' && !error.value
+      ? businessReviewStructuredData(
+          { name: props.businessName, canonicalUrl, type: props.schemaType },
+          data.value,
+        )
+      : null
+  return {
+    script: schema
+      ? [
+          {
+            key: 'business-reviews',
+            type: 'application/ld+json',
+            innerHTML: serializeJsonLd(schema),
+          },
+        ]
+      : [],
+  }
+})
 
 const formOpen = ref(false)
 const isEditing = ref(false)

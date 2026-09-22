@@ -5,48 +5,22 @@ import { serializeJsonLd } from '@/utils/jsonLd'
 import { authClient } from '~~/lib/auth-client'
 import type { BusinessListResponse } from '~~/shared/businesses'
 import { useBusinessDiscovery } from '@/composables/discovery/useBusinessDiscovery'
-
-const canonicalUrl = useCanonicalUrl('/explore')
-const socialImage = useCanonicalUrl('/og-image.png')
-
-useSeoMeta({
-  title: 'Explore businesses — Creda',
-  description: 'Find businesses worth knowing, starting in Nigeria.',
-  ogTitle: 'Explore businesses — Creda',
-  ogDescription: 'Find businesses worth knowing, starting in Nigeria.',
-  ogUrl: canonicalUrl,
-  ogImage: socialImage,
-  ogImageAlt: 'Discover businesses on Creda',
-  ogImageWidth: 1200,
-  ogImageHeight: 630,
-  ogType: 'website',
-  twitterCard: 'summary_large_image',
-  twitterImage: socialImage,
-})
-useHead({
-  link: [{ rel: 'canonical', href: canonicalUrl }],
-  script: [
-    {
-      type: 'application/ld+json',
-      innerHTML: serializeJsonLd({
-        '@context': 'https://schema.org',
-        '@type': 'CollectionPage',
-        name: 'Explore businesses — Creda',
-        url: canonicalUrl,
-        description: 'Find businesses worth knowing, starting in Nigeria.',
-        breadcrumb: {
-          '@type': 'BreadcrumbList',
-          itemListElement: [
-            { '@type': 'ListItem', position: 1, name: 'Home', item: useCanonicalUrl('/') },
-            { '@type': 'ListItem', position: 2, name: 'Explore businesses', item: canonicalUrl },
-          ],
-        },
-      }),
-    },
-  ],
-})
+import {
+  directoryCanonicalPath,
+  directoryPage,
+  directoryPageOutOfRange,
+} from '~~/shared/seo/explore'
 
 const route = useRoute()
+const exploreUrl = useCanonicalUrl('/explore')
+const homeUrl = useCanonicalUrl('/')
+const socialImage = useCanonicalUrl('/og-image.png')
+const requestedPage = computed(() => directoryPage(route.query.page))
+const canonicalPath = computed(() => directoryCanonicalPath(route.query))
+const canonicalUrl = computed(() =>
+  canonicalPath.value ? new URL(canonicalPath.value, exploreUrl).toString() : null,
+)
+
 const { data: session } = await authClient.useSession(useFetch)
 const {
   request,
@@ -74,6 +48,67 @@ const {
   removeExtraCriterion,
 } = useBusinessDiscovery()
 await request
+const pageUnavailable = computed(
+  () =>
+    requestedPage.value === null ||
+    (data.value?.page === requestedPage.value &&
+      directoryPageOutOfRange(requestedPage.value, data.value.total, data.value.pageSize)),
+)
+const indexable = computed(
+  () => Boolean(canonicalUrl.value) && !pageUnavailable.value && !error.value,
+)
+const title = computed(() =>
+  requestedPage.value && requestedPage.value > 1
+    ? `Explore Nigerian Businesses & Reviews — Page ${requestedPage.value} | Creda`
+    : 'Explore Nigerian Businesses & Reviews | Creda',
+)
+if (import.meta.server) {
+  if (pageUnavailable.value) setResponseStatus(404)
+  else if (error.value) setResponseStatus(error.value.statusCode === 400 ? 400 : 503)
+}
+useSeoMeta({
+  title,
+  description:
+    'Find online and local businesses in Nigeria. Browse by category, city or state, compare customer reviews, and explore business details.',
+  robots: computed(() => (indexable.value ? 'index, follow' : 'noindex, follow')),
+  ogTitle: title,
+  ogDescription:
+    'Find online and local businesses in Nigeria. Browse by category, city or state, compare customer reviews, and explore business details.',
+  ogUrl: computed(() => canonicalUrl.value ?? exploreUrl),
+  ogImage: socialImage,
+  ogImageAlt: 'Discover businesses on Creda',
+  ogImageWidth: 1200,
+  ogImageHeight: 630,
+  ogType: 'website',
+  twitterCard: 'summary_large_image',
+  twitterImage: socialImage,
+})
+useHead(() => ({
+  link:
+    indexable.value && canonicalUrl.value ? [{ rel: 'canonical', href: canonicalUrl.value }] : [],
+  script: indexable.value
+    ? [
+        {
+          type: 'application/ld+json',
+          innerHTML: serializeJsonLd({
+            '@context': 'https://schema.org',
+            '@type': 'CollectionPage',
+            name: title.value,
+            url: canonicalUrl.value,
+            description:
+              'Find online and local businesses in Nigeria. Browse by category, city or state, compare customer reviews, and explore business details.',
+            breadcrumb: {
+              '@type': 'BreadcrumbList',
+              itemListElement: [
+                { '@type': 'ListItem', position: 1, name: 'Home', item: homeUrl },
+                { '@type': 'ListItem', position: 2, name: 'Explore businesses', item: exploreUrl },
+              ],
+            },
+          }),
+        },
+      ]
+    : [],
+}))
 const visibleIds = computed(() =>
   session.value?.user.emailVerified
     ? (data.value?.items.map((item) => item.id).join(',') ?? '')
@@ -125,13 +160,37 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
   <div class="min-h-screen bg-[#fcfcf8] text-[#172f27]">
     <LandingHeader />
     <main class="mx-auto w-full max-w-[1920px] px-5 pb-14 pt-9 sm:px-8 sm:pt-12 xl:w-[90%] xl:px-0">
-      <div class="border-b border-[#dfe6dc] pb-7 sm:pb-9">
-        <h1 class="text-3xl font-semibold tracking-[-.055em] text-[#143e32] sm:text-4xl">
-          Explore businesses<span class="text-[#a4c43e]">.</span>
-        </h1>
-        <p class="mt-2 max-w-xl text-sm leading-6 text-[#657069] sm:text-base">
-          Browse business profiles and find the details you need before you visit, contact, or buy.
-        </p>
+      <div
+        class="flex flex-col gap-6 border-b border-[#dfe6dc] pb-7 sm:pb-9 lg:flex-row lg:items-end lg:justify-between"
+      >
+        <div>
+          <h1 class="text-3xl font-semibold tracking-[-.055em] text-[#143e32] sm:text-4xl">
+            Explore businesses<span class="text-[#a4c43e]">.</span>
+          </h1>
+          <p class="mt-2 max-w-xl text-sm leading-6 text-[#657069] sm:text-base">
+            Browse business profiles and find the details you need before you visit, contact, or
+            buy.
+          </p>
+        </div>
+        <nav aria-label="Browse businesses" class="shrink-0">
+          <p class="mb-2 text-xs font-medium text-[#657069]">Browse by</p>
+          <div class="flex flex-wrap items-center gap-2">
+            <NuxtLink
+              to="/categories"
+              class="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#dfe6dc] bg-white px-4 py-2 text-sm font-medium text-[#315b3a] transition-colors hover:border-[#b5c7ae] hover:bg-[#edf3e7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#315b3a]"
+            >
+              <UIcon name="i-lucide-layout-grid" class="size-4" aria-hidden="true" />
+              Categories
+            </NuxtLink>
+            <NuxtLink
+              to="/locations"
+              class="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#dfe6dc] bg-white px-4 py-2 text-sm font-medium text-[#315b3a] transition-colors hover:border-[#b5c7ae] hover:bg-[#edf3e7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#315b3a]"
+            >
+              <UIcon name="i-lucide-map-pin" class="size-4" aria-hidden="true" />
+              Locations
+            </NuxtLink>
+          </div>
+        </nav>
       </div>
       <div
         v-if="session?.user.emailVerified && savedLoadStatus === 'error'"
@@ -255,7 +314,26 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
               Finding businesses that match your search…
             </p>
             <div
-              v-if="searchPending"
+              v-if="pageUnavailable && (!searchPending || requestedPage === null)"
+              role="status"
+              class="rounded-2xl border border-[#dfe6dc] bg-white p-9 sm:p-12"
+            >
+              <span
+                class="grid size-14 place-items-center rounded-xl bg-[#e8f4da] text-2xl text-[#315b3a]"
+              >
+                <UIcon name="i-lucide-search-x" />
+              </span>
+              <h3 class="mt-5 text-2xl font-semibold tracking-tight text-[#143e32]">
+                This page isn’t available.
+              </h3>
+              <p class="mt-2 max-w-lg text-sm leading-6 text-[#657069]">
+                The page number may be incorrect, or the results may have changed. Start from the
+                first page to keep exploring.
+              </p>
+              <UButton :to="pageLink(1)" class="mt-5">Go to the first page</UButton>
+            </div>
+            <div
+              v-else-if="searchPending"
               class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
               aria-label="Loading businesses"
             >
@@ -310,7 +388,12 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
                 @toggle-save="toggleSaved(item)"
               />
             </div>
-            <div v-if="data && data.total > data.pageSize && !searchPending" class="mt-9">
+            <div
+              v-if="
+                data && data.total > data.pageSize && !searchPending && !pageUnavailable && !error
+              "
+              class="mt-9"
+            >
               <nav
                 aria-label="Business pages"
                 class="flex flex-wrap items-center justify-between gap-3"
@@ -353,6 +436,7 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
         </section>
       </div>
     </main>
+    <LandingFooter />
     <UDrawer
       v-model:open="filtersOpen"
       title="Filter results"

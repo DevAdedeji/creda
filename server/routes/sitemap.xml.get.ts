@@ -18,6 +18,8 @@ export default defineEventHandler(async (event) => {
   const pages = Math.ceil((result?.total ?? 0) / businessSitemapPageSize)
   const paths = [
     '/sitemap-static.xml',
+    '/sitemap-categories.xml',
+    '/sitemap-locations.xml',
     ...Array.from({ length: pages }, (_, index) => `/sitemap-businesses.xml?page=${index + 1}`),
   ]
 

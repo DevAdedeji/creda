@@ -170,6 +170,8 @@ useHead(() =>
           :src="business.coverUrl"
           :alt="`${business.name} cover image`"
           width="1920"
+          sizes="320:100vw sm:100vw md:100vw lg:100vw xl:100vw 2xl:1920px"
+          fetchpriority="high"
           height="780"
           densities="x1"
           format="webp"
@@ -353,13 +355,13 @@ useHead(() =>
             <NuxtLink
               :to="'/businesses/' + business.slug"
               class="flex items-center justify-between rounded-3xl bg-[#eaf3e5] p-6 text-sm font-semibold text-[#315840] transition hover:bg-[#dcecd5]"
-              >See our Creda listing and reviews <UIcon name="i-lucide-arrow-right"
+              >Read customer reviews on Creda <UIcon name="i-lucide-arrow-right"
             /></NuxtLink>
           </aside>
         </div>
       </main>
       <footer class="border-t border-[#e0e9dc] px-5 py-6 text-center text-xs text-[#708174]">
-        A business page on
+        Business details, photos and links. A business page on
         <NuxtLink to="/" class="font-bold text-[#315840] hover:underline">creda.</NuxtLink>
       </footer>
     </template>
