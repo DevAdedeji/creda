@@ -1,17 +1,31 @@
 <script setup lang="ts">
 import type { BusinessInsights } from '~~/shared/insights'
-const props = defineProps<{ activity: BusinessInsights['activity'] }>()
+const props = defineProps<{ activity: BusinessInsights['activity']; bucketMonths: number }>()
 const maximum = computed(() =>
   Math.max(1, ...props.activity.flatMap((day) => [day.views, day.clicks])),
 )
 const hasActivity = computed(() => props.activity.some((day) => day.views || day.clicks))
 const firstDay = computed(() => props.activity[0]?.date)
-const lastDay = computed(() => props.activity.at(-1)?.date)
+const lastDay = computed(() => props.activity.at(-1)?.through)
 const columnWidth = computed(() => 600 / Math.max(1, props.activity.length))
 const dateLabel = (day: string) =>
-  new Intl.DateTimeFormat('en-NG', { month: 'short', day: 'numeric', timeZone: 'UTC' }).format(
-    new Date(`${day}T00:00:00Z`),
-  )
+  new Intl.DateTimeFormat('en-NG', {
+    month: 'short',
+    ...(props.bucketMonths ? { year: 'numeric' as const } : { day: 'numeric' as const }),
+    timeZone: 'UTC',
+  }).format(new Date(`${day}T00:00:00Z`))
+const intervalLabel = computed(() =>
+  props.bucketMonths === 0
+    ? 'Daily activity'
+    : props.bucketMonths === 1
+      ? 'Monthly activity'
+      : `Activity grouped every ${props.bucketMonths} months`,
+)
+function periodLabel(point: BusinessInsights['activity'][number]): string {
+  const start = dateLabel(point.date)
+  const end = dateLabel(point.through)
+  return start === end ? start : `${start} – ${end}`
+}
 </script>
 
 <template>
@@ -24,7 +38,7 @@ const dateLabel = (day: string) =>
         <h2 id="insights-activity-heading" class="text-lg font-semibold text-[#143e32]">
           Activity over time
         </h2>
-        <p class="mt-1 text-sm text-[#657069]">A daily look at discovery and the next step.</p>
+        <p class="mt-1 text-sm text-[#657069]">{{ intervalLabel }} across the selected period.</p>
       </div>
       <div class="flex gap-4 text-xs text-[#657069]" aria-hidden="true">
         <span class="flex items-center gap-2"
@@ -46,14 +60,14 @@ const dateLabel = (day: string) =>
         viewBox="0 0 640 190"
         class="w-full"
         role="img"
-        aria-label="Daily page views and link clicks. Exact values are in the accompanying table."
+        aria-label="Page views and link clicks. Exact periods and values are in the accompanying table."
       >
         <line x1="30" y1="160" x2="635" y2="160" stroke="#e4e9e0" />
         <line x1="30" y1="20" x2="635" y2="20" stroke="#edf0e9" stroke-dasharray="4 4" />
         <text x="22" y="24" text-anchor="end" fill="#657069" font-size="10">{{ maximum }}</text>
         <text x="22" y="163" text-anchor="end" fill="#657069" font-size="10">0</text>
         <g v-for="(day, index) in activity" :key="day.date">
-          <title>{{ dateLabel(day.date) }}: {{ day.views }} views, {{ day.clicks }} clicks</title>
+          <title>{{ periodLabel(day) }}: {{ day.views }} views, {{ day.clicks }} clicks</title>
           <rect
             :x="32 + index * columnWidth + columnWidth * 0.12"
             :y="160 - (day.views / maximum) * 140"
@@ -80,23 +94,25 @@ const dateLabel = (day: string) =>
       </svg>
       <details class="mt-3 text-xs text-[#657069]">
         <summary class="w-fit cursor-pointer rounded px-1 py-2 font-semibold text-[#315b3a]">
-          View daily numbers
+          View activity details
         </summary>
         <div class="mt-3 max-h-56 overflow-auto rounded-xl border border-[#e4e9e0]">
           <table class="w-full text-left">
             <caption class="sr-only">
-              Daily activity, UTC
+              {{
+                intervalLabel
+              }}, UTC
             </caption>
             <thead class="sticky top-0 bg-[#f6f8f2]">
               <tr>
-                <th scope="col" class="p-3">Date (UTC)</th>
+                <th scope="col" class="p-3">Period (UTC)</th>
                 <th scope="col" class="p-3">Page views</th>
                 <th scope="col" class="p-3">Link clicks</th>
               </tr>
             </thead>
             <tbody>
               <tr v-for="day in activity" :key="day.date" class="border-t border-[#edf0e9]">
-                <th scope="row" class="p-3 font-normal">{{ dateLabel(day.date) }}</th>
+                <th scope="row" class="p-3 font-normal">{{ periodLabel(day) }}</th>
                 <td class="p-3">{{ day.views }}</td>
                 <td class="p-3">{{ day.clicks }}</td>
               </tr>

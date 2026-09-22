@@ -10,9 +10,10 @@ export default defineEventHandler(async (event) => {
   const id = insightBusinessIdSchema.safeParse(getRouterParam(event, 'id'))
   const query = insightQuerySchema.safeParse(getQuery(event))
   if (!id.success) throw createError({ statusCode: 404, statusMessage: 'Business not found.' })
-  if (!query.success) throw createError({ statusCode: 400, statusMessage: 'Choose 7 or 30 days.' })
+  if (!query.success)
+    throw createError({ statusCode: 400, statusMessage: 'Choose all time, 7 days or 30 days.' })
   try {
-    return await getBusinessInsights(id.data, user.id, query.data.days === '30' ? 30 : 7)
+    return await getBusinessInsights(id.data, user.id, query.data.days)
   } catch (error) {
     if (isError(error)) throw error
     const requestId = logInsightFailure('read')

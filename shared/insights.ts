@@ -20,7 +20,7 @@ export const insightDestinationKeys = [
 ] as const
 export type InsightDestinationKey = (typeof insightDestinationKeys)[number]
 export type InsightSurface = 'profile' | 'bio'
-export type InsightRange = 7 | 30
+export type InsightRange = 7 | 30 | 'all'
 export type InsightEvent =
   | { businessId: string; surface: InsightSurface; action: 'view' }
   | {
@@ -52,5 +52,6 @@ export interface BusinessInsights {
   newReviews: number
   totalReviews: number
   averageRating: number | null
-  activity: { date: string; views: number; clicks: number }[]
+  activityBucketMonths: number
+  activity: { date: string; through: string; views: number; clicks: number }[]
 }

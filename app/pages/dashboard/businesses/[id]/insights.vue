@@ -7,10 +7,13 @@ useSeoMeta({ title: 'Business insights — Creda', robots: 'noindex, nofollow' }
 const route = useRoute()
 const { data: session } = await authClient.useSession(useFetch)
 if (!session.value) await navigateTo('/login')
-const range = computed<InsightRange>(() => (route.query.days === '30' ? 30 : 7))
+const periods: InsightRange[] = ['all', 7, 30]
+const range = computed<InsightRange>(() =>
+  route.query.days === '7' ? 7 : route.query.days === '30' ? 30 : 'all',
+)
 const { data, status, error, refresh } = await useFetch<BusinessInsights>(
   () => `/api/my/businesses/${encodeURIComponent(String(route.params.id))}/insights`,
-  { query: computed(() => ({ days: String(range.value) })) },
+  { query: computed(() => ({ days: String(range.value) })), retry: 0 },
 )
 watch(
   () => session.value?.user.id,
@@ -35,7 +38,10 @@ const formatDate = (value: string) =>
   )
 function selectRange(days: InsightRange) {
   void navigateTo(
-    { path: route.path, query: { ...route.query, days: days === 7 ? undefined : '30' } },
+    {
+      path: route.path,
+      query: { ...route.query, days: days === 'all' ? undefined : String(days) },
+    },
     { replace: true },
   )
 }
@@ -67,7 +73,7 @@ function selectRange(days: InsightRange) {
           aria-label="Insights date range"
         >
           <UButton
-            v-for="days in [7, 30] as const"
+            v-for="days in periods"
             :key="days"
             color="neutral"
             :variant="range === days ? 'solid' : 'ghost'"
@@ -75,7 +81,7 @@ function selectRange(days: InsightRange) {
             class="!rounded-lg !px-4"
             :class="range === days ? '!bg-[#143e32] !text-white' : '!text-[#526659]'"
             @click="selectRange(days)"
-            >Last {{ days }} days</UButton
+            >{{ days === 'all' ? 'All time' : `Last ${days} days` }}</UButton
           >
         </div>
       </div>
@@ -122,7 +128,11 @@ function selectRange(days: InsightRange) {
             <div class="min-w-0">
               <h2 class="truncate font-semibold text-[#143e32]">{{ data.business.name }}</h2>
               <p class="mt-1 text-xs text-[#657069]">
-                {{ formatDate(data.from) }} – {{ formatDate(data.through) }} · UTC, including today
+                {{
+                  data.range === 'all'
+                    ? 'All recorded activity · UTC'
+                    : `${formatDate(data.from)} – ${formatDate(data.through)} · UTC, including today`
+                }}
               </p>
             </div>
           </div>
@@ -165,16 +175,27 @@ function selectRange(days: InsightRange) {
           </section>
           <section class="rounded-2xl border border-[#dfe6dc] bg-white p-5 sm:p-6">
             <UIcon name="i-lucide-message-square" class="size-5 text-[#52734e]" />
-            <h3 class="mt-4 text-sm text-[#657069]">New reviews</h3>
+            <h3 class="mt-4 text-sm text-[#657069]">
+              {{ data.range === 'all' ? 'Published reviews' : 'New reviews' }}
+            </h3>
             <p class="mt-2 text-3xl font-semibold tracking-tight text-[#143e32]">
               {{ formatNumber(data.newReviews) }}
             </p>
             <p class="mt-2 text-xs leading-5 text-[#657069]">
-              Published reviews added in this period
+              {{
+                data.range === 'all'
+                  ? 'Current total · all time'
+                  : 'Published reviews added in this period'
+              }}
             </p>
           </section>
         </div>
-        <div class="mt-6"><InsightsActivityChart :activity="data.activity" /></div>
+        <div class="mt-6">
+          <InsightsActivityChart
+            :activity="data.activity"
+            :bucket-months="data.activityBucketMonths"
+          />
+        </div>
         <div class="mt-6 grid gap-6 lg:grid-cols-[1.5fr_1fr]">
           <section class="rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-8">
             <h2 class="text-lg font-semibold text-[#143e32]">Where people go next</h2>
