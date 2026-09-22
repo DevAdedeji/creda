@@ -55,12 +55,36 @@ export interface ReviewListResponse {
   isOwner: boolean
 }
 
+export const adminReviewStatuses = ['all', 'published', 'removed', 'pending', 'rejected'] as const
+export type AdminReviewStatus = (typeof adminReviewStatuses)[number]
+export const adminReviewStatusOptions: { label: string; value: AdminReviewStatus }[] = [
+  { label: 'All statuses', value: 'all' },
+  { label: 'Published', value: 'published' },
+  { label: 'Removed', value: 'removed' },
+  { label: 'Pending', value: 'pending' },
+  { label: 'Rejected', value: 'rejected' },
+]
+export interface AdminReviewFilters {
+  business: string
+  reviewer: string
+  status: AdminReviewStatus
+  rating?: number
+}
+export interface AdminReviewListResponse {
+  reviews: AdminReview[]
+  page: number
+  pageSize: number
+  total: number
+  totalPages: number
+}
+
 export interface AdminReview {
   id: string
   businessId: string
   businessName: string
   businessSlug: string
   authorName: string
+  authorEmail: string
   isAnonymous: boolean
   rating: number
   body: string

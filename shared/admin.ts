@@ -1,8 +1,8 @@
-export type AdminOverviewPeriod = 7 | 30
+export type AdminOverviewPeriod = 7 | 30 | 'all'
 
 export interface AdminOverview {
   generatedAt: string
-  period: { days: AdminOverviewPeriod; startsAt: string; timeZone: 'Africa/Lagos' }
+  period: { days: AdminOverviewPeriod; startsAt: string | null; timeZone: 'Africa/Lagos' }
   users: { total: number; emailVerified: number; businessOwners: number; added: number }
   businesses: {
     total: number

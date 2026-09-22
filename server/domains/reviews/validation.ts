@@ -1,5 +1,5 @@
 import { z } from 'zod'
-import { MAX_REVIEW_PHOTOS } from '~~/shared/reviews'
+import { adminReviewStatuses, MAX_REVIEW_PHOTOS } from '~~/shared/reviews'
 
 const normalizedText = (min: number, max: number) =>
   z
@@ -60,3 +60,12 @@ export const moderateReviewSchema = z.object({
 export type SubmitReviewInput = z.output<typeof submitReviewSchema>
 export type EditReviewInput = z.output<typeof editReviewSchema>
 export type ModerateReviewInput = z.output<typeof moderateReviewSchema>
+
+export const adminReviewQuerySchema = z.object({
+  page: z.coerce.number().int().min(1).max(10000).default(1),
+  status: z.enum(adminReviewStatuses).default('published'),
+  business: z.string().trim().max(120).default(''),
+  reviewer: z.string().trim().max(254).default(''),
+  rating: z.coerce.number().int().min(1).max(5).optional(),
+})
+export type AdminReviewQuery = z.output<typeof adminReviewQuerySchema>

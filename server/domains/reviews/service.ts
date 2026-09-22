@@ -1,5 +1,5 @@
 import { randomUUID } from 'node:crypto'
-import { and, desc, eq, gte, sql } from 'drizzle-orm'
+import { and, desc, eq, gte, ilike, or, sql, type SQL } from 'drizzle-orm'
 import { db } from '~~/lib/db'
 import {
   business,
@@ -9,8 +9,13 @@ import {
   reviewVote,
   user,
 } from '~~/lib/db/schema'
-import type { AdminReview, MyReview, ReviewListResponse } from '~~/shared/reviews'
-import type { EditReviewInput, ModerateReviewInput, SubmitReviewInput } from './validation'
+import type { AdminReviewListResponse, MyReview, ReviewListResponse } from '~~/shared/reviews'
+import type {
+  AdminReviewQuery,
+  EditReviewInput,
+  ModerateReviewInput,
+  SubmitReviewInput,
+} from './validation'
 import { listReviewVotes } from '@server/domains/reviews/votes'
 import { syncReviewPhotos } from '@server/domains/reviews/photo-storage'
 
@@ -343,52 +348,75 @@ export async function saveOwnerReply(
   })
 }
 
-export async function listAdminReviews(
-  page: number,
-  status: 'pending' | 'published' | 'rejected' | 'removed',
-): Promise<{
-  reviews: AdminReview[]
-  page: number
-  totalPages: number
-}> {
-  const [summary] = await db
-    .select({ count: sql<number>`count(*)::int` })
-    .from(businessReview)
-    .where(eq(businessReview.status, status))
-  const totalPages = Math.max(1, Math.ceil((summary?.count ?? 0) / 20))
-  const safePage = Math.min(page, totalPages)
-  const rows = await db
-    .select({
-      id: businessReview.id,
-      businessId: business.id,
-      businessName: business.name,
-      businessSlug: business.slug,
-      authorName: user.name,
-      isAnonymous: businessReview.isAnonymous,
-      rating: businessReview.rating,
-      body: businessReview.body,
-      photoUrls: businessReview.photoUrls,
-      experienceMonth: businessReview.experienceMonth,
-      status: businessReview.status,
-      createdAt: businessReview.createdAt,
-      updatedAt: businessReview.updatedAt,
-    })
-    .from(businessReview)
-    .innerJoin(business, eq(business.id, businessReview.businessId))
-    .innerJoin(user, eq(user.id, businessReview.authorUserId))
-    .where(eq(businessReview.status, status))
-    .orderBy(desc(businessReview.updatedAt), desc(businessReview.id))
-    .limit(20)
-    .offset((safePage - 1) * 20)
-  return {
-    reviews: rows.map((row) => ({
-      ...row,
-      createdAt: row.createdAt.toISOString(),
-      updatedAt: row.updatedAt.toISOString(),
-    })),
-    page: safePage,
-    totalPages,
+export async function listAdminReviews(query: AdminReviewQuery): Promise<AdminReviewListResponse> {
+  const pageSize = 20
+  const conditions: SQL[] = []
+  const pattern = (value: string) => '%' + value.replace(/[\\%_]/g, '\\$&') + '%'
+  if (query.status !== 'all') conditions.push(eq(businessReview.status, query.status))
+  if (query.rating !== undefined) conditions.push(eq(businessReview.rating, query.rating))
+  if (query.business) {
+    conditions.push(
+      or(
+        ilike(business.name, pattern(query.business)),
+        ilike(business.slug, pattern(query.business)),
+      )!,
+    )
   }
+  if (query.reviewer) {
+    conditions.push(
+      or(ilike(user.name, pattern(query.reviewer)), ilike(user.email, pattern(query.reviewer)))!,
+    )
+  }
+  const where = and(...conditions)
+  return db.transaction(
+    async (tx) => {
+      const [summary] = await tx
+        .select({ count: sql<number>`count(*)::int` })
+        .from(businessReview)
+        .innerJoin(business, eq(business.id, businessReview.businessId))
+        .innerJoin(user, eq(user.id, businessReview.authorUserId))
+        .where(where)
+      const total = summary?.count ?? 0
+      const totalPages = Math.max(1, Math.ceil(total / pageSize))
+      const safePage = Math.min(query.page, totalPages)
+      const rows = await tx
+        .select({
+          id: businessReview.id,
+          businessId: business.id,
+          businessName: business.name,
+          businessSlug: business.slug,
+          authorName: user.name,
+          authorEmail: user.email,
+          isAnonymous: businessReview.isAnonymous,
+          rating: businessReview.rating,
+          body: businessReview.body,
+          photoUrls: businessReview.photoUrls,
+          experienceMonth: businessReview.experienceMonth,
+          status: businessReview.status,
+          createdAt: businessReview.createdAt,
+          updatedAt: businessReview.updatedAt,
+        })
+        .from(businessReview)
+        .innerJoin(business, eq(business.id, businessReview.businessId))
+        .innerJoin(user, eq(user.id, businessReview.authorUserId))
+        .where(where)
+        .orderBy(desc(businessReview.updatedAt), desc(businessReview.id))
+        .limit(pageSize)
+        .offset((safePage - 1) * pageSize)
+      return {
+        reviews: rows.map((row) => ({
+          ...row,
+          createdAt: row.createdAt.toISOString(),
+          updatedAt: row.updatedAt.toISOString(),
+        })),
+        page: safePage,
+        pageSize,
+        total,
+        totalPages,
+      }
+    },
+    { isolationLevel: 'repeatable read', accessMode: 'read only' },
+  )
 }
 
 export async function moderateReview(

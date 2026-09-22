@@ -2,9 +2,10 @@
 import type { AdminOverview, AdminOverviewPeriod } from '~~/shared/admin'
 
 useSeoMeta({ title: 'Admin overview — Creda', robots: 'noindex, nofollow' })
-const days = ref<AdminOverviewPeriod>(7)
+const days = ref<AdminOverviewPeriod>('all')
 const { data, status, error, refresh } = await useFetch<AdminOverview>('/api/admin/overview', {
   query: { days },
+  retry: 0,
 })
 const numberFormat = new Intl.NumberFormat('en-NG')
 const dateFormat = new Intl.DateTimeFormat('en-NG', {
@@ -14,7 +15,7 @@ const dateFormat = new Intl.DateTimeFormat('en-NG', {
   minute: '2-digit',
   timeZone: 'Africa/Lagos',
 })
-const periods: AdminOverviewPeriod[] = [7, 30]
+const periods: AdminOverviewPeriod[] = ['all', 7, 30]
 const attentionCount = computed(() =>
   data.value
     ? data.value.attention.ownershipRequests +
@@ -116,7 +117,13 @@ const communityRows = computed(() =>
       <div class="mt-7 flex flex-wrap items-center justify-between gap-4">
         <div>
           <h2 class="text-sm font-semibold text-[#143e32]">Platform totals</h2>
-          <p class="mt-1 text-xs text-[#79877c]">Period counts include today, in Lagos time.</p>
+          <p class="mt-1 text-xs text-[#79877c]">
+            {{
+              days === 'all'
+                ? 'All records currently on Creda.'
+                : 'Totals are all time. New additions include today, in Lagos time.'
+            }}
+          </p>
         </div>
         <div
           class="inline-flex rounded-xl border border-[#e0e7dc] bg-[#f0f4ec] p-1"
@@ -136,7 +143,7 @@ const communityRows = computed(() =>
             "
             @click="days = period"
           >
-            {{ period }} days
+            {{ period === 'all' ? 'All time' : `${period} days` }}
           </button>
         </div>
       </div>

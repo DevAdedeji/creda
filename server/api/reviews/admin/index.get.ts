@@ -1,17 +1,13 @@
-import { createError, getQuery } from 'h3'
-import { z } from 'zod'
+import { createError, getQuery, setHeader } from 'h3'
 import { requireAdmin } from '@server/utils/access'
 import { listAdminReviews } from '@server/domains/reviews/service'
-
-const querySchema = z.object({
-  page: z.coerce.number().int().min(1).max(10000).default(1),
-  status: z.enum(['pending', 'published', 'rejected', 'removed']).default('published'),
-})
+import { adminReviewQuerySchema } from '@server/domains/reviews/validation'
 
 export default defineEventHandler(async (event) => {
+  setHeader(event, 'cache-control', 'private, no-store')
   await requireAdmin(event)
-  const parsed = querySchema.safeParse(getQuery(event))
+  const parsed = adminReviewQuerySchema.safeParse(getQuery(event))
   if (!parsed.success)
     throw createError({ statusCode: 400, statusMessage: 'Invalid review filters.' })
-  return listAdminReviews(parsed.data.page, parsed.data.status)
+  return listAdminReviews(parsed.data)
 })

@@ -12,7 +12,10 @@ import type { AdminOverview, AdminOverviewPeriod } from '~~/shared/admin'
 
 export async function getAdminOverview(days: AdminOverviewPeriod): Promise<AdminOverview> {
   // Include today and the preceding calendar days in Nigeria, using the database clock.
-  const startsAt = sql`(date_trunc('day', now() at time zone 'Africa/Lagos') - (${days}::integer - 1) * interval '1 day') at time zone 'Africa/Lagos'`
+  const startsAt =
+    days === 'all'
+      ? sql`'-infinity'::timestamptz`
+      : sql`((date_trunc('day', now() at time zone 'Africa/Lagos') - (${days}::integer - 1) * interval '1 day') at time zone 'Africa/Lagos')`
   return db.transaction(
     async (tx) => {
       const [users] = await tx
@@ -24,7 +27,12 @@ export async function getAdminOverview(days: AdminOverviewPeriod): Promise<Admin
               Number,
             ),
           generatedAt: sql<string>`to_char(now() at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`,
-          startsAt: sql<string>`to_char((${startsAt}) at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`,
+          startsAt:
+            days === 'all'
+              ? sql<string | null>`null::text`
+              : sql<
+                  string | null
+                >`to_char((${startsAt}) at time zone 'UTC', 'YYYY-MM-DD"T"HH24:MI:SS.MS"Z"')`,
         })
         .from(user)
       const [businesses] = await tx

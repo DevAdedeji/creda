@@ -1,10 +1,11 @@
 <script setup lang="ts">
+import type { AdminOverviewPeriod } from '~~/shared/admin'
 defineProps<{
   label: string
   value: number
   icon: string
   added: number
-  days: number
+  days: AdminOverviewPeriod
   detail: string
 }>()
 const numberFormat = new Intl.NumberFormat('en-NG')
@@ -22,7 +23,9 @@ const numberFormat = new Intl.NumberFormat('en-NG')
       {{ numberFormat.format(value) }}
     </p>
     <p class="mt-3 text-xs font-medium text-[#46694b]">
-      {{ numberFormat.format(added) }} added in {{ days }} days
+      {{
+        days === 'all' ? 'All-time total' : `${numberFormat.format(added)} added in ${days} days`
+      }}
     </p>
     <p class="mt-2 text-xs leading-5 text-[#7b887d]">{{ detail }}</p>
   </article>
