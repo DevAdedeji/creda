@@ -102,9 +102,9 @@ const categoryLabel = (category: PublicBusiness['category']) =>
           >
         </div>
         <NuxtLink
-          to="/businesses/new"
+          to="/explore"
           class="mt-5 flex w-full items-center justify-between rounded-md bg-[#edf1e5] px-3 py-2.5 text-xs font-semibold text-[#143e32] transition hover:bg-[#dce8c6]"
-          >Be one of the first <UIcon name="i-lucide-arrow-up-right" class="text-base"
+          >Explore the directory <UIcon name="i-lucide-arrow-up-right" class="text-base"
         /></NuxtLink>
       </template>
     </div>

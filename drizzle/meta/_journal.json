@@ -134,6 +134,13 @@
       "when": 1790033451528,
       "tag": "0018_business_insights",
       "breakpoints": true
+    },
+    {
+      "idx": 19,
+      "version": "7",
+      "when": 1790040455606,
+      "tag": "0019_homepage_features",
+      "breakpoints": true
     }
   ]
 }

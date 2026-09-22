@@ -545,3 +545,20 @@ export const businessInsightGuard = pgTable(
     check('business_insight_guard_positive', sql`count > 0`),
   ],
 )
+
+export const homepagePlacement = pgTable(
+  'homepage_placement',
+  {
+    position: integer('position').primaryKey(),
+    businessId: text('business_id')
+      .notNull()
+      .references(() => business.id, { onDelete: 'cascade' }),
+  },
+  (table) => [
+    check('homepage_placement_position_valid', sql`${table.position} between 0 and 6`),
+    uniqueIndex('homepage_placement_featured_unique')
+      .on(table.businessId)
+      .where(sql`${table.position} > 0`),
+    index('homepage_placement_business_idx').on(table.businessId),
+  ],
+)

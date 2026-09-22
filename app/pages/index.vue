@@ -52,7 +52,7 @@ useHead({
 })
 
 import BusinessCard from '@/components/businesses/BusinessCard.vue'
-import type { BusinessListResponse } from '~~/shared/businesses'
+import type { HomepageBusinesses } from '~~/shared/homepage'
 
 const categories = [
   { label: 'All businesses', value: '', icon: 'i-lucide-grid-2x2' },
@@ -70,9 +70,9 @@ const {
   status: directoryStatus,
   error: directoryError,
   refresh: refreshDirectory,
-} = await useFetch<BusinessListResponse>('/api/businesses')
-const featuredBusiness = computed(() => directory.value?.items[0] ?? null)
-const visibleBusinesses = computed(() => directory.value?.items.slice(0, 6) ?? [])
+} = await useFetch<HomepageBusinesses>('/api/homepage', { key: 'homepage-businesses', retry: 0 })
+const featuredBusiness = computed(() => directory.value?.hero ?? null)
+const visibleBusinesses = computed(() => directory.value?.featured ?? [])
 
 function searchBusinesses() {
   navigateTo({
@@ -283,18 +283,17 @@ function searchBusinesses() {
                 ><UIcon name="i-lucide-store"
               /></span>
               <h3 class="mt-6 text-3xl font-semibold tracking-[-.05em] text-[#143e32] sm:text-4xl">
-                The first good find<br />could be yours.
+                Your next good find<br />is out there.
               </h3>
               <p class="mt-3 max-w-lg text-sm leading-7 text-[#637463]">
-                There aren’t any businesses to explore yet. If you own one, create a profile and
-                help start the directory.
+                Explore the directory to discover businesses, or add a business of your own.
               </p>
             </div>
             <UButton
-              to="/businesses/new"
+              to="/explore"
               class="!rounded-xl !bg-[#143e32] !px-5 !py-3 !font-semibold !text-white"
               trailing-icon="i-lucide-arrow-up-right"
-              >List your business</UButton
+              >Explore businesses</UButton
             >
           </div>
         </div>
