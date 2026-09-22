@@ -72,12 +72,8 @@ const {
   applySort,
   pageLink,
   removeExtraCriterion,
-} = useBusinessDiscovery(computed(() => session.value?.user))
+} = useBusinessDiscovery()
 await request
-const searchLoginLink = computed(() => ({
-  path: '/login',
-  query: { returnTo: `/explore?${new URLSearchParams({ q: search.value, mode: 'ai' })}` },
-}))
 const visibleIds = computed(() =>
   session.value?.user.emailVerified
     ? (data.value?.items.map((item) => item.id).join(',') ?? '')
@@ -189,19 +185,12 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
 
         <section aria-live="polite">
           <h2 class="sr-only">Business listings</h2>
-          <div class="flex md:flex-row flex-col sm:items-center justify-between">
-            <div class="flex mb-2 items-center justify-between gap-3">
-              <UButton
-                color="neutral"
-                variant="outline"
-                icon="i-lucide-sliders-horizontal"
-                aria-label="Filter businesses"
-                title="Filter businesses"
-                class="!rounded-xl !border-[#d5dfd2] !bg-white !text-[#143e32] lg:!hidden"
-                @click="filtersOpen = true"
-              />
-              <div>
-                <label for="directory-sort" class="text-sm font-semibold text-[#345341]"
+          <div
+            class="flex flex-col gap-6 pb-6 lg:flex-row lg:items-center lg:justify-between lg:gap-4"
+          >
+            <div class="flex w-full items-center justify-between gap-3 lg:w-auto">
+              <div class="flex min-w-0 items-center gap-2 sm:gap-3">
+                <label for="directory-sort" class="shrink-0 text-sm font-semibold text-[#345341]"
                   >Sort by</label
                 >
                 <USelect
@@ -209,15 +198,24 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
                   v-model="sort"
                   :disabled="searchPending || Boolean(searchNotice)"
                   :items="[...sortOptions]"
-                  class="min-w-40"
+                  class="min-w-0 w-36 sm:w-40"
                   :ui="{ base: '!rounded-lg !border-[#d9e2d8] !ring-0 focus:!ring-0' }"
                   @update:model-value="applySort"
                 />
               </div>
+              <UButton
+                color="neutral"
+                variant="outline"
+                icon="i-lucide-sliders-horizontal"
+                aria-label="Filter businesses"
+                title="Filter businesses"
+                class="ml-auto shrink-0 !rounded-xl !border-[#d5dfd2] !bg-white !text-[#143e32] lg:!hidden"
+                @click="filtersOpen = true"
+              />
             </div>
             <NuxtLink
               to="/businesses/new"
-              class="mb-4 inline-flex items-center gap-2 text-sm font-semibold text-[#315c3c] hover:underline"
+              class="inline-flex items-center gap-2 self-start text-sm font-semibold text-[#315c3c] hover:underline lg:self-auto"
               >List your business <UIcon name="i-lucide-arrow-up-right"
             /></NuxtLink>
           </div>
@@ -233,12 +231,6 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
               </UButton>
               <UButton color="neutral" variant="link" size="sm" @click="applyFilters"
                 >Try again</UButton
-              >
-              <NuxtLink
-                v-if="!session?.user"
-                :to="searchLoginLink"
-                class="ml-1 font-semibold underline"
-                >Log in</NuxtLink
               >
             </div>
           </div>

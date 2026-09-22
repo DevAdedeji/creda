@@ -1,4 +1,3 @@
-import type { Ref } from 'vue'
 import {
   businessCategories,
   businessDays,
@@ -14,9 +13,7 @@ import {
 } from '~~/shared/discovery'
 import { interpretBusinessSearch, searchFailureNotice } from '@/services/discovery'
 
-type DiscoveryUser = { id: string; emailVerified: boolean }
-
-export function useBusinessDiscovery(currentUser: Readonly<Ref<DiscoveryUser | undefined | null>>) {
+export function useBusinessDiscovery() {
   const route = useRoute()
   const interpreting = ref(false)
   const searchNotice = ref('')
@@ -27,13 +24,6 @@ export function useBusinessDiscovery(currentUser: Readonly<Ref<DiscoveryUser | u
     interpreting.value = false
   }
   onBeforeUnmount(cancelInterpretation)
-  watch(
-    () => [currentUser.value?.id, currentUser.value?.emailVerified],
-    () => {
-      cancelInterpretation()
-      searchNotice.value = ''
-    },
-  )
   const routeInterpretation = computed<DiscoveryInterpretation | null>(() => {
     if (route.query.mode !== 'ai') return null
     if (typeof route.query.intent !== 'string' || route.query.intent.length > 4096) return null
@@ -164,57 +154,49 @@ export function useBusinessDiscovery(currentUser: Readonly<Ref<DiscoveryUser | u
       (queryText !== (typeof route.query.q === 'string' ? route.query.q : '') || !interpreted)
     ) {
       interpreted = null
-      if (queryText.length >= 3 && currentUser.value?.emailVerified) {
-        const request = new AbortController()
-        searchController = request
-        interpreting.value = true
-        try {
-          const response = await interpretBusinessSearch(queryText, request.signal)
-          if (searchController !== request) return
-          interpreted = {
-            criteria: response.criteria,
-            searchable: response.searchable,
-            clarification: response.clarification,
-            unsupported: response.unsupported,
-          }
-          // Explicit filter edits take precedence. Otherwise allow a new search to change inferred filters.
-          const previous = routeInterpretation.value?.criteria
-          if (
-            (!previous && selected.categories.length) ||
-            (previous &&
-              JSON.stringify(selected.categories) !== JSON.stringify(previous.categories))
-          )
-            interpreted.criteria.categories = selected.categories
-          if ((!previous && selected.city) || (previous && selected.city !== previous.city))
-            interpreted.criteria.city = selected.city
-          if ((!previous && selected.state) || (previous && selected.state !== previous.state))
-            interpreted.criteria.state = selected.state
-          if (
-            (!previous && selected.operationModes.length) ||
-            (previous &&
-              JSON.stringify(selected.operationModes) !== JSON.stringify(previous.operationModes))
-          )
-            interpreted.criteria.operationModes = selected.operationModes
-          if (
-            (!previous && selected.sort !== 'relevance') ||
-            (previous && selected.sort !== previous.sort)
-          )
-            interpreted.criteria.sort = selected.sort
-        } catch (error) {
-          if (searchController !== request) return
-          searchNotice.value = searchFailureNotice(error)
-          return
-        } finally {
-          if (searchController === request) {
-            interpreting.value = false
-            searchController = undefined
-          }
+      const request = new AbortController()
+      searchController = request
+      interpreting.value = true
+      try {
+        const response = await interpretBusinessSearch(queryText, request.signal)
+        if (searchController !== request) return
+        interpreted = {
+          criteria: response.criteria,
+          searchable: response.searchable,
+          clarification: response.clarification,
+          unsupported: response.unsupported,
         }
-      } else if (queryText.length >= 3 && !currentUser.value?.emailVerified) {
-        searchNotice.value = currentUser.value
-          ? 'Verify your email to use AI search. Normal search is available now.'
-          : 'Log in with a verified account to use AI search. Normal search is available now.'
+        // Explicit filter edits take precedence. Otherwise allow a new search to change inferred filters.
+        const previous = routeInterpretation.value?.criteria
+        if (
+          (!previous && selected.categories.length) ||
+          (previous && JSON.stringify(selected.categories) !== JSON.stringify(previous.categories))
+        )
+          interpreted.criteria.categories = selected.categories
+        if ((!previous && selected.city) || (previous && selected.city !== previous.city))
+          interpreted.criteria.city = selected.city
+        if ((!previous && selected.state) || (previous && selected.state !== previous.state))
+          interpreted.criteria.state = selected.state
+        if (
+          (!previous && selected.operationModes.length) ||
+          (previous &&
+            JSON.stringify(selected.operationModes) !== JSON.stringify(previous.operationModes))
+        )
+          interpreted.criteria.operationModes = selected.operationModes
+        if (
+          (!previous && selected.sort !== 'relevance') ||
+          (previous && selected.sort !== previous.sort)
+        )
+          interpreted.criteria.sort = selected.sort
+      } catch (error) {
+        if (searchController !== request) return
+        searchNotice.value = searchFailureNotice(error)
         return
+      } finally {
+        if (searchController === request) {
+          interpreting.value = false
+          searchController = undefined
+        }
       }
     } else if (interpreted) {
       interpreted.criteria = { ...interpreted.criteria, ...selected }
@@ -237,7 +219,7 @@ export function useBusinessDiscovery(currentUser: Readonly<Ref<DiscoveryUser | u
 
   onMounted(() => {
     watch(
-      () => [route.fullPath, currentUser.value?.id, currentUser.value?.emailVerified],
+      () => route.fullPath,
       () => {
         if (route.query.mode === 'ai' && !routeInterpretation.value) void applyFilters()
       },

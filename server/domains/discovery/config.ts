@@ -9,6 +9,7 @@ const dailyLimit = (fallback: number) =>
   )
 const configurationSchema = z.object({
   apiKey: z.string().trim().min(1),
+  rateLimitSecret: z.string().min(32),
   model: z
     .string()
     .trim()
@@ -30,6 +31,7 @@ export function getDiscoveryConfiguration(): DiscoveryConfiguration {
   if (!process.env.GEMINI_API_KEY?.trim()) throw new DiscoveryError('configuration_missing')
   const parsed = configurationSchema.safeParse({
     apiKey: process.env.GEMINI_API_KEY,
+    rateLimitSecret: process.env.BETTER_AUTH_SECRET,
     model: process.env.GEMINI_MODEL?.trim() || 'gemini-3.1-flash-lite',
     userDailyLimit: process.env.ASK_CREDA_DAILY_USER_LIMIT,
     globalDailyLimit: process.env.ASK_CREDA_DAILY_LIMIT,

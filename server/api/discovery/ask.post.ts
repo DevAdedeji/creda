@@ -6,7 +6,9 @@ import { getDiscoveryConfiguration } from '@server/domains/discovery/config'
 import { DiscoveryError } from '@server/domains/discovery/errors'
 import { logDiscovery } from '@server/domains/discovery/telemetry'
 import { reserveDiscoveryUsage } from '@server/domains/discovery/usage'
-import { assertSameOrigin, requireVerifiedUser } from '@server/utils/access'
+import { assertSameOrigin } from '@server/utils/access'
+import { auth } from '~~/lib/auth'
+import { discoveryGuestKey } from '@server/domains/discovery/identity'
 import { readValidatedJson } from '@server/utils/validated-json'
 
 export default defineEventHandler(async (event): Promise<AskDiscoveryResponse> => {
@@ -14,14 +16,15 @@ export default defineEventHandler(async (event): Promise<AskDiscoveryResponse> =
   const requestId = randomUUID()
   setHeader(event, 'X-Request-Id', requestId)
   assertSameOrigin(event)
-  const user = await requireVerifiedUser(event)
   const input = await readValidatedJson(event, askDiscoverySchema)
   const startedAt = performance.now()
   let stage: 'configuration' | 'usage' | 'provider' = 'configuration'
   try {
     const config = getDiscoveryConfiguration()
     stage = 'usage'
-    const remaining = await reserveDiscoveryUsage(user.id, config)
+    const session = await auth.api.getSession({ headers: event.headers })
+    const visitorKey = session?.user.id ?? discoveryGuestKey(event, config.rateLimitSecret)
+    const remaining = await reserveDiscoveryUsage(visitorKey, config)
     setHeader(event, 'X-Ask-Creda-Remaining', String(remaining))
     stage = 'provider'
     const interpretation = await interpretDiscovery(input, config)

@@ -5,7 +5,7 @@ import { discoveryProviderLimits, type DiscoveryConfiguration } from './config'
 import { DiscoveryError, type DiscoveryFailureCode } from './errors'
 
 export async function reserveDiscoveryUsage(
-  userId: string,
+  visitorKey: string,
   config: DiscoveryConfiguration,
 ): Promise<number> {
   const { userDailyLimit: userLimit, globalDailyLimit: globalLimit } = config
@@ -22,13 +22,13 @@ export async function reserveDiscoveryUsage(
         code: 'global_daily_limit',
       },
       {
-        key: sql`${'user:' + userId + ':'} || ${day}`,
+        key: sql`${'user:' + visitorKey + ':'} || ${day}`,
         limit: userLimit,
         expiry: sql`now() + interval '2 days'`,
         code: 'user_daily_limit',
       },
       {
-        key: sql`${'minute:' + userId + ':'} || ${minute}`,
+        key: sql`${'minute:' + visitorKey + ':'} || ${minute}`,
         limit: discoveryProviderLimits.requestsPerMinute,
         expiry: sql`now() + interval '2 minutes'`,
         code: 'user_minute_limit',
