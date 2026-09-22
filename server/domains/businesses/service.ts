@@ -2,6 +2,11 @@ import { randomBytes, randomUUID } from 'node:crypto'
 import { and, asc, desc, eq, ilike, inArray, isNull, ne, or, sql, type SQL } from 'drizzle-orm'
 import { db } from '~~/lib/db'
 import {
+  queueBusinessCreated,
+  queueBusinessDecision,
+  queueOwnershipDecisions,
+} from '@server/domains/notifications/business'
+import {
   business,
   businessSlug,
   businessImageUpload,
@@ -210,6 +215,7 @@ export async function createBusiness(
         })
         .returning()
       await tx.insert(businessSlug).values({ slug: row!.slug, businessId: row!.id })
+      await queueBusinessCreated(tx, row!)
       return { row: row!, isFirstBusiness: !existingBusiness }
     })
     return { ...toManaged(created.row), isFirstBusiness: created.isFirstBusiness }
@@ -287,10 +293,12 @@ export async function updateBusiness(
         .returning()
       if (identityChanged) {
         const approvedRequests = await tx
-          .select({ id: ownershipRequest.id })
+          .select({ id: ownershipRequest.id, requesterUserId: ownershipRequest.requesterUserId })
           .from(ownershipRequest)
           .where(and(eq(ownershipRequest.businessId, id), eq(ownershipRequest.status, 'approved')))
+        const notifications = []
         for (const request of approvedRequests) {
+          const decisionId = randomUUID()
           await tx
             .update(ownershipRequest)
             .set({
@@ -302,7 +310,7 @@ export async function updateBusiness(
             })
             .where(eq(ownershipRequest.id, request.id))
           await tx.insert(ownershipDecision).values({
-            id: randomUUID(),
+            id: decisionId,
             requestId: request.id,
             businessId: id,
             actorUserId: ownerUserId,
@@ -310,16 +318,30 @@ export async function updateBusiness(
             toStatus: 'revoked',
             reason: 'Listing identity or official contact details changed.',
           })
+          notifications.push({
+            eventId: decisionId,
+            requesterUserId: request.requesterUserId,
+            status: 'revoked' as const,
+            reason:
+              'Listing identity or official contact details changed. You can request verification again from your account.',
+          })
         }
+        await queueOwnershipDecisions(tx, updated!, notifications)
       }
       if (locked.status === 'rejected') {
+        const decisionId = randomUUID()
         await tx.insert(businessModeration).values({
-          id: randomUUID(),
+          id: decisionId,
           businessId: id,
           actorUserId: ownerUserId,
           fromStatus: 'rejected',
           toStatus: 'approved',
           reason: 'Owner updated the listing.',
+        })
+        await queueBusinessDecision(tx, updated!, {
+          eventId: decisionId,
+          status: 'restored',
+          reason: 'Your updated listing has been published.',
         })
       }
       const selected = new Set(imageUrls(input))
@@ -435,12 +457,18 @@ export async function reviewBusiness(
         existing ? 'This listing has already been reviewed.' : 'Business not found.',
       )
     }
+    const decisionId = randomUUID()
     await tx.insert(businessModeration).values({
-      id: randomUUID(),
+      id: decisionId,
       businessId: id,
       actorUserId,
       fromStatus: 'pending',
       toStatus: updated.status,
+      reason: input.decision === 'reject' ? input.reason : null,
+    })
+    await queueBusinessDecision(tx, updated, {
+      eventId: decisionId,
+      status: input.decision === 'approve' ? 'approved' : 'rejected',
       reason: input.decision === 'reject' ? input.reason : null,
     })
     return toManaged(updated)

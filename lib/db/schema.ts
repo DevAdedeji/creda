@@ -1,3 +1,4 @@
+import type { EmailDelivery } from '../email/message'
 import type { InsightMetric } from '~~/shared/insights'
 import { relations, sql } from 'drizzle-orm'
 import {
@@ -560,5 +561,48 @@ export const homepagePlacement = pgTable(
       .on(table.businessId)
       .where(sql`${table.position} > 0`),
     index('homepage_placement_business_idx').on(table.businessId),
+  ],
+)
+
+export const emailOutbox = pgTable(
+  'email_outbox',
+  {
+    id: text('id').primaryKey(),
+    dedupeKey: text('dedupe_key').notNull(),
+    payload: jsonb('payload').$type<EmailDelivery>().notNull(),
+    status: text('status').notNull().default('pending'),
+    attempts: integer('attempts').notNull().default(0),
+    availableAt: timestamp('available_at', { withTimezone: true }).notNull().defaultNow(),
+    firstAttemptAt: timestamp('first_attempt_at', { withTimezone: true }),
+    lockedAt: timestamp('locked_at', { withTimezone: true }),
+    lockToken: text('lock_token'),
+    providerId: text('provider_id'),
+    lastError: text('last_error'),
+    completedAt: timestamp('completed_at', { withTimezone: true }),
+    createdAt: timestamp('created_at', { withTimezone: true }).notNull().defaultNow(),
+    updatedAt: timestamp('updated_at', { withTimezone: true }).notNull().defaultNow(),
+  },
+  (table) => [
+    uniqueIndex('email_outbox_dedupe_unique').on(table.dedupeKey),
+    index('email_outbox_available_idx')
+      .on(table.availableAt)
+      .where(sql`${table.status} = 'pending'`),
+    index('email_outbox_locked_idx')
+      .on(table.lockedAt)
+      .where(sql`${table.status} = 'sending'`),
+    index('email_outbox_completed_idx').on(table.completedAt),
+    check(
+      'email_outbox_status_valid',
+      sql`${table.status} in ('pending', 'sending', 'sent', 'failed')`,
+    ),
+    check('email_outbox_attempts_valid', sql`${table.attempts} between 0 and 8`),
+    check(
+      'email_outbox_lock_valid',
+      sql`(${table.status} = 'sending' and ${table.lockedAt} is not null and ${table.lockToken} is not null) or (${table.status} <> 'sending' and ${table.lockedAt} is null and ${table.lockToken} is null)`,
+    ),
+    check(
+      'email_outbox_completion_valid',
+      sql`(${table.status} in ('sent', 'failed')) = (${table.completedAt} is not null)`,
+    ),
   ],
 )

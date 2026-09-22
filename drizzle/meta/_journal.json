@@ -141,6 +141,13 @@
       "when": 1790040455606,
       "tag": "0019_homepage_features",
       "breakpoints": true
+    },
+    {
+      "idx": 20,
+      "version": "7",
+      "when": 1790077475721,
+      "tag": "0020_business_email_notifications",
+      "breakpoints": true
     }
   ]
 }

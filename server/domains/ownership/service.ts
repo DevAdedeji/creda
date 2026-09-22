@@ -1,6 +1,10 @@
 import { randomUUID } from 'node:crypto'
 import { and, asc, desc, eq, inArray, ne, sql } from 'drizzle-orm'
 import { db } from '~~/lib/db'
+import {
+  queueOwnershipDecisions,
+  type OwnershipNotice,
+} from '@server/domains/notifications/business'
 import { business, ownershipDecision, ownershipRequest, user } from '~~/lib/db/schema'
 import type {
   AdminVerificationItem,
@@ -248,6 +252,8 @@ export async function decideOwnershipVerification(
     const [owned] = await tx
       .select({
         id: business.id,
+        name: business.name,
+        slug: business.slug,
         listingSource: business.listingSource,
         ownerUserId: business.ownerUserId,
         ownershipStatus: business.ownershipStatus,
@@ -291,6 +297,7 @@ export async function decideOwnershipVerification(
     }
 
     const reason = input.reason || null
+    const notifications: OwnershipNotice[] = []
     await tx
       .update(ownershipRequest)
       .set({
@@ -303,7 +310,7 @@ export async function decideOwnershipVerification(
       .where(eq(ownershipRequest.id, requestId))
     if (nextStatus === 'approved' && curatedClaim) {
       const competingClaims = await tx
-        .select({ id: ownershipRequest.id })
+        .select({ id: ownershipRequest.id, requesterUserId: ownershipRequest.requesterUserId })
         .from(ownershipRequest)
         .where(
           and(
@@ -326,17 +333,24 @@ export async function decideOwnershipVerification(
             updatedAt: sql`now()`,
           })
           .where(inArray(ownershipRequest.id, competingIds))
-        await tx.insert(ownershipDecision).values(
-          competingIds.map((competingRequestId) => ({
-            id: randomUUID(),
-            requestId: competingRequestId,
-            businessId: request.businessId,
-            actorUserId,
-            fromStatus: 'pending' as const,
-            toStatus: 'declined' as const,
+        const decisions = competingClaims.map((claim) => ({
+          id: randomUUID(),
+          requestId: claim.id,
+          businessId: request.businessId,
+          actorUserId,
+          fromStatus: 'pending' as const,
+          toStatus: 'declined' as const,
+          reason: competingReason,
+        }))
+        await tx.insert(ownershipDecision).values(decisions)
+        for (const [index, claim] of competingClaims.entries()) {
+          notifications.push({
+            eventId: decisions[index]!.id,
+            requesterUserId: claim.requesterUserId,
+            status: 'declined',
             reason: competingReason,
-          })),
-        )
+          })
+        }
       }
       await tx
         .update(business)
@@ -361,8 +375,9 @@ export async function decideOwnershipVerification(
         })
         .where(eq(business.id, request.businessId))
     }
+    const decisionId = randomUUID()
     await tx.insert(ownershipDecision).values({
-      id: randomUUID(),
+      id: decisionId,
       requestId,
       businessId: request.businessId,
       actorUserId,
@@ -370,6 +385,13 @@ export async function decideOwnershipVerification(
       toStatus: nextStatus,
       reason,
     })
+    notifications.push({
+      eventId: decisionId,
+      requesterUserId: request.requesterUserId,
+      status: nextStatus,
+      reason,
+    })
+    await queueOwnershipDecisions(tx, owned, notifications)
     return { id: request.id, status: nextStatus }
   })
 }

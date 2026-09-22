@@ -6,7 +6,11 @@ export default defineNuxtConfig({
   compatibilityDate: '2026-09-17',
   nitro: {
     experimental: { tasks: true },
-    scheduledTasks: { '*/15 * * * *': ['business-images-cleanup', 'business-insights-cleanup'] },
+    scheduledTasks: {
+      '*/15 * * * *': ['business-images-cleanup', 'business-insights-cleanup'],
+      '* * * * *': ['email-notifications'],
+      '0 * * * *': ['email-notifications-cleanup'],
+    },
   },
   devtools: { enabled: true },
   modules: ['@nuxt/ui', '@nuxt/image'],

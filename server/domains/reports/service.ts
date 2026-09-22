@@ -1,6 +1,7 @@
 import { randomUUID } from 'node:crypto'
 import { and, desc, eq, gte, sql } from 'drizzle-orm'
 import { db } from '~~/lib/db'
+import { queueBusinessDecision } from '@server/domains/notifications/business'
 import {
   business,
   businessModeration,
@@ -184,12 +185,18 @@ export async function decideReport(id: string, actorUserId: string, input: Repor
             updatedAt: sql`now()`,
           })
           .where(eq(business.id, listing.id))
+        const decisionId = randomUUID()
         await tx.insert(businessModeration).values({
-          id: randomUUID(),
+          id: decisionId,
           businessId: listing.id,
           actorUserId,
           fromStatus: listing.status,
           toStatus: next,
+          reason: input.reason,
+        })
+        await queueBusinessDecision(tx, listing, {
+          eventId: decisionId,
+          status: input.action === 'remove' ? 'suspended' : 'restored',
           reason: input.reason,
         })
       }

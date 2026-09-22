@@ -1,12 +1,9 @@
 import { createError, getHeader, type H3Event } from 'h3'
 import { auth } from '~~/lib/auth'
+import { getAdminEmails } from '@server/config/admin'
 
 export function isAdminEmail(email: string): boolean {
-  const allowed = (process.env.CREDA_ADMIN_EMAILS ?? '')
-    .split(',')
-    .map((value) => value.trim().toLowerCase())
-    .filter(Boolean)
-  return allowed.includes(email.toLowerCase())
+  return getAdminEmails().includes(email.toLowerCase())
 }
 
 export async function requireVerifiedUser(event: H3Event) {
