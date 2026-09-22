@@ -207,9 +207,14 @@ watch(
             </div>
           </div>
           <div
-            v-if="item.status !== 'suspended'"
             class="flex flex-wrap justify-end gap-x-5 gap-y-2 border-t border-[#edf0e9] px-6 py-4"
           >
+            <NuxtLink
+              :to="'/dashboard/businesses/' + item.id + '/insights'"
+              class="mr-auto inline-flex items-center gap-1.5 text-xs font-semibold text-[#315b3a] hover:underline"
+            >
+              <UIcon name="i-lucide-chart-no-axes-combined" class="text-base" /> Insights
+            </NuxtLink>
             <NuxtLink
               v-if="item.status === 'approved'"
               :to="'/businesses/' + item.slug"
@@ -218,6 +223,7 @@ watch(
               View profile <UIcon name="i-lucide-arrow-up-right" class="text-base" />
             </NuxtLink>
             <NuxtLink
+              v-if="item.status !== 'suspended'"
               :to="'/dashboard/businesses/' + item.id + '/edit'"
               class="inline-flex items-center gap-1.5 text-xs font-semibold text-[#315b3a] hover:underline"
             >

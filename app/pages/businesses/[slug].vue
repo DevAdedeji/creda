@@ -7,6 +7,8 @@ import {
 } from '~~/shared/businesses'
 import { authClient } from '~~/lib/auth-client'
 import { serializeJsonLd } from '@/utils/jsonLd'
+import { useBusinessInsightsTracking } from '@/composables/insights/useBusinessInsightsTracking'
+import type { InsightDestinationKey } from '~~/shared/insights'
 
 const route = useRoute()
 const googleMapsApiKey = useRuntimeConfig().public.googleMapsApiKey
@@ -159,6 +161,11 @@ useHead(() => {
   }
 })
 
+const { recordClick } = useBusinessInsightsTracking(
+  computed(() => business.value?.id),
+  'profile',
+)
+
 const categoryLabel = computed(
   () => businessCategories.find((item) => item.value === business.value?.category)?.label,
 )
@@ -186,12 +193,42 @@ const destinations = computed(() => {
   const item = business.value
   if (!item) return []
   return [
-    { label: 'Visit website', url: item.websiteUrl, icon: 'i-lucide-globe' },
-    { label: 'Apple App Store', url: item.appStoreUrl, icon: 'i-lucide-smartphone' },
-    { label: 'Google Play Store', url: item.playStoreUrl, icon: 'i-lucide-smartphone' },
-    { label: 'View social profile', url: item.socialUrl, icon: 'i-lucide-at-sign' },
-    { label: 'Contact business', url: item.contactUrl, icon: 'i-lucide-message-circle' },
-  ].filter((link): link is { label: string; url: string; icon: string } => Boolean(link.url))
+    {
+      label: 'Visit website',
+      url: item.websiteUrl,
+      destination: 'websiteUrl' as const,
+      icon: 'i-lucide-globe',
+    },
+    {
+      label: 'Apple App Store',
+      url: item.appStoreUrl,
+      destination: 'appStoreUrl' as const,
+      icon: 'i-lucide-smartphone',
+    },
+    {
+      label: 'Google Play Store',
+      url: item.playStoreUrl,
+      destination: 'playStoreUrl' as const,
+      icon: 'i-lucide-smartphone',
+    },
+    {
+      label: 'View social profile',
+      url: item.socialUrl,
+      destination: 'socialUrl' as const,
+      icon: 'i-lucide-at-sign',
+    },
+    {
+      label: item.contactUrl?.startsWith('tel:') ? 'Call business' : 'Contact business',
+      url: item.contactUrl,
+      destination: 'contactUrl' as const,
+      icon: 'i-lucide-message-circle',
+    },
+  ].filter(
+    (
+      link,
+    ): link is { label: string; url: string; icon: string; destination: InsightDestinationKey } =>
+      Boolean(link.url),
+  )
 })
 </script>
 
@@ -416,7 +453,9 @@ const destinations = computed(() => {
                 v-for="link in destinations"
                 :key="link.label"
                 :href="link.url"
-                target="_blank"
+                @click="recordClick(link.destination)"
+                @auxclick.middle="recordClick(link.destination)"
+                :target="link.url.startsWith('tel:') ? undefined : '_blank'"
                 rel="noopener noreferrer"
                 class="flex items-center justify-between gap-3 rounded-xl border border-[#dfe6dc] px-4 py-3 text-sm font-semibold text-[#234532] transition hover:border-[#a6bea3] hover:bg-[#f5f9f1]"
                 ><span class="flex items-center gap-2"

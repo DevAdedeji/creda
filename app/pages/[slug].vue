@@ -1,6 +1,8 @@
 <script setup lang="ts">
 import { businessCategories, businessDays, type PublicBusiness } from '~~/shared/businesses'
 import { serializeJsonLd } from '@/utils/jsonLd'
+import { useBusinessInsightsTracking } from '@/composables/insights/useBusinessInsightsTracking'
+import type { InsightDestinationKey } from '~~/shared/insights'
 
 const route = useRoute()
 const slug = String(route.params.slug)
@@ -21,6 +23,11 @@ if (import.meta.server && (error.value || !business.value)) {
   setResponseStatus(error.value && error.value.statusCode !== 404 ? 500 : 404)
 }
 
+const { recordClick } = useBusinessInsightsTracking(
+  computed(() => business.value?.id),
+  'bio',
+)
+
 const categoryLabel = computed(
   () => businessCategories.find((item) => item.value === business.value?.category)?.label,
 )
@@ -40,12 +47,42 @@ const links = computed(() => {
   const item = business.value
   if (!item) return []
   return [
-    { label: 'Visit website', url: item.websiteUrl, icon: 'i-lucide-globe-2' },
-    { label: 'Apple App Store', url: item.appStoreUrl, icon: 'i-lucide-smartphone' },
-    { label: 'Google Play Store', url: item.playStoreUrl, icon: 'i-lucide-smartphone' },
-    { label: 'Social profile', url: item.socialUrl, icon: 'i-lucide-at-sign' },
-    { label: 'Contact us', url: item.contactUrl, icon: 'i-lucide-message-circle' },
-  ].filter((link): link is { label: string; url: string; icon: string } => Boolean(link.url))
+    {
+      label: 'Visit website',
+      url: item.websiteUrl,
+      destination: 'websiteUrl' as const,
+      icon: 'i-lucide-globe-2',
+    },
+    {
+      label: 'Apple App Store',
+      url: item.appStoreUrl,
+      destination: 'appStoreUrl' as const,
+      icon: 'i-lucide-smartphone',
+    },
+    {
+      label: 'Google Play Store',
+      url: item.playStoreUrl,
+      destination: 'playStoreUrl' as const,
+      icon: 'i-lucide-smartphone',
+    },
+    {
+      label: 'Social profile',
+      url: item.socialUrl,
+      destination: 'socialUrl' as const,
+      icon: 'i-lucide-at-sign',
+    },
+    {
+      label: item.contactUrl?.startsWith('tel:') ? 'Call business' : 'Contact us',
+      url: item.contactUrl,
+      destination: 'contactUrl' as const,
+      icon: 'i-lucide-message-circle',
+    },
+  ].filter(
+    (
+      link,
+    ): link is { label: string; url: string; icon: string; destination: InsightDestinationKey } =>
+      Boolean(link.url),
+  )
 })
 const primaryLink = computed(() => links.value[0])
 const mapUrl = computed(() => {
@@ -152,7 +189,9 @@ useHead(() =>
             <a
               v-if="primaryLink"
               :href="primaryLink.url"
-              target="_blank"
+              @click="recordClick(primaryLink.destination)"
+              @auxclick.middle="recordClick(primaryLink.destination)"
+              :target="primaryLink.url.startsWith('tel:') ? undefined : '_blank'"
               rel="noopener noreferrer"
               class="rounded-full bg-white px-4 py-2 text-xs font-semibold text-[#173b32] transition hover:bg-[#e7f5d9] sm:text-sm"
             >
@@ -201,7 +240,9 @@ useHead(() =>
             <a
               v-if="primaryLink"
               :href="primaryLink.url"
-              target="_blank"
+              @click="recordClick(primaryLink.destination)"
+              @auxclick.middle="recordClick(primaryLink.destination)"
+              :target="primaryLink.url.startsWith('tel:') ? undefined : '_blank'"
               rel="noopener noreferrer"
               class="inline-flex min-h-12 items-center gap-2 rounded-xl bg-[#173b32] px-6 text-sm font-semibold text-white transition hover:bg-[#285743]"
               >{{ primaryLink.label }} <UIcon name="i-lucide-arrow-up-right"
@@ -276,7 +317,9 @@ useHead(() =>
                   v-for="link in links"
                   :key="link.label"
                   :href="link.url"
-                  target="_blank"
+                  @click="recordClick(link.destination)"
+                  @auxclick.middle="recordClick(link.destination)"
+                  :target="link.url.startsWith('tel:') ? undefined : '_blank'"
                   rel="noopener noreferrer"
                   class="flex items-center justify-between gap-3 rounded-xl border border-[#dfe8dc] px-4 py-3 text-sm font-semibold text-[#315840] transition hover:bg-[#f3f8ef]"
                   ><span class="inline-flex items-center gap-2"

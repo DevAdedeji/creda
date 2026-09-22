@@ -155,7 +155,23 @@ export type BusinessLinks = Pick<
   'websiteUrl' | 'appStoreUrl' | 'playStoreUrl' | 'socialUrl' | 'contactUrl'
 >
 
+export const businessContactLinkMessage =
+  'Use a website or WhatsApp URL, or a phone link such as tel:+2348012345678.'
+
+export function isBusinessContactLink(value: string): boolean {
+  if (!value) return true
+  if (/\s|[\u0000-\u001f\u007f]/u.test(value)) return false
+  if (/^tel:\+[1-9]\d{6,14}$/.test(value)) return true
+  try {
+    const url = new URL(value)
+    return ['http:', 'https:'].includes(url.protocol) && !url.username && !url.password
+  } catch {
+    return false
+  }
+}
+
 export function businessLinkError(input: BusinessLinks): string | null {
+  if (!isBusinessContactLink(input.contactUrl.trim())) return businessContactLinkMessage
   if (
     !input.websiteUrl &&
     !input.appStoreUrl &&

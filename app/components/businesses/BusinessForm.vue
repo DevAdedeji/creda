@@ -728,7 +728,11 @@ async function selectImages(event: Event, kind: 'logo' | 'cover' | 'gallery') {
               :ui="fieldUi"
             />
           </UFormField>
-          <UFormField label="Contact link" name="contactUrl">
+          <UFormField
+            label="Contact link"
+            name="contactUrl"
+            description="A website, WhatsApp link or phone link: tel:+2348012345678."
+          >
             <UInput
               v-model="draft.contactUrl"
               name="contactUrl"
