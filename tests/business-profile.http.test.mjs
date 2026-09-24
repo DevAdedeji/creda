@@ -66,6 +66,7 @@ test(
       const ownerCookie = await makeUser(owner, true)
       const strangerCookie = await makeUser(stranger, true)
       await sql`insert into business (id, slug, owner_user_id, name, normalized_name, description, category, business_types, operation_mode, normalized_location, website_url, status) values (${id}, ${slug}, ${owner}, 'Profile integration fixture', ${id}, 'Local-only fixture for business profile details.', 'creative', '{}', 'online', 'online', ${'https://' + slug + '.example.test'}, 'approved')`
+      await sql`update business set profile_details_source = ${sql.json({ url: 'https://example.test/faq', reviewedAt: '2026-09-24' })} where id = ${id}`
       assert.equal((await request({ details, revision: 0 })).status, 401)
       assert.equal((await request({ details, revision: 0 }, strangerCookie)).status, 404)
       assert.equal(
@@ -94,6 +95,7 @@ test(
       assert.deepEqual(saved.details, details)
       const publicData = await publicProfile()
       assert.deepEqual(publicData.profileDetails, details)
+      assert.equal(publicData.profileDetailsSource, null)
       assert.ok(!('profileDetailsRevision' in publicData))
       assert.ok(!('ownerUserId' in publicData))
       const basics = Object.fromEntries(

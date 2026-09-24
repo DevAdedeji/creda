@@ -147,6 +147,10 @@ export const businessProfileDetailsSchema = z.strictObject({
 })
 export type BusinessProfileDetails = z.infer<typeof businessProfileDetailsSchema>
 export type BusinessOffering = z.infer<typeof offeringSchema>
+export interface BusinessProfileSource {
+  url: string
+  reviewedAt: string
+}
 export interface BusinessProfileDetailsResponse {
   details: BusinessProfileDetails
   revision: number

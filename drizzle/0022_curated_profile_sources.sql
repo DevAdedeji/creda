@@ -1,0 +1,1 @@
+ALTER TABLE "business" ADD COLUMN "profile_details_source" jsonb;

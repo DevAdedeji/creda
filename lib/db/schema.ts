@@ -1,4 +1,4 @@
-import type { BusinessProfileDetails } from '../../shared/business-profile'
+import type { BusinessProfileDetails, BusinessProfileSource } from '../../shared/business-profile'
 import type { EmailDelivery } from '../email/message'
 import type { InsightMetric } from '~~/shared/insights'
 import { relations, sql } from 'drizzle-orm'
@@ -164,6 +164,7 @@ export const business = pgTable(
       .$type<BusinessProfileDetails>()
       .notNull()
       .default({ offerings: [], practical: {}, faqs: [] }),
+    profileDetailsSource: jsonb('profile_details_source').$type<BusinessProfileSource>(),
     profileDetailsRevision: integer('profile_details_revision').notNull().default(0),
     googlePlaceId: text('google_place_id'),
     normalizedLocation: text('normalized_location').notNull(),

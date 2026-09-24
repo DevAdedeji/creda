@@ -8,7 +8,7 @@ export const curatedBusinesses = [
     slug: 'paystack',
     category: 'finance',
     description:
-      'Payment infrastructure for Nigerian businesses to accept online and in-person payments and manage transactions.',
+      'Paystack provides payment tools for businesses selling online and in person. Merchants can collect one-off or recurring payments, use supported payment channels such as cards and bank transfers, and review customer and transaction data. Developers can connect these capabilities to websites and apps through Paystack APIs.',
     websiteUrl: 'https://paystack.com/',
     sourceUrl: 'https://paystack.com/',
     appStoreUrl: 'https://apps.apple.com/ng/app/paystack-merchant/id1481413006',
@@ -22,7 +22,7 @@ export const curatedBusinesses = [
     slug: 'flutterwave',
     category: 'finance',
     description:
-      'Payment technology for businesses to collect payments, send money, and serve customers across markets.',
+      'Flutterwave offers payment collection and transfer tools for businesses. Its products include online checkout, payment links, invoices, online stores and POS systems. Businesses can collect customer payments, issue invoices and initiate individual or bulk bank transfers through its platform or integrate payment services into their own software.',
     websiteUrl: 'https://flutterwave.com/ng/',
     sourceUrl: 'https://flutterwave.com/ng/',
     appStoreUrl: 'https://apps.apple.com/ng/app/flutterwave/id1534897339',
@@ -36,7 +36,7 @@ export const curatedBusinesses = [
     slug: 'piggyvest',
     category: 'finance',
     description:
-      'Digital savings and investment platform with tools for personal saving goals and investment plans.',
+      'PiggyVest is a digital savings and investment platform with different ways to organise personal savings. Its products include automated saving with Piggybank, fixed savings with SafeLock, goal-based Target Savings and flexible savings wallets. Customers can access the platform through its website and mobile apps.',
     websiteUrl: 'https://www.piggyvest.com/',
     sourceUrl: 'https://www.piggyvest.com/',
     appStoreUrl: 'https://apps.apple.com/ng/app/piggyvest-save-invest-today/id1263117994',
@@ -51,7 +51,7 @@ export const curatedBusinesses = [
     slug: 'cowrywise',
     category: 'finance',
     description:
-      'Digital platform for saving and investing with plans designed around individual financial goals.',
+      'Cowrywise provides digital tools for saving and investing. Individuals can automate savings towards goals and explore mutual funds and Nigerian stocks. The platform also offers Sprout for business cash management and Embed for developers adding investment services to their own applications.',
     websiteUrl: 'https://cowrywise.com/',
     sourceUrl: 'https://cowrywise.com/',
     appStoreUrl: 'https://apps.apple.com/ng/app/cowrywise-save-invest-money/id1436590033',
@@ -65,7 +65,7 @@ export const curatedBusinesses = [
     slug: 'kuda',
     category: 'finance',
     description:
-      'Digital banking app offering accounts, transfers, cards, and money management for individuals.',
+      'Kuda offers app-based banking for everyday transfers, card spending, bill payments and savings. Its personal banking tools include savings goals and Spend+Save, while its business products include accounts, POS services and payroll tools. Customers can explore the relevant personal or business service through its website and apps.',
     websiteUrl: 'https://www.kuda.com/',
     sourceUrl: 'https://www.kuda.com/',
     appStoreUrl: 'https://apps.apple.com/ng/app/kuda-free-transfer-payment/id1467373738',
@@ -79,7 +79,7 @@ export const curatedBusinesses = [
     slug: 'moniepoint',
     category: 'finance',
     description:
-      'Banking and payment services for individuals and businesses, including accounts and business tools.',
+      'Moniepoint provides banking and payment tools for Nigerian businesses. Its business account works alongside POS terminals, expense cards, savings and working-capital products. Moniebook adds tools for sales, inventory and customer management, giving merchants ways to handle payments and day-to-day business records.',
     websiteUrl: 'https://moniepoint.com/ng/',
     sourceUrl: 'https://moniepoint.com/ng/about',
     appStoreUrl: 'https://apps.apple.com/ng/app/moniepoint-personal-banking/id6452756675',
@@ -93,7 +93,7 @@ export const curatedBusinesses = [
     slug: 'bumpa',
     category: 'software',
     description:
-      'Commerce tools that help merchants create storefronts, manage inventory, and handle customer orders.',
+      'Bumpa helps retail businesses manage sales, stock, orders and customers. Merchants can create an online store, record sales and expenses, send invoices and receipts, and review business analytics. The platform also supports managing staff and multiple store locations, with features depending on the selected subscription plan.',
     websiteUrl: 'https://www.getbumpa.com/',
     sourceUrl: 'https://www.getbumpa.com/',
     appStoreUrl: 'https://apps.apple.com/ng/app/bumpa-manage-orders-easily/id1497638594',
@@ -104,7 +104,7 @@ export const curatedBusinesses = [
     slug: 'selar',
     category: 'software',
     description:
-      'Platform for creators to sell digital products, courses, and other offerings to their audiences.',
+      'Selar provides an online storefront for creators and merchants selling digital products, courses, services and event tickets. Sellers can upload downloadable content, host course videos or audio, and offer recurring subscriptions. Its tools also support affiliate sales, allowing creators to work with people who promote their products.',
     websiteUrl: 'https://selar.com/',
     sourceUrl: 'https://selar.com/',
     appStoreUrl: 'https://apps.apple.com/ng/app/selar-access-digital-products/id6748024658',
@@ -115,7 +115,7 @@ export const curatedBusinesses = [
     slug: 'jumia-nigeria',
     category: 'retail',
     description:
-      'Online marketplace where shoppers can browse products across electronics, fashion, home, and other categories.',
+      'Jumia Nigeria is an online marketplace for everyday shopping, including phones, electronics, fashion and home products. Shoppers can browse official-store offers and other seller listings, then choose from available fulfilment options. Jumia offers home delivery and pickup stations; options depend on the order and delivery location.',
     websiteUrl: 'https://www.jumia.com.ng/',
     sourceUrl: 'https://www.jumia.com.ng/',
     appStoreUrl: 'https://apps.apple.com/ng/app/jumia-online-shopping/id925015459',
@@ -128,7 +128,8 @@ export const curatedBusinesses = [
     name: 'Taeillo',
     slug: 'taeillo',
     category: 'retail',
-    description: 'Furniture and home goods brand offering products for living and working spaces.',
+    description:
+      'Taeillo sells furniture for living spaces, bedrooms and work areas through its Nigerian online store. Its collections include sofas, chairs, beds, tables and consoles, with individual product pages showing available options. The brand makes furniture locally and advertises shipping across Nigeria.',
     websiteUrl: 'https://taeillo.com/',
     sourceUrl: 'https://taeillo.com/',
   },
@@ -137,7 +138,7 @@ export const curatedBusinesses = [
     slug: 'printivo',
     category: 'services',
     description:
-      'Online printing service for business cards, marketing materials, packaging, and branded products.',
+      'Printivo is an online printing service for business stationery, marketing materials, packaging and branded merchandise. Its catalogue includes business cards, flyers, stickers, banners, mugs, T-shirts and paper bags. Customers can browse product options and quantities online and arrange delivery of their printed order.',
     websiteUrl: 'https://printivo.com/',
     sourceUrl: 'https://printivo.com/',
     location: 'Moyosore House, 180/182 Ikorodu Road, Onipanu, Lagos, Nigeria',
@@ -149,7 +150,7 @@ export const curatedBusinesses = [
     slug: 'ulesson',
     category: 'education',
     description:
-      'Learning platform offering video lessons, practice resources, and educational support for students.',
+      'uLesson provides digital learning resources for primary and secondary school students. Lessons are organised by school level and cover subjects such as mathematics, English and sciences. Its Education Tab 2 includes an offline video library, allowing learners to revisit lessons at their own pace without a continuous internet connection.',
     websiteUrl: 'https://ulesson.com/',
     sourceUrl: 'https://ulesson.com/',
     playStoreUrl: 'https://play.google.com/store/apps/details?id=com.ulesson',
@@ -162,7 +163,7 @@ export const curatedBusinesses = [
     slug: 'altschool-africa',
     category: 'education',
     description:
-      'Online education platform offering structured training in technology, business, and related skills.',
+      'AltSchool Africa offers online learning programmes across software engineering, data, product, business and the creative economy. Learners can choose longer instructor-led diploma programmes or shorter, focused Nano-Diplomas. The website explains each learning format and provides programme pages for exploring subjects before applying.',
     websiteUrl: 'https://altschoolafrica.com/',
     sourceUrl: 'https://altschoolafrica.com/',
   },
@@ -170,7 +171,8 @@ export const curatedBusinesses = [
     name: 'Wakanow',
     slug: 'wakanow',
     category: 'travel',
-    description: 'Travel booking platform for flights, hotels, and other travel planning services.',
+    description:
+      'Wakanow is a travel booking platform for flights, hotels and holiday planning. Travellers can search one-way, return or multi-city flights and explore hotel stays, packages and tours. Its mobile app also supports managing bookings and receiving flight updates.',
     websiteUrl: 'https://www.wakanow.com/',
     sourceUrl: 'https://www.wakanow.com/',
     appStoreUrl: 'https://apps.apple.com/ng/app/wakanow-flights-hotels-cars/id1467891138',
@@ -184,7 +186,7 @@ export const curatedBusinesses = [
     slug: 'gig-mobility',
     category: 'travel',
     description:
-      'Intercity transport service with online booking for bus journeys across its supported routes.',
+      'GIG Mobility provides passenger travel booking through its website and mobile app. Travellers can book seats on available journeys, check booking status and explore bus-hire options. Its online services bring trip planning and booking tools together for customers using the GIGM transport network.',
     websiteUrl: 'https://www.gigm.com/',
     sourceUrl: 'https://www.gigm.com/',
     operationMode: 'hybrid',
@@ -197,7 +199,7 @@ export const curatedBusinesses = [
     slug: 'helium-health',
     category: 'health',
     description:
-      'Health technology company providing digital tools for healthcare providers and patient operations.',
+      'Helium Health provides digital tools and financing services for healthcare organisations. HeliumOS supports day-to-day care operations, while HeliumDoc supports interactions between providers and patients. The company also offers HeliumCredit for healthcare financing and HeliumWallet for billing, alongside public-health and data partnerships.',
     websiteUrl: 'https://heliumhealth.com/',
     sourceUrl: 'https://heliumhealth.com/',
     location: 'Block 22, Babatunde Anjous Avenue, Lekki Phase 1, Lagos, Nigeria',
@@ -209,7 +211,7 @@ export const curatedBusinesses = [
     slug: 'reliance-hmo',
     category: 'health',
     description:
-      'Health insurance and care services offering plans and access to healthcare for individuals and organisations.',
+      'Reliance HMO provides health plans and digital tools for accessing care in Nigeria. Its employer plans support teams and eligible family members through a network of healthcare providers. Members can use the Reliance Care app to view benefits and access telemedicine, while company administrators can manage enrolment and track plan usage.',
     websiteUrl: 'https://getreliancehealth.com/nigeria/',
     sourceUrl: 'https://getreliancehealth.com/nigeria/',
     appStoreUrl: 'https://apps.apple.com/ng/app/reliance-care/id1538245836',
@@ -223,7 +225,7 @@ export const curatedBusinesses = [
     slug: 'so-fresh',
     category: 'food',
     description:
-      'Food brand serving fresh meals, salads, juices, and other prepared items through its outlets and online channels.',
+      'So Fresh offers prepared meals, salads, drinks and snacks through its online menu. Customers can browse salads, smoothies, juices, parfaits, Greek yoghurt, wraps and meal combinations, as well as baskets and platters. The online shop supports ordering for delivery.',
     websiteUrl: 'https://sofreshng.com/',
     sourceUrl: 'https://sofreshng.com/',
     operationMode: 'hybrid',
@@ -235,7 +237,8 @@ export const curatedBusinesses = [
     name: 'ORÍKÌ',
     slug: 'oriki',
     category: 'beauty',
-    description: 'Beauty and wellness brand offering skincare products and spa experiences.',
+    description:
+      'ORÍKÌ combines a skincare and body-care shop with spa and wellness services. Its store includes cleansers, creams, scrubs and grooming products, while the spa section provides treatment information and an appointment-booking link. The brand also offers training for spa professionals through its training institute.',
     websiteUrl: 'https://www.orikigroup.com/',
     sourceUrl: 'https://www.orikigroup.com/',
     operationMode: 'hybrid',
@@ -248,7 +251,7 @@ export const curatedBusinesses = [
     slug: 'i-fitness',
     category: 'fitness',
     description:
-      'Fitness club network offering gym access, exercise facilities, and fitness programmes.',
+      'i-Fitness operates fitness centres with gym facilities, personal trainers and group exercise programmes. Its class range includes spinning, yoga, aerobics, core cardio and higher-intensity sessions. The website provides a centre finder and information about available programmes so visitors can explore a suitable branch.',
     websiteUrl: 'https://ifitness.ng/',
     sourceUrl: 'https://ifitness.ng/',
     operationMode: 'physical',
@@ -261,7 +264,7 @@ export const curatedBusinesses = [
     slug: 'filmhouse-cinemas',
     category: 'entertainment',
     description:
-      'Cinema chain showing films at multiple locations, with online movie schedules and ticket booking.',
+      'Filmhouse Cinemas operates cinema venues in Nigeria, offering film screenings and different cinema experiences. Its website provides information about ticket prices, food and drinks, and premium experiences such as The Cube. Visitors can explore the available options before choosing a venue and screening.',
     websiteUrl: 'https://fh-frontend.filmhouseng.com/',
     sourceUrl: 'https://fh-frontend.filmhouseng.com/about-us',
     operationMode: 'hybrid',
@@ -276,7 +279,7 @@ export const curatedBusinesses = [
     slug: 'chowdeck',
     category: 'food',
     description:
-      'Delivery platform connecting customers with restaurants, groceries, pharmacies, and local markets.',
+      'Chowdeck connects customers with restaurants, grocery shops, pharmacies and local markets for delivery. Customers enter a delivery address to explore nearby options and can follow order updates through the service. The platform also allows restaurants and stores to join as vendors and riders to apply to its delivery network.',
     websiteUrl: 'https://chowdeck.com/',
     sourceUrl: 'https://chowdeck.com/',
     appStoreUrl: 'https://apps.apple.com/ng/app/chowdeck-food-groceries/id1530676376',
@@ -290,9 +293,9 @@ export const curatedBusinesses = [
     slug: 'rovingheights',
     category: 'retail',
     description:
-      'Book retailer helping readers discover and order books through its online shop and bookstores.',
-    websiteUrl: 'https://rovingheights.com/',
-    sourceUrl: 'https://rovingheights.com/',
+      'Rovingheights is a Nigerian bookseller with online ordering and physical bookstores. Readers can arrange delivery or collect an order from a store. Its published customer information covers order tracking, international shipping and support for payment or order issues, helping customers plan how to receive their books.',
+    websiteUrl: 'https://rhbooks.com.ng/',
+    sourceUrl: 'https://rhbooks.com.ng/about-us/',
     operationMode: 'hybrid',
     location: 'Bookstores in Nigeria',
   },
@@ -301,7 +304,7 @@ export const curatedBusinesses = [
     slug: 'tix-africa',
     category: 'entertainment',
     description:
-      'Event ticketing platform where organisers can publish events and audiences can purchase tickets.',
+      'Tix Africa helps people discover live events and lets organisers create, promote and sell tickets. Its tools support live and virtual events, branded event collections and website embeds. Organisers can monitor ticket sales, revenue and payouts through a dashboard, while attendees can browse events and pay for tickets online.',
     websiteUrl: 'https://tix.africa/',
     sourceUrl: 'https://tix.africa/',
     appStoreUrl: 'https://apps.apple.com/ng/app/tix-africa-orbit/id6755313741',
@@ -315,7 +318,7 @@ export const curatedBusinesses = [
     slug: 'interswitch',
     category: 'finance',
     description:
-      'Payments technology company providing transaction infrastructure and digital payment products for businesses and consumers.',
+      "Interswitch provides payment infrastructure and business payment products. Its services include corporate payment tools, collections and payment-processing infrastructure for financial institutions. Businesses can explore products suited to their operations through the company's onboarding platform.",
     websiteUrl: 'https://interswitchgroup.com/',
     sourceUrl: 'https://interswitchgroup.com/',
     location: '1648C Oko-Awo Street, Victoria Island, Lagos, Nigeria',
@@ -327,7 +330,7 @@ export const curatedBusinesses = [
     slug: 'palmpay',
     category: 'finance',
     description:
-      'Digital financial service offering transfers, bill payments, savings, and business payment tools.',
+      'PalmPay offers digital financial services for everyday money management in Nigeria. Its personal products include bank transfers, bill payments, savings and a debit card. Customers can use the platform for activities such as paying for airtime or bills and organising flexible or fixed savings.',
     websiteUrl: 'https://www.palmpay.com/',
     sourceUrl: 'https://www.palmpay.com/',
     appStoreUrl: 'https://apps.apple.com/ng/app/palmpay-transfers-bills/id1479656820',
@@ -338,7 +341,7 @@ export const curatedBusinesses = [
     slug: 'konga',
     category: 'retail',
     description:
-      'Online shopping marketplace for electronics, home goods, fashion, and other consumer products.',
+      'Konga is a Nigerian online marketplace for electronics, phones, appliances, fashion, groceries and home products. Shoppers can browse product categories, place orders and use order-tracking tools. Its website also provides information about delivery, returns and bulk purchases, with several supported payment options.',
     websiteUrl: 'https://www.konga.com/',
     sourceUrl: 'https://www.konga.com/',
     appStoreUrl: 'https://apps.apple.com/ng/app/konga/id880918394',
@@ -352,7 +355,7 @@ export const curatedBusinesses = [
     slug: 'seamlesshr',
     category: 'software',
     description:
-      'Human resources software for employee records, payroll, recruitment, performance, and related workflows.',
+      'SeamlessHR provides software for human resources and workforce management. Its products cover employee records, payroll, recruitment, performance and time management. The company also lists tools for shift-based teams, including attendance and mobile self-service, and offers product demonstrations through its website.',
     websiteUrl: 'https://seamlesshr.com/ng/',
     sourceUrl: 'https://seamlesshr.com/ng/',
     appStoreUrl: 'https://apps.apple.com/ng/app/breeze-by-seamlesstech/id1549679995',
@@ -366,7 +369,7 @@ export const curatedBusinesses = [
     slug: 'air-peace',
     category: 'travel',
     description:
-      'Airline offering flight booking and travel services across domestic and international routes.',
+      'Air Peace is an airline offering flight bookings across domestic, regional and international routes. Its website lets travellers search for flights, manage an existing booking and access online check-in. Customers can use their surname and booking reference to retrieve a reservation through the booking tools.',
     websiteUrl: 'https://flyairpeace.com/',
     sourceUrl: 'https://flyairpeace.com/',
     appStoreUrl: 'https://apps.apple.com/ng/app/air-peace/id1491685731',
@@ -380,7 +383,7 @@ export const curatedBusinesses = [
     slug: 'termii',
     category: 'software',
     description:
-      'Communication APIs for transactional messaging, verification, and customer notifications across multiple channels.',
+      'Termii provides communication tools for businesses sending verification codes, account alerts and customer messages. Its platform supports SMS, WhatsApp, voice and email, with APIs for connecting messaging to an application. It also offers customer-engagement tools and a shared inbox for handling conversations.',
     websiteUrl: 'https://termii.com/',
     sourceUrl: 'https://termii.com/',
   },

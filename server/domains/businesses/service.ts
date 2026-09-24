@@ -115,6 +115,7 @@ export function toPublic(row: BusinessRow): PublicBusiness {
     hoursTimeZone: row.hoursTimeZone,
     services: row.services,
     profileDetails: row.profileDetails,
+    profileDetailsSource: row.profileDetailsSource,
     googlePlaceId: row.googlePlaceId,
     websiteUrl: row.websiteUrl,
     appStoreUrl: row.appStoreUrl,

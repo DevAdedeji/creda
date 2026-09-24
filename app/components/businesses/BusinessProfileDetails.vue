@@ -3,8 +3,12 @@ import {
   offeringPriceLabel,
   practicalFields,
   type BusinessProfileDetails,
+  type BusinessProfileSource,
 } from '~~/shared/business-profile'
-const props = defineProps<{ details: BusinessProfileDetails }>()
+const props = defineProps<{
+  details: BusinessProfileDetails
+  source?: BusinessProfileSource | null
+}>()
 const practical = computed(() =>
   practicalFields.filter((field) => props.details.practical[field.key] !== undefined),
 )
@@ -18,6 +22,16 @@ const practical = computed(() =>
     <h2 id="offerings-heading" class="text-2xl font-semibold tracking-tight text-[#143e32]">
       Services & offerings
     </h2>
+    <p v-if="source" class="mt-2 text-sm text-[#657069]">
+      Summarised from the
+      <a
+        :href="source.url"
+        target="_blank"
+        rel="noopener noreferrer"
+        class="font-medium text-[#315840] underline underline-offset-4"
+        >official website</a
+      >.
+    </p>
     <div class="mt-5 grid gap-4 sm:grid-cols-2">
       <article
         v-for="offering in details.offerings"
@@ -84,7 +98,27 @@ const practical = computed(() =>
     <h2 id="business-faqs-heading" class="text-2xl font-semibold tracking-tight text-[#143e32]">
       Frequently asked questions
     </h2>
-    <p class="mt-2 text-sm text-[#657069]">Answers from the business.</p>
+    <p class="mt-2 text-sm text-[#657069]">
+      <template v-if="source">
+        Summarised from the
+        <a
+          :href="source.url"
+          target="_blank"
+          rel="noopener noreferrer"
+          class="font-medium text-[#315840] underline underline-offset-4"
+          >official website</a
+        >. Reviewed
+        {{
+          new Intl.DateTimeFormat('en-GB', {
+            day: 'numeric',
+            month: 'short',
+            year: 'numeric',
+            timeZone: 'UTC',
+          }).format(new Date(source.reviewedAt))
+        }}.
+      </template>
+      <template v-else>Answers from the business.</template>
+    </p>
     <div class="mt-5 divide-y divide-[#e5ebdf]">
       <details v-for="faq in details.faqs" :key="faq.question" class="group py-4">
         <summary

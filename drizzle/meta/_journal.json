@@ -155,6 +155,13 @@
       "when": 1790263016545,
       "tag": "0021_business_profile_details",
       "breakpoints": true
+    },
+    {
+      "idx": 22,
+      "version": "7",
+      "when": 1790270491020,
+      "tag": "0022_curated_profile_sources",
+      "breakpoints": true
     }
   ]
 }

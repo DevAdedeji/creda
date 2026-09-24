@@ -2,6 +2,11 @@ import { randomUUID } from 'node:crypto'
 import { existsSync } from 'node:fs'
 import postgres from 'postgres'
 import { curatedBusinesses } from './data/curated-businesses.mjs'
+import { curatedBusinessProfiles } from './data/curated-business-profiles.mjs'
+import {
+  curatedBusinessProfileSchema,
+  fillEmptyCuratedProfiles,
+} from './lib/curated-business-profiles.mjs'
 import { curatedLogoUrls } from './data/curated-logo-urls.mjs'
 
 // Railway injects its database URL. Do not supplement it from a local .env.
@@ -45,6 +50,17 @@ const validatedStoreUrl = (value, hostname, slug) => {
   }
 }
 
+const profileEntries = Object.entries(curatedBusinessProfiles).map(([slug, entry]) => ({
+  slug,
+  ...curatedBusinessProfileSchema.parse(entry),
+}))
+const profilesBySlug = new Map(profileEntries.map((entry) => [entry.slug, entry]))
+if (
+  profilesBySlug.size !== curatedBusinesses.length ||
+  curatedBusinesses.some((item) => !profilesBySlug.has(item.slug))
+) {
+  throw new Error('Curated profile details and business catalog do not match.')
+}
 const slugs = new Set()
 const names = new Set()
 const sites = new Set()
@@ -144,6 +160,9 @@ try {
     )
     if (skipped.length) console.log(`Claimed or conflicting entries: ${skipped.join(', ')}`)
     if (!apply && !check) {
+      console.log(
+        'Would fill empty, unedited curated profiles with researched offerings and FAQs; existing details stay unchanged.',
+      )
       if (pending.length) console.log(`Would add: ${pending.map((item) => item.slug).join(', ')}`)
       if (managed.length) {
         console.log(`Would refresh: ${managed.map(({ item }) => item.slug).join(', ')}`)
@@ -225,6 +244,17 @@ try {
       `
       await sql`INSERT INTO business_slug (slug, business_id) VALUES (${item.slug}, ${id})`
     }
+    const enriched = await fillEmptyCuratedProfiles(
+      sql,
+      profileEntries.map(({ slug, details, sourceUrl, reviewedAt }) => ({
+        slug,
+        details,
+        source: { url: sourceUrl, reviewedAt },
+      })),
+    )
+    console.log(
+      `Added researched details to ${enriched.length} empty curated profiles; existing details were preserved.`,
+    )
     if (check) throw rollbackCheck
     console.log(`Inserted ${pending.length} and refreshed ${updatedCount} curated businesses.`)
   })

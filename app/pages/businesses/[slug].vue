@@ -367,7 +367,10 @@ const destinations = computed(() => {
 
         <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div class="space-y-6">
-            <BusinessProfileDetails :details="business.profileDetails" />
+            <BusinessProfileDetails
+              :details="business.profileDetails"
+              :source="business.profileDetailsSource"
+            />
             <section
               v-if="business.services.length"
               class="rounded-2xl border border-[#dfe6dc] bg-white p-7 sm:p-9"

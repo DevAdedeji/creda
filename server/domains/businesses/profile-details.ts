@@ -23,6 +23,7 @@ export async function saveBusinessProfileDetails(
     .update(business)
     .set({
       profileDetails: input.details,
+      profileDetailsSource: null,
       profileDetailsRevision: sql`${business.profileDetailsRevision} + 1`,
       updatedAt: sql`now()`,
     })

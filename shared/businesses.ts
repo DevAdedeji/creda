@@ -1,4 +1,4 @@
-import type { BusinessProfileDetails } from './business-profile'
+import type { BusinessProfileDetails, BusinessProfileSource } from './business-profile'
 
 export const businessCategoryValues = [
   'software',
@@ -95,6 +95,7 @@ export interface BusinessDraft {
 
 export interface PublicBusiness {
   profileDetails: BusinessProfileDetails
+  profileDetailsSource: BusinessProfileSource | null
   id: string
   slug: string
   name: string
