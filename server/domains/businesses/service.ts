@@ -98,7 +98,7 @@ function slugFor(name: string, location: string | null): string {
   return (base || 'business') + '-' + randomBytes(3).toString('hex')
 }
 
-function toPublic(row: BusinessRow): PublicBusiness {
+export function toPublic(row: BusinessRow): PublicBusiness {
   return {
     id: row.id,
     slug: row.slug,

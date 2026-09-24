@@ -1,7 +1,14 @@
 <script setup lang="ts">
 import { authClient } from '~~/lib/auth-client'
 
-const { data: session } = await authClient.useSession(useFetch)
+// Public navigation must not wait for authentication before the server can send HTML.
+const sessionState = authClient.useSession()
+const mounted = ref(false)
+onMounted(() => {
+  mounted.value = true
+})
+const session = computed(() => sessionState.value.data)
+const sessionPending = computed(() => !mounted.value || sessionState.value.isPending)
 const menuOpen = ref(false)
 const signingOut = ref(false)
 const appToast = useAppToast()
@@ -65,8 +72,14 @@ const accountMenu = computed(() => [
           >{{ link.label }}</a
         >
       </nav>
+      <span
+        v-if="sessionPending"
+        class="hidden h-11 w-28 animate-pulse rounded-lg bg-[#edf2e8] lg:block"
+        role="status"
+        aria-label="Loading account"
+      />
       <UDropdownMenu
-        v-if="session"
+        v-else-if="session"
         :items="accountMenu"
         :ui="{ content: 'w-60', item: 'py-2.5' }"
         :content="{ align: 'end', sideOffset: 8 }"
@@ -132,7 +145,10 @@ const accountMenu = computed(() => [
         @click="menuOpen = false"
         >{{ link.label }}<UIcon name="i-lucide-arrow-up-right"
       /></a>
-      <template v-if="session">
+      <span v-if="sessionPending" role="status" class="py-3 text-sm text-[#657069]"
+        >Loading account…</span
+      >
+      <template v-else-if="session">
         <NuxtLink
           to="/profile"
           class="flex items-center justify-between border-b border-[#e0e5dd] py-3 text-[15px] font-semibold text-[#172f27]"

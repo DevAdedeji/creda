@@ -1,5 +1,12 @@
 <script setup lang="ts">
+import dmSansLatin from '@fontsource-variable/dm-sans/files/dm-sans-latin-wght-normal.woff2?url'
 import { isAnalyticsEnabled } from '@/utils/analytics'
+
+useHead({
+  link: [
+    { rel: 'preload', href: dmSansLatin, as: 'font', type: 'font/woff2', crossorigin: 'anonymous' },
+  ],
+})
 
 const hostname = useRequestURL().hostname
 

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import { trackAnalyticsEvent } from '@/utils/analytics'
 import BusinessCard from '@/components/businesses/BusinessCard.vue'
 import FilterFields from '@/components/businesses/FilterFields.vue'
 import { serializeJsonLd } from '@/utils/jsonLd'
@@ -41,12 +42,20 @@ const {
   searchPending,
   searchNotice,
   extraCriteria,
-  applyFilters,
+  applyFilters: runFilters,
   clearFilters,
   applySort,
   pageLink,
   removeExtraCriterion,
 } = useBusinessDiscovery()
+function applyFilters() {
+  trackAnalyticsEvent('search_submitted', {
+    surface: 'explore',
+    mode: aiSearch.value ? 'ai' : 'standard',
+    has_query: String(Boolean(search.value.trim())),
+  })
+  return runFilters()
+}
 await request
 const pageUnavailable = computed(
   () =>

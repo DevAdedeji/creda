@@ -1,5 +1,6 @@
 import type { Ref } from 'vue'
 import type { InsightDestinationKey, InsightSurface } from '~~/shared/insights'
+import { trackAnalyticsEvent } from '@/utils/analytics'
 import { sendBusinessInsight } from '@/services/insights'
 
 export function useBusinessInsightsTracking(
@@ -26,10 +27,16 @@ export function useBusinessInsightsTracking(
       return
     lastViewed = id
     sendBusinessInsight({ businessId: id, surface, action: 'view' })
+    trackAnalyticsEvent('business_viewed', { business_id: id, surface })
   }
   function recordClick(destination: InsightDestinationKey) {
     if (!mounted || !businessId.value || !permitted()) return
     sendBusinessInsight({ businessId: businessId.value, surface, action: 'click', destination })
+    trackAnalyticsEvent('business_link_clicked', {
+      business_id: businessId.value,
+      surface,
+      destination,
+    })
   }
   onMounted(() => {
     mounted = true

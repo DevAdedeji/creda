@@ -10,6 +10,10 @@ useSeoMeta({ title: 'List your business — Creda', robots: 'noindex, nofollow' 
 const { data: session } = await authClient.useSession(useFetch)
 if (!session.value) await navigateTo('/login')
 
+onMounted(() => {
+  if (session.value?.user.emailVerified) trackAnalyticsEvent('business_form_viewed')
+})
+
 const submitting = ref(false)
 const errorMessage = ref('')
 

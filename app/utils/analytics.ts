@@ -12,6 +12,11 @@ export function isAnalyticsEnabled(hostname: string): boolean {
 
 export function trackAnalyticsEvent(name: string, properties?: Record<string, string>): void {
   if (!import.meta.client || !isAnalyticsEnabled(window.location.hostname)) return
+  if (
+    navigator.doNotTrack === '1' ||
+    ('globalPrivacyControl' in navigator && navigator.globalPrivacyControl === true)
+  )
+    return
   const analyticsWindow = window as AnalyticsWindow
 
   const send = () => {

@@ -1,6 +1,7 @@
 <script setup lang="ts">
 import { categoryPath } from '~~/shared/seo/categories'
 import type { BusinessCategory } from '~~/shared/businesses'
+import { trackAnalyticsEvent } from '@/utils/analytics'
 import SearchMode from '@/components/discovery/SearchMode.vue'
 import { serializeJsonLd } from '@/utils/jsonLd'
 
@@ -76,7 +77,23 @@ const {
 const featuredBusiness = computed(() => directory.value?.hero ?? null)
 const visibleBusinesses = computed(() => directory.value?.featured ?? [])
 
+function trackHomepageLink(event: MouseEvent) {
+  const anchor = event.target instanceof Element ? event.target.closest('a') : null
+  if (!anchor || anchor.origin !== window.location.origin) return
+  const path = anchor.pathname
+  if (path === '/explore' || path.startsWith('/categories') || path.startsWith('/locations')) {
+    trackAnalyticsEvent('homepage_browse_clicked', { destination: path.split('/')[1] || 'explore' })
+  } else if (path === '/businesses/new') {
+    trackAnalyticsEvent('listing_cta_clicked', { surface: 'homepage' })
+  }
+}
+
 function searchBusinesses() {
+  trackAnalyticsEvent('search_submitted', {
+    surface: 'homepage',
+    mode: aiSearch.value ? 'ai' : 'standard',
+    has_query: String(Boolean(query.value.trim())),
+  })
   navigateTo({
     path: '/explore',
     query: { q: query.value.trim() || undefined, mode: aiSearch.value ? 'ai' : undefined },
@@ -85,7 +102,7 @@ function searchBusinesses() {
 </script>
 
 <template>
-  <div>
+  <div @click="trackHomepageLink" @auxclick.middle="trackHomepageLink">
     <a
       class="fixed -top-24 left-5 z-50 rounded-lg bg-[#143e32] px-5 py-3 text-white focus:top-4"
       href="#main"

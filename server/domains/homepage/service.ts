@@ -1,8 +1,8 @@
 import { createHash } from 'node:crypto'
 import { and, asc, eq, inArray, sql } from 'drizzle-orm'
 import { db } from '~~/lib/db'
-import { business, homepagePlacement } from '~~/lib/db/schema'
-import { listPublicBusinesses } from '@server/domains/businesses/service'
+import { business, businessReview, homepagePlacement } from '~~/lib/db/schema'
+import { toPublic } from '@server/domains/businesses/service'
 import type {
   HomepageBusinesses,
   HomepageSelection,
@@ -83,38 +83,36 @@ export async function saveHomepageSelection(
 }
 
 export async function getHomepageBusinesses(): Promise<HomepageBusinesses> {
-  const placements = await db
-    .select()
+  // Only the selected, currently public businesses are read; no directory count or pagination.
+  const rows = await db
+    .select({
+      position: homepagePlacement.position,
+      business,
+      reviewCount: sql<number>`(select count(*)::int from ${businessReview}
+        where ${businessReview.businessId} = ${business.id}
+          and ${businessReview.status} = 'published')`,
+      averageRating: sql<
+        number | null
+      >`(select round(avg(${businessReview.rating})::numeric, 1)::float
+        from ${businessReview} where ${businessReview.businessId} = ${business.id}
+          and ${businessReview.status} = 'published')`,
+    })
     .from(homepagePlacement)
+    .innerJoin(
+      business,
+      and(eq(business.id, homepagePlacement.businessId), eq(business.status, 'approved')),
+    )
     .orderBy(asc(homepagePlacement.position))
-  if (!placements.length) return { hero: null, featured: [] }
-  const { items } = await listPublicBusinesses(
-    {
-      q: '',
-      category: [],
-      operationMode: [],
-      location: '',
-      city: '',
-      state: '',
-      sort: 'relevance',
-      page: 1,
+  const listings = rows.map((row) => ({
+    position: row.position,
+    listing: {
+      ...toPublic(row.business),
+      reviewCount: row.reviewCount,
+      averageRating: row.averageRating,
     },
-    [
-      inArray(
-        business.id,
-        placements.map((item) => item.businessId),
-      ),
-    ],
-  )
-  const byId = new Map(items.map((item) => [item.id, item]))
-  const heroId = placements.find((item) => item.position === 0)?.businessId
+  }))
   return {
-    hero: heroId ? (byId.get(heroId) ?? null) : null,
-    featured: placements
-      .filter((item) => item.position > 0)
-      .flatMap((item) => {
-        const listing = byId.get(item.businessId)
-        return listing ? [listing] : []
-      }),
+    hero: listings.find((item) => item.position === 0)?.listing ?? null,
+    featured: listings.filter((item) => item.position > 0).map((item) => item.listing),
   }
 }
