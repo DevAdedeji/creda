@@ -59,4 +59,95 @@ export const curatedLogoUrls = {
     'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/air-peace-8851af163a9afe4f.png',
   termii:
     'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/termii-792e340176287071.png',
+  // Null uses Creda’s initials avatar when no usable official logo is available.
+  ofadaboy:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/ofadaboy-c656b14ab6d6e098.png',
+  'terra-kulture-restaurant':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/terra-kulture-restaurant-71de3bf19edd1ff1.png',
+  'nok-by-alara':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/nok-by-alara-5ecc28755154224c.png',
+  'rsvp-lagos':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/rsvp-lagos-17959232561bad81.png',
+  nuli: 'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/nuli-66baf079a48bbb1a.png',
+  'the-place':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/the-place-651aa7a46a7173f8.png',
+  blucabana:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/blucabana-df9f7c5be08ca619.png',
+  jevinik:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/jevinik-0d32fc14746d73fe.png',
+  'ile-iyan-by-pods':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/ile-iyan-by-pods-6901769341d522ed.png',
+  'the-wheatbaker':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/the-wheatbaker-29e7eb0b247abe02.png',
+  'bukka-hut':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/bukka-hut-32064d462b9adacc.png',
+  skin101: null,
+  'apples-and-oranges':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/apples-and-oranges-1870df47bf7b701b.png',
+  'beauty-hut-africa':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/beauty-hut-africa-2f6cb1caab0e17db.png',
+  'arami-essentials':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/arami-essentials-69bccd50553e6415.png',
+  'mamatega-cosmetics':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/mamatega-cosmetics-6776a82d40e5338d.png',
+  'zaron-cosmetics': null,
+  'nuban-beauty':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/nuban-beauty-51e24b20afe4b11a.png',
+  'dang-lifestyle':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/dang-lifestyle-761ca85681c0b345.png',
+  'vava-furniture': null,
+  woodscope: null,
+  lifemate:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/lifemate-e0921ab8d413cb93.png',
+  dojah:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/dojah-1fec152064700222.png',
+  'ruff-n-tumble':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/ruff-n-tumble-955255730819d0ea.png',
+  miskay:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/miskay-f5fb93659059c552.png',
+  'wanni-fuga': null,
+  terawork:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/terawork-dc72a0225da4678e.png',
+  'momodu-studios':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/momodu-studios-6b497caa90e4ea83.png',
+  studio24:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/studio24-685ef70565cf764a.png',
+  fichaya:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/fichaya-4c623805c7b1860a.png',
+  cleanace:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/cleanace-7806a3b4f10489ba.png',
+  'venia-business-hub':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/venia-business-hub-e2820e776fab19ce.png',
+  'cafe-one':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/cafe-one-33d2e0d604e13b47.png',
+  'the-adrenalina':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/the-adrenalina-160caa75810f83f6.png',
+  'beehive-workstation': null,
+  venturespark:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/venturespark-fef435537d087ef2.png',
+  utiva:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/utiva-12edb8ebe7b81396.png',
+  'semicolon-africa':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/semicolon-africa-8f660b56b0a45c2e.png',
+  univelcity:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/univelcity-77ae1ddb01bab943.png',
+  'gomycode-nigeria': null,
+  'genesys-tech-hub':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/genesys-tech-hub-14efc74f12b7685a.png',
+  sendbox:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/sendbox-fc7651fc2fe37fe4.png',
+  'fez-delivery':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/fez-delivery-f4867f2589b51936.png',
+  travelbeta:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/travelbeta-b4a5b62969fb379c.png',
+  spleet:
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/spleet-f43f9269e73ca1e9.png',
+  'nike-art-gallery-olumo-rock': null,
+  'rele-gallery':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/rele-gallery-41f419960c9b94e3.png',
+  'art-twenty-one': null,
+  'smo-contemporary-art':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/smo-contemporary-art-5d6726c055975eea.png',
+  'genesis-cinemas':
+    'https://cdn.byteship.cloud/f/p_uOEImF02/businesses/curated/logos/genesis-cinemas-e279041fd7339680.png',
 }

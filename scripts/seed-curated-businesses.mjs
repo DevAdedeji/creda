@@ -8,6 +8,7 @@ import {
   fillEmptyCuratedProfiles,
 } from './lib/curated-business-profiles.mjs'
 import { curatedLogoUrls } from './data/curated-logo-urls.mjs'
+import { curatedLogoUrl, curatedContactUrl } from './lib/curated-business-links.mjs'
 
 // Railway injects its database URL. Do not supplement it from a local .env.
 if (!process.env.DIRECT_URL && !process.env.DATABASE_URL && existsSync('.env')) {
@@ -85,16 +86,8 @@ for (const item of curatedBusinesses) {
   if ((item.operationMode || 'online') !== 'online' && !item.location) {
     throw new Error(`Physical listing needs a location: ${item.slug}`)
   }
-  const logoUrl = curatedLogoUrls[item.slug]
-  if (!logoUrl) throw new Error(`Missing hosted logo URL: ${item.slug}`)
-  const logo = new URL(logoUrl)
-  if (
-    logo.protocol !== 'https:' ||
-    logo.hostname !== 'cdn.byteship.cloud' ||
-    !new RegExp(`/businesses/curated/logos/${item.slug}-[a-f0-9]{16}\\.png$`).test(logo.pathname)
-  ) {
-    throw new Error(`Unexpected hosted logo URL: ${item.slug}`)
-  }
+  curatedLogoUrl(item.slug, curatedLogoUrls)
+  curatedContactUrl(item.contactUrl)
   if (
     slugs.has(item.slug) ||
     names.has(normalizedKey(item.name)) ||
@@ -178,6 +171,8 @@ try {
       const state = item.state || null
       const appStoreUrl = item.appStoreUrl || null
       const playStoreUrl = item.playStoreUrl || null
+      const contactUrl = curatedContactUrl(item.contactUrl)
+      const logoUrl = curatedLogoUrl(item.slug, curatedLogoUrls)
       const businessTypes = businessTypesFor(item)
       const normalizedLocation = normalizedKey(
         location || [city, state].filter(Boolean).join(', ') || 'online',
@@ -191,7 +186,8 @@ try {
           location = ${location}, city = ${city}, state = ${state},
           normalized_location = ${normalizedLocation}, website_url = ${item.websiteUrl},
           app_store_url = ${appStoreUrl}, play_store_url = ${playStoreUrl},
-          logo_url = ${curatedLogoUrls[item.slug]}, updated_at = NOW()
+          logo_url = COALESCE(${logoUrl}, logo_url),
+          contact_url = COALESCE(${contactUrl}, contact_url), updated_at = NOW()
         WHERE id = ${id}
           AND listing_source = 'curated'
           AND owner_user_id IS NULL
@@ -211,7 +207,8 @@ try {
             OR website_url IS DISTINCT FROM ${item.websiteUrl}
             OR app_store_url IS DISTINCT FROM ${appStoreUrl}
             OR play_store_url IS DISTINCT FROM ${playStoreUrl}
-            OR logo_url IS DISTINCT FROM ${curatedLogoUrls[item.slug]}
+            OR (${logoUrl}::text IS NOT NULL AND logo_url IS DISTINCT FROM ${logoUrl})
+            OR (${contactUrl}::text IS NOT NULL AND contact_url IS DISTINCT FROM ${contactUrl})
           )
         RETURNING id
       `
@@ -226,19 +223,21 @@ try {
       const state = item.state || null
       const appStoreUrl = item.appStoreUrl || null
       const playStoreUrl = item.playStoreUrl || null
+      const contactUrl = curatedContactUrl(item.contactUrl)
+      const logoUrl = curatedLogoUrl(item.slug, curatedLogoUrls)
       const businessTypes = businessTypesFor(item)
       await sql`
         INSERT INTO business (
           id, slug, owner_user_id, listing_source, curation_source_url, curation_checked_at,
           name, normalized_name, description, category, business_types, operation_mode,
           location, city, state, normalized_location, website_url, app_store_url,
-          play_store_url, logo_url, status, ownership_status, published_at
+          play_store_url, logo_url, contact_url, status, ownership_status, published_at
         ) VALUES (
           ${id}, ${item.slug}, NULL, 'curated', ${item.sourceUrl}, NOW(),
           ${item.name}, ${normalizedKey(item.name)}, ${item.description}, ${item.category},
           ${businessTypes}::business_type[], ${mode}, ${location}, ${city}, ${state},
           ${normalizedKey(location || [city, state].filter(Boolean).join(', ') || 'online')},
-          ${item.websiteUrl}, ${appStoreUrl}, ${playStoreUrl}, ${curatedLogoUrls[item.slug]},
+          ${item.websiteUrl}, ${appStoreUrl}, ${playStoreUrl}, ${logoUrl}, ${contactUrl},
           'approved', 'unverified', NOW()
         )
       `
