@@ -148,6 +148,13 @@
       "when": 1790077475721,
       "tag": "0020_business_email_notifications",
       "breakpoints": true
+    },
+    {
+      "idx": 21,
+      "version": "7",
+      "when": 1790263016545,
+      "tag": "0021_business_profile_details",
+      "breakpoints": true
     }
   ]
 }

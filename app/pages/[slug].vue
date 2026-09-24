@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BusinessProfileDetails from '@/components/businesses/BusinessProfileDetails.vue'
 import { businessCategories, businessDays, type PublicBusiness } from '~~/shared/businesses'
 import { serializeJsonLd } from '@/utils/jsonLd'
 import { useBusinessInsightsTracking } from '@/composables/insights/useBusinessInsightsTracking'
@@ -277,8 +278,11 @@ useHead(() =>
 
         <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_320px]">
           <div class="space-y-6">
+            <BusinessProfileDetails :details="business.profileDetails" />
             <section v-if="business.services.length" class="rounded-3xl bg-white p-7 sm:p-9">
-              <h2 class="text-2xl font-semibold tracking-tight">What they offer</h2>
+              <h2 class="text-2xl font-semibold tracking-tight">
+                {{ business.profileDetails.offerings.length ? 'Specialties' : 'What they offer' }}
+              </h2>
               <div class="mt-5 flex flex-wrap gap-2">
                 <span
                   v-for="service in business.services"

@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BusinessProfileEditor from '@/components/businesses/BusinessProfileEditor.vue'
 import BusinessForm from '@/components/businesses/BusinessForm.vue'
 import { apiErrorMessage } from '@/utils/apiError'
 import { authClient } from '~~/lib/auth-client'
@@ -44,6 +45,21 @@ const initial = computed<BusinessDraft | undefined>(() => {
     mediaProofs: [],
   }
 })
+const activeTab = ref<'basics' | 'details'>('basics')
+function moveTab(event: KeyboardEvent) {
+  if (!['ArrowLeft', 'ArrowRight', 'Home', 'End'].includes(event.key)) return
+  event.preventDefault()
+  activeTab.value =
+    event.key === 'Home'
+      ? 'basics'
+      : event.key === 'End'
+        ? 'details'
+        : activeTab.value === 'basics'
+          ? 'details'
+          : 'basics'
+  const group = event.currentTarget as HTMLElement
+  group.querySelector<HTMLButtonElement>(`#${activeTab.value}-tab`)?.focus()
+}
 const submitting = ref(false)
 const errorMessage = ref('')
 const currentSlug = ref('')
@@ -129,84 +145,133 @@ async function submit(draft: BusinessDraft) {
           This listing is unavailable following a content review. Changes are paused until an
           administrator restores it.
         </div>
-        <section
-          v-else
-          class="mb-8 rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-8"
-          aria-labelledby="business-link-heading"
-        >
-          <div class="flex flex-wrap items-start justify-between gap-4">
-            <div>
-              <p class="text-xs font-bold uppercase tracking-[.15em] text-[#58745f]">
-                YOUR BUSINESS PAGE
-              </p>
-              <h2
-                id="business-link-heading"
-                class="mt-2 text-2xl font-semibold tracking-tight text-[#143e32]"
-              >
-                Make your link yours.
-              </h2>
-              <p class="mt-2 text-sm leading-6 text-[#657069]">
-                Share a simple page for your business. Your directory listing uses the same address.
-              </p>
-            </div>
-            <NuxtLink
-              :to="'/' + currentSlug"
-              target="_blank"
-              class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#315b3a] hover:underline"
-              >View page <UIcon name="i-lucide-arrow-up-right"
-            /></NuxtLink>
-          </div>
-          <form
-            class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end"
-            @submit.prevent="saveSlug"
+        <template v-else>
+          <div
+            class="mb-6 flex gap-2 rounded-xl bg-[#edf3e7] p-1.5"
+            role="tablist"
+            aria-label="Business editor"
+            @keydown="moveTab"
           >
-            <div class="min-w-0 flex-1">
-              <label for="business-slug" class="mb-2 block text-sm font-semibold text-[#254b36]"
-                >Page address</label
-              >
-              <div
-                class="flex h-12 overflow-hidden rounded-xl border border-[#d9e2d8] focus-within:border-[#4f805c]"
-              >
-                <span class="flex items-center bg-[#f5f8f2] px-3 text-sm text-[#536b57]"
-                  >creda.ng/</span
-                >
-                <input
-                  id="business-slug"
-                  v-model="slugDraft"
-                  type="text"
-                  maxlength="48"
-                  autocomplete="off"
-                  autocapitalize="none"
-                  spellcheck="false"
-                  class="min-w-0 flex-1 bg-white px-3 text-sm text-[#143e32] outline-none"
-                  aria-describedby="business-slug-help"
-                />
-              </div>
-            </div>
-            <UButton
-              type="submit"
-              :loading="savingSlug"
-              :disabled="
-                !isAvailableBusinessSlugFormat(proposedSlug) || proposedSlug === currentSlug
-              "
-              class="!h-12 !rounded-xl !bg-[#143e32] !px-5 !text-white"
-              >Save link</UButton
+            <button
+              id="basics-tab"
+              :tabindex="activeTab === 'basics' ? 0 : -1"
+              type="button"
+              role="tab"
+              :aria-selected="activeTab === 'basics'"
+              aria-controls="basics-panel"
+              class="min-h-12 flex-1 rounded-lg px-3 text-sm font-semibold text-[#143e32]"
+              :class="activeTab === 'basics' ? 'bg-white shadow-sm' : 'hover:bg-white/50'"
+              @click="activeTab = 'basics'"
             >
-          </form>
-          <p id="business-slug-help" class="mt-3 text-xs leading-5 text-[#708075]">
-            Use 3–48 letters, numbers, or hyphens. Your directory link will be
-            creda.ng/businesses/{{ proposedSlug || currentSlug }}.
-          </p>
-          <UiFeedbackAlert v-if="slugError" tone="error" :message="slugError" class="mt-3" />
-        </section>
-        <BusinessForm
-          v-if="business.status !== 'suspended'"
-          :initial="initial"
-          :submitting="submitting"
-          :error="errorMessage"
-          submit-label="Save changes"
-          @submit="submit"
-        />
+              Business profile
+            </button>
+            <button
+              id="details-tab"
+              :tabindex="activeTab === 'details' ? 0 : -1"
+              type="button"
+              role="tab"
+              :aria-selected="activeTab === 'details'"
+              aria-controls="details-panel"
+              class="min-h-12 flex-1 rounded-lg px-3 text-sm font-semibold text-[#143e32]"
+              :class="activeTab === 'details' ? 'bg-white shadow-sm' : 'hover:bg-white/50'"
+              @click="activeTab = 'details'"
+            >
+              Services & FAQs
+            </button>
+          </div>
+          <div
+            v-show="activeTab === 'details'"
+            id="details-panel"
+            role="tabpanel"
+            aria-labelledby="details-tab"
+          >
+            <BusinessProfileEditor :key="business.id" :business="business" />
+          </div>
+          <div
+            v-show="activeTab === 'basics'"
+            id="basics-panel"
+            role="tabpanel"
+            aria-labelledby="basics-tab"
+          >
+            <section
+              class="mb-8 rounded-2xl border border-[#dfe6dc] bg-white p-6 sm:p-8"
+              aria-labelledby="business-link-heading"
+            >
+              <div class="flex flex-wrap items-start justify-between gap-4">
+                <div>
+                  <p class="text-xs font-bold uppercase tracking-[.15em] text-[#58745f]">
+                    YOUR BUSINESS PAGE
+                  </p>
+                  <h2
+                    id="business-link-heading"
+                    class="mt-2 text-2xl font-semibold tracking-tight text-[#143e32]"
+                  >
+                    Make your link yours.
+                  </h2>
+                  <p class="mt-2 text-sm leading-6 text-[#657069]">
+                    Share a simple page for your business. Your directory listing uses the same
+                    address.
+                  </p>
+                </div>
+                <NuxtLink
+                  :to="'/' + currentSlug"
+                  target="_blank"
+                  class="inline-flex items-center gap-1.5 text-sm font-semibold text-[#315b3a] hover:underline"
+                  >View page <UIcon name="i-lucide-arrow-up-right"
+                /></NuxtLink>
+              </div>
+              <form
+                class="mt-6 flex flex-col gap-3 sm:flex-row sm:items-end"
+                @submit.prevent="saveSlug"
+              >
+                <div class="min-w-0 flex-1">
+                  <label for="business-slug" class="mb-2 block text-sm font-semibold text-[#254b36]"
+                    >Page address</label
+                  >
+                  <div
+                    class="flex h-12 overflow-hidden rounded-xl border border-[#d9e2d8] focus-within:border-[#4f805c]"
+                  >
+                    <span class="flex items-center bg-[#f5f8f2] px-3 text-sm text-[#536b57]"
+                      >creda.ng/</span
+                    >
+                    <input
+                      id="business-slug"
+                      v-model="slugDraft"
+                      type="text"
+                      maxlength="48"
+                      autocomplete="off"
+                      autocapitalize="none"
+                      spellcheck="false"
+                      class="min-w-0 flex-1 bg-white px-3 text-sm text-[#143e32] outline-none"
+                      aria-describedby="business-slug-help"
+                    />
+                  </div>
+                </div>
+                <UButton
+                  type="submit"
+                  :loading="savingSlug"
+                  :disabled="
+                    !isAvailableBusinessSlugFormat(proposedSlug) || proposedSlug === currentSlug
+                  "
+                  class="!h-12 !rounded-xl !bg-[#143e32] !px-5 !text-white"
+                  >Save link</UButton
+                >
+              </form>
+              <p id="business-slug-help" class="mt-3 text-xs leading-5 text-[#708075]">
+                Use 3–48 letters, numbers, or hyphens. Your directory link will be
+                creda.ng/businesses/{{ proposedSlug || currentSlug }}.
+              </p>
+              <UiFeedbackAlert v-if="slugError" tone="error" :message="slugError" class="mt-3" />
+            </section>
+            <BusinessForm
+              :initial="initial"
+              :submitting="submitting"
+              :error="errorMessage"
+              submit-label="Save changes"
+              @submit="submit"
+            />
+          </div>
+        </template>
       </template>
     </main>
   </WorkspaceShell>

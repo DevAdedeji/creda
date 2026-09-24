@@ -114,6 +114,7 @@ export function toPublic(row: BusinessRow): PublicBusiness {
     weeklyHours: row.weeklyHours,
     hoursTimeZone: row.hoursTimeZone,
     services: row.services,
+    profileDetails: row.profileDetails,
     googlePlaceId: row.googlePlaceId,
     websiteUrl: row.websiteUrl,
     appStoreUrl: row.appStoreUrl,
@@ -132,6 +133,7 @@ export function toPublic(row: BusinessRow): PublicBusiness {
 function toManaged(row: BusinessRow): ManagedBusiness {
   return {
     ...toPublic(row),
+    profileDetailsRevision: row.profileDetailsRevision,
     status: row.status,
     rejectionReason: row.rejectionReason,
     createdAt: row.createdAt.toISOString(),
@@ -556,7 +558,13 @@ export async function listPublicBusinesses(
   const conditions: SQL[] = [eq(business.status, 'approved'), ...additionalConditions]
   if (query.q) {
     const term = '%' + query.q.replace(/[\\%_]/g, '\\$&') + '%'
-    conditions.push(or(ilike(business.name, term), ilike(business.description, term))!)
+    conditions.push(
+      or(
+        ilike(business.name, term),
+        ilike(business.description, term),
+        sql`exists (select 1 from jsonb_array_elements(${business.profileDetails}->'offerings') offering where offering->>'name' ilike ${term} or offering->>'description' ilike ${term})`,
+      )!,
+    )
   }
   if (query.category.length) conditions.push(inArray(business.category, query.category))
   if (query.location) {

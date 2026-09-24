@@ -1,3 +1,5 @@
+import type { BusinessProfileDetails } from './business-profile'
+
 export const businessCategoryValues = [
   'software',
   'creative',
@@ -92,6 +94,7 @@ export interface BusinessDraft {
 }
 
 export interface PublicBusiness {
+  profileDetails: BusinessProfileDetails
   id: string
   slug: string
   name: string
@@ -121,6 +124,7 @@ export interface PublicBusiness {
 }
 
 export interface ManagedBusiness extends PublicBusiness {
+  profileDetailsRevision: number
   status: BusinessStatus
   rejectionReason: string | null
   createdAt: string

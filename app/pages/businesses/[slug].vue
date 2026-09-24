@@ -1,4 +1,5 @@
 <script setup lang="ts">
+import BusinessProfileDetails from '@/components/businesses/BusinessProfileDetails.vue'
 import { categoryPath } from '~~/shared/seo/categories'
 import {
   businessCategories,
@@ -366,6 +367,7 @@ const destinations = computed(() => {
 
         <div class="mt-6 grid gap-6 lg:grid-cols-[minmax(0,1fr)_300px]">
           <div class="space-y-6">
+            <BusinessProfileDetails :details="business.profileDetails" />
             <section
               v-if="business.services.length"
               class="rounded-2xl border border-[#dfe6dc] bg-white p-7 sm:p-9"
@@ -375,7 +377,7 @@ const destinations = computed(() => {
                 id="services-heading"
                 class="text-2xl font-semibold tracking-tight text-[#143e32]"
               >
-                What they offer
+                {{ business.profileDetails.offerings.length ? 'Specialties' : 'What they offer' }}
               </h2>
               <div class="mt-5 flex flex-wrap gap-2">
                 <span

@@ -1,3 +1,4 @@
+import type { BusinessProfileDetails } from '../../shared/business-profile'
 import type { EmailDelivery } from '../email/message'
 import type { InsightMetric } from '~~/shared/insights'
 import { relations, sql } from 'drizzle-orm'
@@ -159,6 +160,11 @@ export const business = pgTable(
       .array()
       .notNull()
       .default(sql`'{}'::text[]`),
+    profileDetails: jsonb('profile_details')
+      .$type<BusinessProfileDetails>()
+      .notNull()
+      .default({ offerings: [], practical: {}, faqs: [] }),
+    profileDetailsRevision: integer('profile_details_revision').notNull().default(0),
     googlePlaceId: text('google_place_id'),
     normalizedLocation: text('normalized_location').notNull(),
     websiteUrl: text('website_url'),
@@ -182,6 +188,10 @@ export const business = pgTable(
     updatedAt: timestamp('updated_at', { withTimezone: true }).defaultNow().notNull(),
   },
   (table) => [
+    check(
+      'business_profile_details_shape',
+      sql`jsonb_typeof(${table.profileDetails}) = 'object' AND jsonb_typeof(${table.profileDetails}->'offerings') = 'array' AND jsonb_array_length(${table.profileDetails}->'offerings') <= 8 AND jsonb_typeof(${table.profileDetails}->'practical') = 'object' AND jsonb_typeof(${table.profileDetails}->'faqs') = 'array' AND jsonb_array_length(${table.profileDetails}->'faqs') <= 8 AND ${table.profileDetails} ?& array['offerings', 'practical', 'faqs'] AND ${table.profileDetailsRevision} >= 0`,
+    ),
     uniqueIndex('business_name_location_unique').on(table.normalizedName, table.normalizedLocation),
     index('business_status_name_idx').on(table.status, table.name),
     index('business_status_state_city_idx').on(table.status, table.state, table.city),
