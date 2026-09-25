@@ -1,6 +1,7 @@
 import type { BusinessListItem, BusinessStatus } from './businesses'
 
 export const HOMEPAGE_FEATURED_LIMIT = 6
+export const HOMEPAGE_RECENT_LIMIT = 6
 
 export interface HomepageBusiness {
   id: string
@@ -25,4 +26,5 @@ export interface HomepageSelectionInput {
 export interface HomepageBusinesses {
   hero: BusinessListItem | null
   featured: BusinessListItem[]
+  recent: BusinessListItem[]
 }

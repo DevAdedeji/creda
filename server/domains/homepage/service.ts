@@ -1,5 +1,5 @@
 import { createHash } from 'node:crypto'
-import { and, asc, eq, inArray, sql } from 'drizzle-orm'
+import { and, asc, desc, eq, inArray, notInArray, sql } from 'drizzle-orm'
 import { db } from '~~/lib/db'
 import { business, businessReview, homepagePlacement } from '~~/lib/db/schema'
 import { toPublic } from '@server/domains/businesses/service'
@@ -8,6 +8,8 @@ import type {
   HomepageSelection,
   HomepageSelectionInput,
 } from '~~/shared/homepage'
+
+import { HOMEPAGE_RECENT_LIMIT } from '~~/shared/homepage'
 
 type Placement = typeof homepagePlacement.$inferSelect
 
@@ -83,20 +85,18 @@ export async function saveHomepageSelection(
 }
 
 export async function getHomepageBusinesses(): Promise<HomepageBusinesses> {
-  // Only the selected, currently public businesses are read; no directory count or pagination.
-  const rows = await db
-    .select({
-      position: homepagePlacement.position,
-      business,
-      reviewCount: sql<number>`(select count(*)::int from ${businessReview}
+  const reviewStats = {
+    reviewCount: sql<number>`(select count(*)::int from ${businessReview}
         where ${businessReview.businessId} = ${business.id}
           and ${businessReview.status} = 'published')`,
-      averageRating: sql<
-        number | null
-      >`(select round(avg(${businessReview.rating})::numeric, 1)::float
+    averageRating: sql<
+      number | null
+    >`(select round(avg(${businessReview.rating})::numeric, 1)::float
         from ${businessReview} where ${businessReview.businessId} = ${business.id}
           and ${businessReview.status} = 'published')`,
-    })
+  }
+  const rows = await db
+    .select({ position: homepagePlacement.position, business, ...reviewStats })
     .from(homepagePlacement)
     .innerJoin(
       business,
@@ -111,7 +111,24 @@ export async function getHomepageBusinesses(): Promise<HomepageBusinesses> {
       averageRating: row.averageRating,
     },
   }))
+  const selectedIds = listings.map((item) => item.listing.id)
+  const recent = await db
+    .select({ business, ...reviewStats })
+    .from(business)
+    .where(
+      and(
+        eq(business.status, 'approved'),
+        selectedIds.length ? notInArray(business.id, selectedIds) : undefined,
+      ),
+    )
+    .orderBy(desc(business.publishedAt), desc(business.createdAt), asc(business.id))
+    .limit(HOMEPAGE_RECENT_LIMIT)
   return {
+    recent: recent.map((row) => ({
+      ...toPublic(row.business),
+      reviewCount: row.reviewCount,
+      averageRating: row.averageRating,
+    })),
     hero: listings.find((item) => item.position === 0)?.listing ?? null,
     featured: listings.filter((item) => item.position > 0).map((item) => item.listing),
   }
