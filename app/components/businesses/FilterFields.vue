@@ -1,5 +1,4 @@
 <script setup lang="ts">
-import SearchMode from '@/components/discovery/SearchMode.vue'
 import { authInputUi } from '@/utils/authInputUi'
 import {
   businessCategories,
@@ -11,9 +10,6 @@ import { matchingNigeriaState, nigeriaStates, otherStateFilterValue } from '~~/s
 
 defineProps<{ disabled?: boolean }>()
 
-const searchInputId = useId()
-const aiSearch = defineModel<boolean>('aiSearch', { required: true })
-const search = defineModel<string>('search', { required: true })
 const category = defineModel<BusinessCategory[]>('category', { required: true })
 const city = defineModel<string>('city', { required: true })
 const state = defineModel<string>('state', { required: true })
@@ -60,23 +56,6 @@ const modeSummary = computed(() =>
 
 <template>
   <div class="space-y-5">
-    <div>
-      <div class="mb-2 flex items-center justify-between gap-3">
-        <label :for="searchInputId" class="text-sm font-medium">Search</label>
-        <SearchMode v-model="aiSearch" :disabled="disabled" />
-      </div>
-      <UInput
-        :id="searchInputId"
-        v-model="search"
-        name="q"
-        :placeholder="aiSearch ? 'Describe what you need' : 'Name or keyword'"
-        :maxlength="500"
-        :disabled="disabled"
-        leading-icon="i-lucide-search"
-        class="w-full"
-        :ui="authInputUi"
-      />
-    </div>
     <UFormField label="Category" name="category">
       <USelectMenu
         v-model="category"
@@ -109,16 +88,6 @@ const modeSummary = computed(() =>
         <span class="truncate">{{ modeSummary }}</span>
       </USelectMenu>
     </UFormField>
-    <UFormField label="City" name="city">
-      <UInput
-        v-model="city"
-        :disabled="disabled"
-        name="city"
-        placeholder="Any city"
-        class="w-full"
-        :ui="authInputUi"
-      />
-    </UFormField>
     <UFormField label="State" name="state">
       <USelectMenu
         v-model="selectedState"
@@ -126,6 +95,7 @@ const modeSummary = computed(() =>
         value-key="value"
         :search-input="{ placeholder: 'Find a state' }"
         name="state"
+        aria-label="Select state"
         :disabled="disabled"
         class="w-full"
         :ui="authInputUi"
@@ -137,6 +107,16 @@ const modeSummary = computed(() =>
         name="customState"
         placeholder="Enter a state or region"
         class="mt-2 w-full"
+        :ui="authInputUi"
+      />
+    </UFormField>
+    <UFormField label="City" name="city">
+      <UInput
+        v-model="city"
+        :disabled="disabled"
+        name="city"
+        placeholder="Any city"
+        class="w-full"
         :ui="authInputUi"
       />
     </UFormField>

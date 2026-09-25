@@ -2,6 +2,7 @@
 import { trackAnalyticsEvent } from '@/utils/analytics'
 import BusinessCard from '@/components/businesses/BusinessCard.vue'
 import FilterFields from '@/components/businesses/FilterFields.vue'
+import DirectorySearch from '@/components/discovery/DirectorySearch.vue'
 import { serializeJsonLd } from '@/utils/jsonLd'
 import { authClient } from '~~/lib/auth-client'
 import type { BusinessListResponse } from '~~/shared/businesses'
@@ -42,6 +43,8 @@ const {
   searchPending,
   searchNotice,
   extraCriteria,
+  activeFilters,
+  removeFilter,
   applyFilters: runFilters,
   clearFilters,
   applySort,
@@ -167,40 +170,30 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
 
 <template>
   <div class="min-h-screen bg-[#fcfcf8] text-[#172f27]">
+    <a
+      href="#business-results"
+      class="fixed -top-24 left-5 z-50 rounded-lg bg-[#143e32] px-5 py-3 text-white focus:top-4"
+      >Skip to results</a
+    >
     <LandingHeader />
     <main class="mx-auto w-full max-w-[1920px] px-5 pb-14 pt-9 sm:px-8 sm:pt-12 xl:w-[90%] xl:px-0">
-      <div
-        class="flex flex-col gap-6 border-b border-[#dfe6dc] pb-7 sm:pb-9 lg:flex-row lg:items-end lg:justify-between"
-      >
+      <div class="flex flex-col gap-4 pb-6 lg:flex-row lg:items-end lg:justify-between">
         <div>
           <h1 class="text-3xl font-semibold tracking-[-.055em] text-[#143e32] sm:text-4xl">
             Explore businesses<span class="text-[#a4c43e]">.</span>
           </h1>
           <p class="mt-2 max-w-xl text-sm leading-6 text-[#657069] sm:text-base">
-            Browse business profiles and find the details you need before you visit, contact, or
-            buy.
+            Find your next good business. Search, compare, and explore.
           </p>
         </div>
-        <nav aria-label="Browse businesses" class="shrink-0">
-          <p class="mb-2 text-xs font-medium text-[#657069]">Browse by</p>
-          <div class="flex flex-wrap items-center gap-2">
-            <NuxtLink
-              to="/categories"
-              class="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#dfe6dc] bg-white px-4 py-2 text-sm font-medium text-[#315b3a] transition-colors hover:border-[#b5c7ae] hover:bg-[#edf3e7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#315b3a]"
-            >
-              <UIcon name="i-lucide-layout-grid" class="size-4" aria-hidden="true" />
-              Categories
-            </NuxtLink>
-            <NuxtLink
-              to="/locations"
-              class="inline-flex min-h-11 items-center gap-2 rounded-xl border border-[#dfe6dc] bg-white px-4 py-2 text-sm font-medium text-[#315b3a] transition-colors hover:border-[#b5c7ae] hover:bg-[#edf3e7] focus-visible:outline-2 focus-visible:outline-offset-2 focus-visible:outline-[#315b3a]"
-            >
-              <UIcon name="i-lucide-map-pin" class="size-4" aria-hidden="true" />
-              Locations
-            </NuxtLink>
-          </div>
-        </nav>
       </div>
+      <DirectorySearch
+        v-model:search="search"
+        v-model:ai-search="aiSearch"
+        :pending="searchPending"
+        :interpreting="interpreting"
+        @search="applyFilters"
+      />
       <div
         v-if="session?.user.emailVerified && savedLoadStatus === 'error'"
         role="alert"
@@ -211,21 +204,19 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
           >Try again</UButton
         >
       </div>
-      <div class="grid gap-9 py-8 lg:grid-cols-[245px_minmax(0,1fr)] lg:py-10">
-        <aside class="hidden lg:block">
+      <div class="grid items-start gap-6 py-6 lg:grid-cols-[250px_minmax(0,1fr)] lg:gap-7">
+        <aside class="hidden lg:sticky lg:top-28 lg:block">
           <form
-            class="rounded-2xl border border-[#dfe6dc] bg-white p-5 lg:sticky lg:top-28"
+            class="rounded-2xl border border-[#dfe6dc] bg-white p-5"
             aria-label="Filter businesses"
             @submit.prevent="applyFilters"
           >
             <div class="flex items-center justify-between">
-              <h2 class="text-lg font-semibold text-[#143e32]">Filter results</h2>
+              <h2 class="text-lg font-semibold text-[#143e32]">Filters</h2>
               <UIcon name="i-lucide-sliders-horizontal" class="text-[#5f785d]" />
             </div>
             <div class="mt-6">
               <FilterFields
-                v-model:search="search"
-                v-model:ai-search="aiSearch"
                 v-model:category="category"
                 v-model:city="city"
                 v-model:state="state"
@@ -238,36 +229,61 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
               :loading="interpreting"
               :disabled="searchPending"
               block
-              class="mt-7 !rounded-lg !bg-[#143e32] !text-white"
+              class="mt-6 !min-h-11 !rounded-xl !bg-[#143e32] !text-white"
               >Show businesses</UButton
             >
             <button
               type="button"
-              class="mt-4 block w-full text-center text-xs font-semibold text-[#657069] hover:underline"
+              class="mt-2 block min-h-11 w-full text-center text-sm font-semibold text-[#657069] hover:underline"
               @click="clearFilters"
             >
               Clear filters
             </button>
           </form>
+          <NuxtLink
+            to="/businesses/new"
+            class="mt-5 flex min-h-11 items-center justify-center gap-2 text-sm font-semibold text-[#315c3c] hover:underline"
+            >List your business <UIcon name="i-lucide-arrow-up-right" aria-hidden="true"
+          /></NuxtLink>
         </aside>
 
-        <section aria-live="polite">
-          <h2 class="sr-only">Business listings</h2>
-          <div
-            class="flex flex-col gap-6 pb-6 lg:flex-row lg:items-center lg:justify-between lg:gap-4"
-          >
-            <div class="flex w-full items-center justify-between gap-3 lg:w-auto">
-              <div class="flex min-w-0 items-center gap-2 sm:gap-3">
-                <label for="directory-sort" class="shrink-0 text-sm font-semibold text-[#345341]"
-                  >Sort by</label
+        <section
+          id="business-results"
+          tabindex="-1"
+          class="min-w-0 scroll-mt-28"
+          :aria-busy="searchPending"
+        >
+          <div class="mb-5 flex flex-wrap items-center justify-between gap-x-4 gap-y-3">
+            <div role="status" aria-live="polite" class="min-w-0">
+              <h2 class="text-lg font-semibold text-[#143e32]">
+                {{
+                  activeFilters.length || extraCriteria.length ? 'Search results' : 'All businesses'
+                }}
+              </h2>
+              <p class="mt-1 text-sm text-[#657069]">
+                <template v-if="searchPending">Finding businesses…</template>
+                <template v-else-if="error || searchNotice || pageUnavailable"
+                  >Adjust your search or try again.</template
                 >
+                <template v-else-if="data?.total"
+                  >Showing {{ (data.page - 1) * data.pageSize + 1 }}–{{
+                    Math.min(data.page * data.pageSize, data.total)
+                  }}
+                  of {{ data.total }} {{ data.total === 1 ? 'business' : 'businesses' }}</template
+                >
+                <template v-else>No matching businesses</template>
+              </p>
+            </div>
+            <div class="flex w-full items-center justify-between gap-3 sm:w-auto">
+              <div class="flex min-w-0 items-center gap-2">
+                <label for="directory-sort" class="shrink-0 text-sm text-[#657069]">Sort by</label>
                 <USelect
                   id="directory-sort"
                   v-model="sort"
                   :disabled="searchPending || Boolean(searchNotice)"
                   :items="[...sortOptions]"
-                  class="min-w-0 w-36 sm:w-40"
-                  :ui="{ base: '!rounded-lg !border-[#d9e2d8] !ring-0 focus:!ring-0' }"
+                  class="w-37 sm:w-40"
+                  :ui="{ base: '!min-h-11 !rounded-xl !bg-white !ring-1 !ring-[#d9e2d8]' }"
                   @update:model-value="applySort"
                 />
               </div>
@@ -276,16 +292,50 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
                 variant="outline"
                 icon="i-lucide-sliders-horizontal"
                 aria-label="Filter businesses"
-                title="Filter businesses"
-                class="ml-auto shrink-0 !rounded-xl !border-[#d5dfd2] !bg-white !text-[#143e32] lg:!hidden"
+                class="ml-auto !min-h-11 !rounded-xl !bg-white !text-[#143e32] lg:!hidden"
                 @click="filtersOpen = true"
-              />
+              >
+                Filters<span
+                  v-if="activeFilters.length + extraCriteria.length"
+                  class="rounded-full bg-[#e8f4da] px-1.5 text-xs"
+                  >{{ activeFilters.length + extraCriteria.length }}</span
+                >
+              </UButton>
             </div>
-            <NuxtLink
-              to="/businesses/new"
-              class="inline-flex items-center gap-2 self-start text-sm font-semibold text-[#315c3c] hover:underline lg:self-auto"
-              >List your business <UIcon name="i-lucide-arrow-up-right"
-            /></NuxtLink>
+          </div>
+          <div
+            v-if="(activeFilters.length || extraCriteria.length) && !searchPending && !searchNotice"
+            class="mb-5 flex flex-wrap items-center gap-2"
+            aria-label="Active filters"
+          >
+            <button
+              v-for="filter in activeFilters"
+              :key="`${filter.key}-${filter.value}`"
+              type="button"
+              :aria-label="`Remove ${filter.label} filter`"
+              class="inline-flex min-h-10 max-w-full items-center gap-2 rounded-full border border-[#d4e1cb] bg-[#edf4e7] px-3 text-xs font-medium text-[#315b3a] hover:bg-[#e3eedb] focus-visible:outline-2 focus-visible:outline-offset-2"
+              @click="removeFilter(filter.key, filter.value)"
+            >
+              <span class="max-w-64 truncate">{{ filter.label }}</span
+              ><UIcon name="i-lucide-x" class="shrink-0" aria-hidden="true" />
+            </button>
+            <button
+              v-for="filter in extraCriteria"
+              :key="filter.key"
+              type="button"
+              :aria-label="`Remove ${filter.label} filter`"
+              class="inline-flex min-h-10 items-center gap-2 rounded-full border border-[#d4e1cb] bg-[#edf4e7] px-3 text-xs font-medium text-[#315b3a] hover:bg-[#e3eedb]"
+              @click="removeExtraCriterion(filter.key)"
+            >
+              {{ filter.label }}<UIcon name="i-lucide-x" aria-hidden="true" />
+            </button>
+            <button
+              type="button"
+              class="min-h-10 px-2 text-xs font-semibold text-[#657069] underline underline-offset-4"
+              @click="clearFilters"
+            >
+              Clear all
+            </button>
           </div>
           <div
             v-if="searchNotice"
@@ -303,22 +353,6 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
             </div>
           </div>
           <template v-if="!searchNotice">
-            <div
-              v-if="extraCriteria.length && !searchPending"
-              class="mb-5 flex flex-wrap gap-2"
-              aria-label="Additional search filters"
-            >
-              <button
-                v-for="filter in extraCriteria"
-                :key="filter.key"
-                type="button"
-                :aria-label="`Remove ${filter.label} filter`"
-                class="inline-flex items-center gap-2 rounded-lg border border-[#d4e1cb] bg-[#edf4e7] px-3 py-2 text-xs font-medium text-[#315b3a] hover:bg-[#e3eedb]"
-                @click="removeExtraCriterion(filter.key)"
-              >
-                {{ filter.label }}<UIcon name="i-lucide-x" />
-              </button>
-            </div>
             <p v-if="interpreting" role="status" class="mb-4 text-sm text-[#657069]">
               Finding businesses that match your search…
             </p>
@@ -343,12 +377,16 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
             </div>
             <div
               v-else-if="searchPending"
-              class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3"
+              class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4"
               aria-label="Loading businesses"
             >
               <div v-for="n in 6" :key="n" class="h-72 animate-pulse rounded-2xl bg-[#e8eee4]" />
             </div>
-            <div v-else-if="error" class="rounded-2xl border border-red-200 bg-white p-8">
+            <div
+              v-else-if="error"
+              role="alert"
+              class="rounded-2xl border border-red-200 bg-white p-8"
+            >
               <h3 class="text-lg font-semibold text-red-800">We couldn’t load the directory.</h3>
               <p class="mt-2 text-sm text-[#657069]">Please try again in a moment.</p>
               <UButton color="neutral" variant="outline" class="mt-5" @click="refresh()"
@@ -373,7 +411,7 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
               <p class="mt-2 max-w-lg text-sm leading-6 text-[#657069]">
                 {{
                   (data?.discovery?.searchable === false ? data.discovery.clarification : null) ||
-                  'Try another search or a broader filter. New businesses appear as soon as they are listed.'
+                  'Try another search or a broader filter. You can remove a filter above or browse all businesses.'
                 }}
               </p>
               <NuxtLink
@@ -382,7 +420,7 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
                 >Browse all businesses</NuxtLink
               >
             </div>
-            <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3">
+            <div v-else class="grid gap-4 sm:grid-cols-2 xl:grid-cols-3 2xl:grid-cols-4">
               <BusinessCard
                 v-for="item in data.items"
                 :key="item.id"
@@ -442,13 +480,35 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
               </nav>
             </div>
           </template>
+          <nav
+            aria-label="More ways to browse"
+            class="mt-8 flex flex-wrap items-center gap-x-5 gap-y-2 border-t border-[#dfe6dc] pt-5 text-sm"
+          >
+            <span class="text-[#657069]">More ways to explore</span>
+            <NuxtLink
+              to="/categories"
+              class="inline-flex min-h-11 items-center gap-2 font-medium text-[#315b3a] hover:underline"
+              >Browse categories <UIcon name="i-lucide-arrow-right" aria-hidden="true"
+            /></NuxtLink>
+            <NuxtLink
+              to="/locations"
+              class="inline-flex min-h-11 items-center gap-2 font-medium text-[#315b3a] hover:underline"
+              >Browse locations <UIcon name="i-lucide-arrow-right" aria-hidden="true"
+            /></NuxtLink>
+            <NuxtLink
+              to="/businesses/new"
+              class="inline-flex min-h-11 items-center gap-2 font-medium text-[#315b3a] hover:underline lg:hidden"
+              >List your business <UIcon name="i-lucide-arrow-up-right" aria-hidden="true"
+            /></NuxtLink>
+          </nav>
         </section>
       </div>
     </main>
     <LandingFooter />
     <UDrawer
       v-model:open="filtersOpen"
-      title="Filter results"
+      title="Filter businesses"
+      description="Choose categories, how a business operates, and its location."
       close
       :ui="{
         content: 'max-h-[90dvh] rounded-t-3xl bg-white',
@@ -462,8 +522,6 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
       <template #body>
         <form id="mobile-business-filters" @submit.prevent="applyFilters">
           <FilterFields
-            v-model:search="search"
-            v-model:ai-search="aiSearch"
             v-model:category="category"
             v-model:city="city"
             v-model:state="state"
@@ -473,16 +531,19 @@ async function toggleSaved(item: BusinessListResponse['items'][number]) {
         </form>
       </template>
       <template #footer>
-        <UButton
-          type="submit"
-          form="mobile-business-filters"
-          :loading="interpreting"
-          :disabled="searchPending"
-          block
-          class="!rounded-lg !bg-[#143e32] !text-white"
-          >Show businesses</UButton
-        >
-        <UButton color="neutral" variant="ghost" block @click="clearFilters">Clear filters</UButton>
+        <div class="flex items-center justify-between gap-4">
+          <UButton color="neutral" variant="soft" class="min-h-11" @click="clearFilters"
+            >Clear all</UButton
+          >
+          <UButton
+            type="submit"
+            form="mobile-business-filters"
+            :loading="interpreting"
+            :disabled="searchPending"
+            class="!min-h-11 !rounded-xl !bg-[#143e32] !text-white"
+            >Show businesses</UButton
+          >
+        </div>
       </template>
     </UDrawer>
   </div>

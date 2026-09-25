@@ -1,3 +1,4 @@
+import type { LocationQueryRaw } from 'vue-router'
 import {
   businessCategories,
   businessDays,
@@ -112,6 +113,40 @@ export function useBusinessDiscovery() {
       })
     return values
   })
+  type FilterKey = 'q' | 'category' | 'operationMode' | 'state' | 'city' | 'location'
+  const activeFilters = computed(() => {
+    const filters: { key: FilterKey; value: string; label: string }[] = []
+    for (const key of ['q', 'state', 'city', 'location'] as const) {
+      const value = route.query[key]
+      if (typeof value === 'string' && value.trim())
+        filters.push({ key, value, label: key === 'q' ? `Search: ${value}` : value })
+    }
+    for (const [key, options] of [
+      ['category', businessCategories],
+      ['operationMode', operationModes],
+    ] as const) {
+      for (const option of options) {
+        const values = route.query[key]
+        if (Array.isArray(values) ? values.includes(option.value) : values === option.value)
+          filters.push({ key, value: option.value, label: option.label })
+      }
+    }
+    return filters
+  })
+
+  function removeFilter(key: FilterKey, value: string) {
+    if (searchPending.value) return
+    const query: LocationQueryRaw = { ...route.query, page: undefined }
+    const current = query[key]
+    query[key] = Array.isArray(current) ? current.filter((item) => item !== value) : undefined
+    // Removing the prompt also removes its AI-only constraints.
+    if (key === 'q') {
+      query.mode = undefined
+      query.intent = undefined
+    }
+    return navigateTo({ path: '/explore', query })
+  }
+
   watch(
     () => route.query,
     () => {
@@ -298,6 +333,8 @@ export function useBusinessDiscovery() {
     searchPending,
     searchNotice,
     extraCriteria,
+    activeFilters,
+    removeFilter,
     applyFilters,
     clearFilters,
     applySort,
